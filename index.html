@@ -1,0 +1,2745 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PajakTools — Suite Lengkap Alat Pajak Indonesia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #0e1520;
+            --surface2: #141d2c;
+            --border: #1e2d42;
+            --border2: #263548;
+            --text: #e2eaf8;
+            --text-dim: #6b83a3;
+            --text-muted: #3d5270;
+            --accent: #3b82f6;
+            --accent2: #60a5fa;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --orange: #f97316;
+            --purple: #8b5cf6;
+            --tab-active: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 10% 0%, rgba(59,130,246,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 90% 100%, rgba(139,92,246,0.06) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 60% at 50% 50%, rgba(6,182,212,0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(8,12,20,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            font-family: 'Syne', sans-serif;
+        }
+
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span { color: var(--accent2); }
+
+        .navbar-meta {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 72px 32px 56px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 100px;
+            font-size: 11px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--accent2);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent2) 0%, var(--cyan) 50%, var(--purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--text-dim);
+            max-width: 520px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Tab Navigation ── */
+        .tabs-wrapper {
+            position: relative;
+            z-index: 1;
+            padding: 0 32px;
+            margin-bottom: 32px;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 6px;
+            max-width: 900px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tab-btn .tab-icon { font-size: 18px; }
+        .tab-btn .tab-label { white-space: nowrap; }
+        .tab-btn .tab-tag {
+            font-size: 9px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.06em;
+            opacity: 0.7;
+        }
+
+        .tab-btn:hover { color: var(--text); background: var(--surface2); }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.15));
+            color: var(--accent2);
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+
+        .tab-btn.active .tab-tag { opacity: 1; color: var(--accent); }
+
+        /* ── Main content area ── */
+        .main {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 32px 80px;
+        }
+
+        .tool-panel {
+            display: none;
+            animation: panelIn 0.35s ease;
+        }
+
+        .tool-panel.active { display: block; }
+
+        @keyframes panelIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Tool Card ── */
+        .tool-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .tool-card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tool-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .tool-card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .tool-card-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* ── Upload Area ── */
+        .upload-area {
+            border: 2px dashed var(--border2);
+            border-radius: 14px;
+            padding: 40px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: rgba(255,255,255,0.02);
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(59,130,246,0.06);
+        }
+
+        .upload-area.success {
+            border-color: var(--green);
+            background: rgba(16,185,129,0.06);
+        }
+
+        .upload-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+        .upload-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .upload-sub { font-size: 13px; color: var(--text-dim); }
+
+        input[type="file"] { display: none; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #2563eb);
+            color: white;
+            box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(59,130,246,0.5);
+        }
+
+        .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .btn-green {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: white;
+            box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+        }
+
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(16,185,129,0.45); }
+
+        .btn-yellow {
+            background: linear-gradient(135deg, var(--yellow), #d97706);
+            color: white;
+        }
+
+        .btn-yellow:hover { transform: translateY(-2px); }
+
+        .btn-teal {
+            background: linear-gradient(135deg, var(--cyan), #0891b2);
+            color: white;
+        }
+
+        .btn-teal:hover { transform: translateY(-2px); }
+
+        .btn-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* ── Form Elements ── */
+        .form-group { margin-bottom: 18px; }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            font-family: 'IBM Plex Mono', monospace;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border2);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'IBM Plex Mono', monospace;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b83a3' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        /* ── Result Box ── */
+        .result-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            max-height: 380px;
+            overflow: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #86efac;
+            line-height: 1.7;
+        }
+
+        .result-box::-webkit-scrollbar { width: 5px; height: 5px; }
+        .result-box::-webkit-scrollbar-track { background: transparent; }
+        .result-box::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+        /* ── Company Cards ── */
+        .company-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .company-card {
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border2);
+            background: var(--bg);
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .company-card:hover {
+            border-color: rgba(59,130,246,0.5);
+            background: rgba(59,130,246,0.06);
+        }
+
+        .company-card.active {
+            border-color: var(--accent);
+            background: rgba(59,130,246,0.12);
+            box-shadow: 0 0 20px rgba(59,130,246,0.2);
+        }
+
+        .company-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+
+        .company-npwp {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .company-card.active .company-npwp { color: var(--accent2); }
+
+        .active-badge {
+            display: none;
+            margin-top: 12px;
+            padding: 9px 14px;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 8px;
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 600;
+            align-items: center;
+            gap: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .active-badge.show { display: flex; }
+
+        /* ── Gross Up Calculator Grid ── */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .calc-card {
+            background: var(--bg);
+            border: 1px solid var(--border2);
+            border-radius: 14px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s;
+        }
+
+        .calc-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--card-color);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .calc-card:hover { border-color: var(--card-color); transform: translateY(-3px); }
+        .calc-card:hover::before { opacity: 1; }
+        .calc-card.pph21 { --card-color: var(--cyan); }
+        .calc-card.pph23 { --card-color: var(--pink); }
+        .calc-card.pph4  { --card-color: var(--yellow); }
+        .calc-card.ppn   { --card-color: var(--orange); }
+
+        .calc-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .calc-card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--card-color);
+        }
+
+        .calc-badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            padding: 3px 10px;
+            background: var(--card-color);
+            color: #000;
+            border-radius: 4px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+        }
+
+        .calc-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--card-color);
+            color: #000;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .calc-btn:hover { filter: brightness(1.15); transform: translateY(-2px); }
+
+        .calc-result {
+            margin-top: 18px;
+            padding: 16px;
+            background: rgba(0,0,0,0.3);
+            border-left: 3px solid var(--card-color);
+            border-radius: 4px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.3s;
+        }
+
+        .calc-result.show { opacity: 1; transform: translateY(0); }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+            padding-top: 12px;
+            border-top: 2px solid var(--card-color);
+            margin-top: 4px;
+        }
+
+        .result-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        .result-value { font-size: 13px; font-weight: 600; color: var(--text); }
+        .result-row:last-child .result-value { font-size: 15px; color: var(--card-color); }
+
+        /* ── Mode Toggle ── */
+        .mode-toggle {
+            display: flex;
+            background: var(--bg);
+            border: 1px solid var(--border2);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .mode-btn:hover { color: var(--text); background: var(--surface2); }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(139,92,246,0.15));
+            color: var(--accent2);
+            border: 1px solid rgba(59,130,246,0.35);
+        }
+
+        .mode-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            padding: 8px 14px;
+            background: rgba(59,130,246,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(59,130,246,0.1);
+            line-height: 1.6;
+        }
+
+        /* ── Kalkulator Biasa extra styles ── */
+        .kb-calc-card {
+            background: var(--bg);
+            border: 1px solid var(--border2);
+            border-radius: 14px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s;
+        }
+
+        .kb-calc-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--card-color);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .kb-calc-card:hover { border-color: var(--card-color); transform: translateY(-3px); }
+        .kb-calc-card:hover::before { opacity: 1; }
+        .kb-calc-card.pph21 { --card-color: var(--cyan); }
+        .kb-calc-card.pph23 { --card-color: var(--pink); }
+        .kb-calc-card.pph4  { --card-color: var(--yellow); }
+        .kb-calc-card.ppn   { --card-color: var(--orange); }
+        .kb-calc-card.pph22 { --card-color: var(--purple); }
+
+        .kb-result-highlight {
+            background: rgba(0,0,0,0.35);
+            border-left: 3px solid var(--card-color);
+            border-radius: 4px;
+            padding: 14px 16px;
+        }
+
+        /* ── Info cards ── */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            padding: 18px;
+            background: var(--bg);
+            border-left: 3px solid var(--info-color);
+            border-radius: 4px;
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--info-color);
+            font-family: 'IBM Plex Mono', monospace;
+            margin-bottom: 8px;
+        }
+
+        .info-card p { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+        .info-card.pph21 { --info-color: var(--cyan); }
+        .info-card.pph23 { --info-color: var(--pink); }
+        .info-card.pph4  { --info-color: var(--yellow); }
+        .info-card.ppn   { --info-color: var(--orange); }
+
+        /* ── Progress ── */
+        .progress-wrap { display: none; margin: 16px 0; }
+        .progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--cyan));
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 3px;
+        }
+        .progress-text { text-align: center; margin-top: 8px; font-size: 13px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
+
+        /* ── File list ── */
+        .file-list-wrap { display: none; margin: 14px 0; }
+        .file-list-title { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 6px 0;
+        }
+        .file-item-info { flex: 1; }
+        .file-item-name { font-size: 13px; font-weight: 600; color: var(--text); }
+        .file-item-size { font-size: 11px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
+        .file-remove-btn {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #f87171;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-remove-btn:hover { background: rgba(239,68,68,0.3); }
+
+        /* ── Options panel ── */
+        .options-panel {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin: 14px 0;
+        }
+
+        .options-title { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 12px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .option-item input[type="checkbox"] {
+            width: 15px; height: 15px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .option-item label { font-size: 13px; color: var(--text-dim); cursor: pointer; }
+
+        /* ── Result area ── */
+        .result-area {
+            display: none;
+            margin-top: 16px;
+            padding: 20px;
+            background: rgba(16,185,129,0.05);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 12px;
+        }
+
+        .result-area-title { font-size: 15px; font-weight: 700; color: var(--green); margin-bottom: 14px; }
+
+        .preview-table-wrap { overflow-x: auto; border-radius: 10px; margin: 14px 0; }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: var(--bg);
+        }
+
+        .preview-table th {
+            background: linear-gradient(135deg, #1e3a5f, #263548);
+            color: var(--accent2);
+            padding: 10px 12px;
+            text-align: left;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+
+        .preview-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .preview-table tr:hover td { background: rgba(59,130,246,0.04); }
+
+        /* ── Faktur pajak result table ── */
+        .fp-table-wrap { overflow-x: auto; border-radius: 12px; margin-top: 16px; border: 1px solid var(--border); }
+
+        .fp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: var(--bg);
+        }
+
+        .fp-table th {
+            background: linear-gradient(135deg, #1a2d4a, #1e3a5f);
+            color: var(--accent2);
+            padding: 12px 14px;
+            text-align: left;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            position: sticky;
+            top: 0;
+        }
+
+        .fp-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .fp-table tr:hover td { background: rgba(59,130,246,0.04); }
+
+        /* ── Error ── */
+        .error-box {
+            display: none;
+            margin-top: 14px;
+            padding: 16px;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 10px;
+            color: #f87171;
+            font-size: 13px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* ── Section label ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+            margin-bottom: 10px;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; letter-spacing: -0.5px; }
+            .navbar { padding: 0 16px; }
+            .tabs-wrapper { padding: 0 16px; }
+            .main { padding: 0 16px 60px; }
+            .hero { padding: 48px 16px 40px; }
+            .hero-stats { gap: 28px; }
+            .tab-btn { min-width: 100px; font-size: 11px; }
+            .calc-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">
+        <div class="logo-icon">P</div>
+        <span class="logo-text">Pajak<span>Tools</span></span>
+    </div>
+    <div class="navbar-meta">Suite Alat Pajak Indonesia</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-badge">🇮🇩 Indonesia Tax Suite</div>
+    <h1>Semua Alat Pajak<br>di <span class="gradient-text">Satu Tempat</span></h1>
+    <p>Platform lengkap untuk kebutuhan perpajakan Indonesia — konversi PDF, generate XML Coretax, kalkulator Pajak, dan lebih banyak lagi.</p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="hero-stat-num">5</div>
+            <div class="hero-stat-label">Fitur Tools</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-num">100%</div>
+            <div class="hero-stat-label">Client-Side</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-num">0</div>
+            <div class="hero-stat-label">Data Upload</div>
+        </div>
+    </div>
+</section>
+
+<!-- Tab Navigation -->
+<div class="tabs-wrapper">
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('xml')">
+            <span class="tab-icon">🔄</span>
+            <span class="tab-label">Excel → XML</span>
+            <span class="tab-tag">CORETAX</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('grossup')">
+            <span class="tab-icon">🧮</span>
+            <span class="tab-label">Kalkulator Pajak</span>
+            <span class="tab-tag">PPH/PPN</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('pph21')">
+            <span class="tab-icon">📊</span>
+            <span class="tab-label">PPh21</span>
+            <span class="tab-tag">PDF → EXCEL</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('bppu')">
+            <span class="tab-icon">📑</span>
+            <span class="tab-label">PPh Unifikasi</span>
+            <span class="tab-tag">PDF → EXCEL</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('faktur')">
+            <span class="tab-icon">🧾</span>
+            <span class="tab-label">Faktur Pajak</span>
+            <span class="tab-tag">PDF→EXCEL</span>
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+    <!-- ────────── TAB 1: Excel → XML Coretax ────────── -->
+    <div id="tab-xml" class="tool-panel active">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.15));border:1px solid rgba(59,130,246,0.3)">🔄</div>
+                <div>
+                    <div class="tool-card-title">Excel to Tax Invoice XML</div>
+                    <div class="tool-card-desc">Konversi data Excel ke format XML Faktur Pajak Coretax · Multi Perusahaan</div>
+                </div>
+            </div>
+
+            <!-- Company Selector -->
+            <div class="section-label">Pilih Perusahaan</div>
+            <div class="company-grid">
+                <div class="company-card" data-company="RDTN" data-tin="0991183559012000" data-idtku="0991183559012000000000" onclick="xmlSelectCompany(this)">
+                    <div class="company-name">🔵 RDTN</div>
+                    <div class="company-npwp">099118355-9012-000</div>
+                </div>
+                <div class="company-card" data-company="SNB" data-tin="0014602601904000" data-idtku="0014602601904000000000" onclick="xmlSelectCompany(this)">
+                    <div class="company-name">🟢 SNB</div>
+                    <div class="company-npwp">001460260-1904-000</div>
+                </div>
+                <div class="company-card" data-company="UDN" data-tin="0018852632007000" data-idtku="0018852632007000000000" onclick="xmlSelectCompany(this)">
+                    <div class="company-name">🟠 UDN</div>
+                    <div class="company-npwp">001885263-2007-000</div>
+                </div>
+                <div class="company-card" data-company="USI" data-tin="0837291145048000" data-idtku="0837291145048000000000" onclick="xmlSelectCompany(this)">
+                    <div class="company-name">🔴 USI</div>
+                    <div class="company-npwp">083729114-5048-000</div>
+                </div>
+            </div>
+            <div class="active-badge" id="xmlActiveBadge">
+                <span>✅</span><span id="xmlActiveBadgeText">–</span>
+            </div>
+
+            <div style="margin-top:20px;"></div>
+
+            <!-- Download Template -->
+            <div class="btn-row" style="margin-bottom:16px;">
+                <button class="btn btn-yellow" onclick="xmlDownloadTemplate()">📥 Download Template Excel</button>
+            </div>
+
+            <!-- Upload -->
+            <div class="upload-area" id="xmlUploadArea">
+                <span class="upload-icon">📤</span>
+                <div class="upload-title">Klik atau Drag & Drop File Excel</div>
+                <div class="upload-sub">Support: .xlsx, .xls</div>
+                <input type="file" id="xmlFileInput" accept=".xlsx,.xls">
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-row">
+                <button class="btn btn-primary" id="xmlConvertBtn" disabled>⚡ Convert ke XML</button>
+                <button class="btn btn-green" id="xmlDownloadBtn" style="display:none;">💾 Download XML</button>
+                <button class="btn btn-teal" id="xmlCopyBtn" style="display:none;">📋 Copy XML</button>
+            </div>
+
+            <!-- Preview -->
+            <div id="xmlPreview" style="display:none;margin-top:20px;">
+                <div class="section-label" style="margin-bottom:8px;">Preview XML</div>
+                <div class="result-box" id="xmlPreviewBox"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ────────── TAB 2: Kalkulator Pajak ────────── -->
+    <div id="tab-grossup" class="tool-panel">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.3)">🧮</div>
+                <div>
+                    <div class="tool-card-title">Kalkulator Pajak</div>
+                    <div class="tool-card-desc">Hitung PPh & PPN — mode biasa (dari DPP/bruto) atau mode gross up (dari nett)</div>
+                </div>
+            </div>
+
+            <!-- Mode Toggle -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="modeBtnBiasa" onclick="switchCalcMode('biasa')">
+                    🧾 Hitung Pajak Biasa
+                    <span style="font-size:10px;opacity:0.7;font-family:'IBM Plex Mono',monospace;">DPP → Pajak</span>
+                </button>
+                <button class="mode-btn" id="modeBtnGrossup" onclick="switchCalcMode('grossup')">
+                    📈 Gross Up
+                    <span style="font-size:10px;opacity:0.7;font-family:'IBM Plex Mono',monospace;">Nett → DPP</span>
+                </button>
+            </div>
+
+            <!-- ══ MODE BIASA ══ -->
+            <div id="calcModeBiasa">
+                <div class="mode-desc">
+                    💡 <strong>Mode Hitung Biasa</strong> — Masukkan nilai DPP/Bruto, langsung dapat berapa pajaknya yang harus dipotong/dipungut
+                </div>
+
+                <div class="calc-grid">
+
+                    <!-- PPh 21 Biasa -->
+                    <div class="kb-calc-card pph21">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 21</div>
+                            <span class="calc-badge">PASAL 21</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tarif Pajak (%)</label>
+                            <select class="form-select" id="kb_tarifPPh21">
+                                <option value="0.5">0.5% - Final</option>
+                                <option value="2.5">2.5% - Tidak Final</option>
+                                <option value="5">5% - Tidak Ber-NPWP</option>
+                                <option value="15">15% - Layer 1 (s/d 60jt)</option>
+                                <option value="25">25% - Layer 2 (60jt-250jt)</option>
+                                <option value="30">30% - Layer 3 (250jt-500jt)</option>
+                                <option value="35">35% - Layer 4 (>500jt)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">DPP / Penghasilan Bruto (Rp)</label>
+                            <input type="text" class="form-input" id="kb_dppPPh21" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="kbHitungPPh21()">Hitung PPh 21</button>
+                        <div id="kb_resultPPh21" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPh 23 Biasa -->
+                    <div class="kb-calc-card pph23">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 23</div>
+                            <span class="calc-badge">PASAL 23</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Penghasilan</label>
+                            <select class="form-select" id="kb_jenisPPh23" onchange="kbUpdatePPh23()">
+                                <option value="2">Dividen, Bunga, Royalti (2%)</option>
+                                <option value="2b">Jasa Teknik, Manajemen (2%)</option>
+                                <option value="2c">Sewa & Penghasilan Lain (2%)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="kb_customTarifPPh23Group" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="kb_customTarifPPh23" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">DPP / Nilai Bruto (Rp)</label>
+                            <input type="text" class="form-input" id="kb_dppPPh23" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="kbHitungPPh23()">Hitung PPh 23</button>
+                        <div id="kb_resultPPh23" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPh 4(2) Biasa -->
+                    <div class="kb-calc-card pph4">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 4(2)</div>
+                            <span class="calc-badge">FINAL</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Penghasilan</label>
+                            <select class="form-select" id="kb_jenisPPh4" onchange="kbUpdatePPh4()">
+                                <option value="10">Sewa Tanah/Bangunan (10%)</option>
+                                <option value="20">Bunga Deposito/Tabungan (20%)</option>
+                                <optgroup label="A. Pelaksanaan Konstruksi">
+                                    <option value="1.75">Kualifikasi Kecil/OP Bersertifikat (1.75%)</option>
+                                    <option value="2.65">Menengah & Besar Bersertifikat (2.65%)</option>
+                                    <option value="4">Tidak Punya Sertifikat SBU/SKK (4%)</option>
+                                </optgroup>
+                                <optgroup label="B. Perencanaan & Pengawasan">
+                                    <option value="3.5">Punya Sertifikat (3.5%)</option>
+                                    <option value="6">Tidak Punya Sertifikat (6%)</option>
+                                </optgroup>
+                                <optgroup label="C. Konstruksi Terintegrasi">
+                                    <option value="2.65">Bersertifikat (2.65%)</option>
+                                    <option value="4">Tidak Bersertifikat (4%)</option>
+                                </optgroup>
+                                <option value="2.5">Pengalihan Hak Tanah/Bangunan (2.5%)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="kb_customTarifPPh4Group" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="kb_customTarifPPh4" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">DPP / Nilai Bruto (Rp)</label>
+                            <input type="text" class="form-input" id="kb_dppPPh4" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="kbHitungPPh4()">Hitung PPh 4(2)</button>
+                        <div id="kb_resultPPh4" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPh 22 Biasa -->
+                    <div class="kb-calc-card pph22">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 22</div>
+                            <span class="calc-badge">PASAL 22</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Pemungutan</label>
+                            <select class="form-select" id="kb_jenisPPh22" onchange="kbUpdatePPh22()">
+                                <option value="1.5">Pembelian oleh Bendaharawan (1.5%)</option>
+                                <option value="0.25">Impor Barang Tertentu - Bebas (0.25%)</option>
+                                <option value="2.5">Impor Barang Lain (2.5%)</option>
+                                <option value="7.5">Impor Barang Mewah (7.5%)</option>
+                                <option value="0.1">Penjualan BBM/Gas (0.1%)</option>
+                                <option value="0.3">Penjualan Semen (0.3%)</option>
+                                <option value="0.45">Penjualan Kertas (0.45%)</option>
+                                <option value="0.3">Penjualan Baja (0.3%)</option>
+                                <option value="0.25">Penjualan Otomotif (0.25%)</option>
+                                <option value="0.3">Penjualan Farmasi (0.3%)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="kb_customTarifPPh22Group" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="kb_customTarifPPh22" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nilai Transaksi / DPP (Rp)</label>
+                            <input type="text" class="form-input" id="kb_dppPPh22" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="kbHitungPPh22()">Hitung PPh 22</button>
+                        <div id="kb_resultPPh22" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPN Biasa -->
+                    <div class="kb-calc-card ppn">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPN</div>
+                            <span class="calc-badge">11% / 12%</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tarif PPN (%)</label>
+                            <select class="form-select" id="kb_tarifPPN" onchange="kbUpdatePPN()">
+                                <option value="12">12% - Tarif Umum (2025)</option>
+                                <option value="11">11% - Tarif Lama</option>
+                                <option value="1">1% - Pedagang Eceran</option>
+                                <option value="2.2">2.2% - Tarif Efektif (PPh 22)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="kb_customTarifPPNGroup" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="kb_customTarifPPN" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Input</label>
+                            <select class="form-select" id="kb_inputTypePPN">
+                                <option value="dpp">DPP (belum termasuk PPN)</option>
+                                <option value="total">Total (sudah termasuk PPN)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" id="kb_labelPPN">DPP (Rp)</label>
+                            <input type="text" class="form-input" id="kb_dppPPN" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="kbHitungPPN()">Hitung PPN</button>
+                        <div id="kb_resultPPN" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPh 15 Biasa -->
+                    <div class="kb-calc-card" style="--card-color:#10b981;">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title" style="color:var(--green);">PPh 15</div>
+                            <span class="calc-badge" style="background:var(--green);">PASAL 15</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Wajib Pajak</label>
+                            <select class="form-select" id="kb_jenisPPh15" onchange="kbUpdatePPh15()">
+                                <option value="1.2">Pelayaran Dalam Negeri (1.2%)</option>
+                                <option value="2.64">Pelayaran/Penerbangan LN (2.64%)</option>
+                                <option value="1.8">Penerbangan Dalam Negeri (1.8%)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="kb_customTarifPPh15Group" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="kb_customTarifPPh15" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Peredaran Bruto (Rp)</label>
+                            <input type="text" class="form-input" id="kb_dppPPh15" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" style="background:var(--green);" onclick="kbHitungPPh15()">Hitung PPh 15</button>
+                        <div id="kb_resultPPh15" class="calc-result" style="border-left-color:var(--green);"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ══ MODE GROSS UP ══ -->
+            <div id="calcModeGrossup" style="display:none;">
+                <div class="mode-desc">
+                    💡 <strong>Mode Gross Up</strong> — Masukkan nilai nett (yang sudah dipotong pajak), hitung berapa DPP & pajak sebenarnya
+                </div>
+
+                <div class="calc-grid">
+                    <!-- PPh 21 Gross Up -->
+                    <div class="calc-card pph21">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 21</div>
+                            <span class="calc-badge">PASAL 21</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tarif Pajak (%)</label>
+                            <select class="form-select" id="gu_tarifPPh21">
+                                <option value="0.5">0.5% - Final</option>
+                                <option value="2.5">2.5% - Tidak Final</option>
+                                <option value="5">5% - Tidak Ber-NPWP</option>
+                                <option value="15">15% - Layer 1 (s/d 60jt)</option>
+                                <option value="25">25% - Layer 2 (60jt-250jt)</option>
+                                <option value="30">30% - Layer 3 (250jt-500jt)</option>
+                                <option value="35">35% - Layer 4 (>500jt)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Nett (Rp)</label>
+                            <input type="text" class="form-input" id="gu_nettPPh21" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="guHitungPPh21()">Hitung Gross Up</button>
+                        <div id="gu_resultPPh21" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPh 23 Gross Up -->
+                    <div class="calc-card pph23">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 23</div>
+                            <span class="calc-badge">PASAL 23</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Penghasilan</label>
+                            <select class="form-select" id="gu_jenisPPh23" onchange="guUpdateTarifPPh23()">
+                                <option value="2">Dividen, Bunga, Royalti (2%)</option>
+                                <option value="15">Jasa Teknik, Manajemen (2%)</option>
+                                <option value="0.5">Sewa & Penghasilan Lain (2%)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="gu_customTarifPPh23Group" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="gu_customTarifPPh23" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Nett (Rp)</label>
+                            <input type="text" class="form-input" id="gu_nettPPh23" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="guHitungPPh23()">Hitung Gross Up</button>
+                        <div id="gu_resultPPh23" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPh 4(2) Gross Up -->
+                    <div class="calc-card pph4">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPh 4(2)</div>
+                            <span class="calc-badge">FINAL</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Penghasilan</label>
+                            <select class="form-select" id="gu_jenisPPh4" onchange="guUpdateTarifPPh4()">
+                                <option value="10">Sewa Tanah/Bangunan (10%)</option>
+                                <option value="20">Bunga Deposito/Tabungan (20%)</option>
+                                <optgroup label="A. Pelaksanaan Konstruksi">
+                                    <option value="1.75">Kualifikasi Kecil/OP Bersertifikat (1.75%)</option>
+                                    <option value="2.65">Menengah & Besar Bersertifikat (2.65%)</option>
+                                    <option value="4">Tidak Punya Sertifikat SBU/SKK (4%)</option>
+                                </optgroup>
+                                <optgroup label="B. Perencanaan & Pengawasan">
+                                    <option value="3.5">Punya Sertifikat (3.5%)</option>
+                                    <option value="6">Tidak Punya Sertifikat (6%)</option>
+                                </optgroup>
+                                <optgroup label="C. Konstruksi Terintegrasi">
+                                    <option value="2.65">Bersertifikat (2.65%)</option>
+                                    <option value="4">Tidak Bersertifikat (4%)</option>
+                                </optgroup>
+                                <option value="2.5">Pengalihan Hak Tanah/Bangunan (2.5%)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="gu_customTarifPPh4Group" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="gu_customTarifPPh4" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Nett (Rp)</label>
+                            <input type="text" class="form-input" id="gu_nettPPh4" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="guHitungPPh4()">Hitung Gross Up</button>
+                        <div id="gu_resultPPh4" class="calc-result"></div>
+                    </div>
+
+                    <!-- PPN Gross Up -->
+                    <div class="calc-card ppn">
+                        <div class="calc-card-header">
+                            <div class="calc-card-title">PPN</div>
+                            <span class="calc-badge">PAJAK</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tarif PPN (%)</label>
+                            <select class="form-select" id="gu_tarifPPN" onchange="guUpdateTarifPPN()">
+                                <option value="12">12% - Tarif Umum (2025)</option>
+                                <option value="1">1% - Pedagang Eceran</option>
+                                <option value="2.2">2.2% - Tarif Efektif (PPh 22)</option>
+                                <option value="custom">Custom Tarif</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="gu_customTarifPPNGroup" style="display:none;">
+                            <label class="form-label">Tarif Custom (%)</label>
+                            <input type="number" class="form-input" id="gu_customTarifPPN" placeholder="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">DPP (Rp)</label>
+                            <input type="text" class="form-input" id="gu_nettPPN" placeholder="0" inputmode="decimal">
+                        </div>
+                        <button class="calc-btn" onclick="guHitungPPN()">Hitung Gross Up</button>
+                        <div id="gu_resultPPN" class="calc-result"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="tool-card" style="margin-top:16px;background:var(--bg);">
+                <div class="section-label" style="margin-bottom:14px;">Informasi Tarif Pajak</div>
+                <div class="info-grid">
+                    <div class="info-card pph21">
+                        <h3>PPh Pasal 21</h3>
+                        <p>Pajak atas penghasilan berupa gaji, upah, honorarium, tunjangan, dan pembayaran lain yang diterima oleh pegawai atau bukan pegawai.</p>
+                    </div>
+                    <div class="info-card pph23">
+                        <h3>PPh Pasal 23</h3>
+                        <p>Pajak atas penghasilan berupa dividen, bunga, royalti, hadiah, serta imbalan jasa teknik, manajemen, konsultan, dan jasa lainnya.</p>
+                    </div>
+                    <div class="info-card pph4">
+                        <h3>PPh Pasal 4 Ayat 2</h3>
+                        <p>Pajak penghasilan bersifat final atas jenis penghasilan tertentu: bunga deposito, sewa tanah/bangunan, jasa konstruksi, dan pengalihan hak.</p>
+                    </div>
+                    <div class="info-card ppn">
+                        <h3>PPN (Pajak Pertambahan Nilai)</h3>
+                        <p>Pajak atas konsumsi BKP dan/atau JKP di dalam daerah pabean. Tarif umum 12% berlaku mulai tahun 2025.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ────────── TAB 3: PDF PPh21 → Excel ────────── -->
+    <div id="tab-pph21" class="tool-panel">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(6,182,212,0.15),rgba(59,130,246,0.1));border:1px solid rgba(6,182,212,0.3)">📊</div>
+                <div>
+                    <div class="tool-card-title">PDF PPh Dipotong → Excel</div>
+                    <div class="tool-card-desc">Konversi multiple PDF Bukti Pemotongan PPh 21 ke format Excel</div>
+                </div>
+            </div>
+
+            <div class="upload-area" id="pph21UploadArea">
+                <span class="upload-icon">📄</span>
+                <div class="upload-title">Klik atau seret file PDF ke sini</div>
+                <div class="upload-sub">Mendukung multiple files PDF PPh Dipotong</div>
+                <input type="file" id="pph21FileInput" accept=".pdf" multiple>
+            </div>
+
+            <div class="file-list-wrap" id="pph21FileList">
+                <div class="file-list-title">📋 FILE DIPILIH</div>
+                <div id="pph21FileItems"></div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-red" id="pph21ClearBtn" style="font-size:12px;padding:8px 14px;">🗑️ Hapus Semua</button>
+                </div>
+            </div>
+
+            <div class="options-panel">
+                <div class="options-title">⚙️ Opsi Konversi</div>
+                <div class="option-item">
+                    <input type="checkbox" id="pph21_taxDocMode" checked>
+                    <label for="pph21_taxDocMode">🧾 Mode Dokumen Pajak (PPh diPotong)</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="pph21_detectTables" checked>
+                    <label for="pph21_detectTables">Deteksi tabel otomatis</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="pph21_mergePages" checked>
+                    <label for="pph21_mergePages">Gabungkan semua halaman dalam satu sheet</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="pph21_smartCols" checked>
+                    <label for="pph21_smartCols">Smart column detection</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="pph21_separateFiles">
+                    <label for="pph21_separateFiles">Pisahkan setiap file dalam sheet terpisah</label>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="pph21ConvertBtn" style="display:none;" onclick="pph21Convert()">🔄 Konversi ke Excel</button>
+            </div>
+
+            <div class="progress-wrap" id="pph21Progress">
+                <div class="progress-bar"><div class="progress-fill" id="pph21ProgressFill"></div></div>
+                <div class="progress-text" id="pph21ProgressText">Memproses...</div>
+            </div>
+
+            <div class="result-area" id="pph21ResultArea">
+                <div class="result-area-title">✅ Konversi Berhasil!</div>
+                <div id="pph21PreviewArea"></div>
+                <div class="btn-row" style="margin-top:12px;">
+                    <button class="btn btn-green" onclick="pph21Download()">📥 Download Excel</button>
+                </div>
+            </div>
+
+            <div class="error-box" id="pph21ErrorBox"></div>
+        </div>
+    </div>
+
+    <!-- ────────── TAB 4: PDF BPPU → Excel ────────── -->
+    <div id="tab-bppu" class="tool-panel">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(236,72,153,0.1));border:1px solid rgba(139,92,246,0.3)">📑</div>
+                <div>
+                    <div class="tool-card-title">PDF BPPU → Excel</div>
+                    <div class="tool-card-desc">Konversi multiple PDF Bukti Pemotongan/Pemungutan ke format Excel</div>
+                </div>
+            </div>
+
+            <div class="upload-area" id="bppuUploadArea">
+                <span class="upload-icon">📄</span>
+                <div class="upload-title">Klik atau seret file PDF ke sini</div>
+                <div class="upload-sub">Mendukung multiple files PDF BPPU</div>
+                <input type="file" id="bppuFileInput" accept=".pdf" multiple>
+            </div>
+
+            <div class="file-list-wrap" id="bppuFileList">
+                <div class="file-list-title">📋 FILE DIPILIH</div>
+                <div id="bppuFileItems"></div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-red" id="bppuClearBtn" style="font-size:12px;padding:8px 14px;">🗑️ Hapus Semua</button>
+                </div>
+            </div>
+
+            <div class="options-panel">
+                <div class="options-title">⚙️ Opsi Konversi</div>
+                <div class="option-item">
+                    <input type="checkbox" id="bppu_taxDocMode" checked>
+                    <label for="bppu_taxDocMode">🧾 Mode Dokumen Pajak (PPh diPotong)</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="bppu_detectTables" checked>
+                    <label for="bppu_detectTables">Deteksi tabel otomatis</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="bppu_mergePages" checked>
+                    <label for="bppu_mergePages">Gabungkan semua halaman dalam satu sheet</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="bppu_smartCols" checked>
+                    <label for="bppu_smartCols">Smart column detection</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="bppu_separateFiles">
+                    <label for="bppu_separateFiles">Pisahkan setiap file dalam sheet terpisah</label>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="bppuConvertBtn" style="display:none;" onclick="bppuConvert()">🔄 Konversi ke Excel</button>
+            </div>
+
+            <div class="progress-wrap" id="bppuProgress">
+                <div class="progress-bar"><div class="progress-fill" id="bppuProgressFill"></div></div>
+                <div class="progress-text" id="bppuProgressText">Memproses...</div>
+            </div>
+
+            <div class="result-area" id="bppuResultArea">
+                <div class="result-area-title">✅ Konversi Berhasil!</div>
+                <div id="bppuPreviewArea"></div>
+                <div class="btn-row" style="margin-top:12px;">
+                    <button class="btn btn-green" onclick="bppuDownload()">📥 Download Excel</button>
+                </div>
+            </div>
+
+            <div class="error-box" id="bppuErrorBox"></div>
+        </div>
+    </div>
+
+    <!-- ────────── TAB 5: Faktur Pajak Coretax ────────── -->
+    <div id="tab-faktur" class="tool-panel">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(249,115,22,0.1));border:1px solid rgba(245,158,11,0.3)">🧾</div>
+                <div>
+                    <div class="tool-card-title">Ekstrak Faktur Pajak PDF Coretax → Excel</div>
+                    <div class="tool-card-desc">Upload file PDF faktur pajak untuk mengekstrak data ke format Excel</div>
+                </div>
+            </div>
+
+            <div class="upload-area" id="fpUploadBox">
+                <span class="upload-icon">📤</span>
+                <div class="upload-title">Klik atau Drop PDF di sini</div>
+                <div class="upload-sub">Mendukung multiple file PDF faktur pajak Indonesia</div>
+                <input type="file" id="fpFileInput" accept=".pdf" multiple>
+            </div>
+
+            <div id="fpFileInfo" style="margin-top:10px;"></div>
+
+            <div class="btn-row" style="margin-top:14px;">
+                <button class="btn btn-primary" id="fpProcessBtn" disabled onclick="fpProcess()">⚡ Proses PDF</button>
+                <button class="btn btn-green" id="fpDownloadBtn" style="display:none;" onclick="fpDownload()">📥 Download Excel</button>
+                <button class="btn btn-red" id="fpClearBtn" style="display:none;" onclick="fpClear()">🗑️ Clear</button>
+            </div>
+
+            <div id="fpStatus" style="margin-top:12px;font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;min-height:20px;">Belum ada file yang dipilih</div>
+
+            <div id="fpResultSection" style="display:none;margin-top:16px;">
+                <div class="section-label" style="margin-bottom:10px;">Hasil Ekstraksi</div>
+                <div class="fp-table-wrap">
+                    <table class="fp-table">
+                        <thead>
+                            <tr>
+                                <th>No. Faktur Pajak</th>
+                                <th>Nama Penjual</th>
+                                <th>NPWP Penjual</th>
+                                <th>Nama Barang</th>
+                                <th>Harga</th>
+                                <th>Qty</th>
+                                <th>Discount</th>
+                                <th>Total</th>
+                                <th>PPN</th>
+                                <th>Nama Pembeli</th>
+                                <th>NPWP Pembeli</th>
+                                <th>Referensi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fpResultBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer class="footer">
+    © 2025 PajakTools — Suite Lengkap Alat Pajak Indonesia · by Irvan_Signora
+</footer>
+
+<script>
+// ════════════════════════════════════════════════
+//  TAB NAVIGATION
+// ════════════════════════════════════════════════
+function switchTab(id) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        const tabs = ['xml','grossup','pph21','bppu','faktur'];
+        b.classList.toggle('active', tabs[i] === id);
+    });
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ════════════════════════════════════════════════
+//  TAB 1: EXCEL → XML
+// ════════════════════════════════════════════════
+let xmlSelectedTIN = null, xmlSelectedIDTKU = null, xmlSelectedCompany = null;
+let xmlExcelData = null, xmlContent = '';
+
+function xmlSelectCompany(el) {
+    document.querySelectorAll('.company-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    xmlSelectedTIN = el.dataset.tin;
+    xmlSelectedIDTKU = el.dataset.idtku;
+    xmlSelectedCompany = el.dataset.company;
+    const badge = document.getElementById('xmlActiveBadge');
+    badge.classList.add('show');
+    document.getElementById('xmlActiveBadgeText').textContent = `Perusahaan aktif: ${xmlSelectedCompany} · NPWP: ${xmlSelectedTIN}`;
+    if (xmlExcelData) document.getElementById('xmlConvertBtn').disabled = false;
+}
+
+(function() {
+    const ua = document.getElementById('xmlUploadArea');
+    const fi = document.getElementById('xmlFileInput');
+    ua.addEventListener('click', () => fi.click());
+    ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragover'); });
+    ua.addEventListener('dragleave', () => ua.classList.remove('dragover'));
+    ua.addEventListener('drop', e => { e.preventDefault(); ua.classList.remove('dragover'); xmlHandleFile(e.dataTransfer.files[0]); });
+    fi.addEventListener('change', e => xmlHandleFile(e.target.files[0]));
+    document.getElementById('xmlConvertBtn').addEventListener('click', xmlConvert);
+    document.getElementById('xmlCopyBtn').addEventListener('click', xmlCopy);
+    document.getElementById('xmlDownloadBtn').addEventListener('click', xmlDownloadFile);
+})();
+
+function xmlHandleFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        xmlExcelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+        const ua = document.getElementById('xmlUploadArea');
+        ua.innerHTML = `<span class="upload-icon" style="color:var(--green);">✅</span><div class="upload-title" style="color:var(--green);">${file.name}</div><div class="upload-sub">${xmlExcelData.length} baris data terdeteksi</div><input type="file" id="xmlFileInput" accept=".xlsx,.xls" style="display:none">`;
+        ua.querySelector('#xmlFileInput').addEventListener('change', ev => xmlHandleFile(ev.target.files[0]));
+        ua.onclick = () => ua.querySelector('#xmlFileInput').click();
+        ua.classList.add('success');
+        if (xmlSelectedTIN) document.getElementById('xmlConvertBtn').disabled = false;
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function xmlDownloadTemplate() {
+    const data = [
+        { TaxInvoiceDate:'2025-02-02', RefDesc:'Referensi 001', BuyerDocument:'TIN', BuyerDocumentNumber:'1091031210912281', BuyerName:'PT CONTOH PEMBELI', BuyerAdress:'Jl. Contoh No. 123', BuyerEmail:'buyer@example.com', Name:'Barang Contoh', Price:15000, Qty:200, TotalDiscount:100000, TaxBase:2900000 },
+        { TaxInvoiceDate:'2025-02-03', RefDesc:'Referensi 002', BuyerDocument:'National ID', BuyerDocumentNumber:'3201234567890123', BuyerName:'John Doe', BuyerAdress:'Jl. Merdeka No. 45', BuyerEmail:'john@example.com', Name:'Produk Sample', Price:25000, Qty:100, TotalDiscount:50000, TaxBase:2450000 }
+    ];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    XLSX.writeFile(wb, 'Template_Tax_Invoice.xlsx');
+}
+
+function xmlEscape(v) {
+    if (!v) return '';
+    return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function xmlFormatDate(v) {
+    if (!v) return '';
+    if (isNaN(v)) {
+        const d = new Date(v);
+        if (!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return '';
+    }
+    const epoch = new Date(Date.UTC(1899,11,30));
+    const r = new Date(epoch.getTime() + v * 86400000);
+    return `${r.getUTCFullYear()}-${String(r.getUTCMonth()+1).padStart(2,'0')}-${String(r.getUTCDate()).padStart(2,'0')}`;
+}
+
+function xmlNum(v) {
+    if (v === undefined || v === null) return 0;
+    if (typeof v === 'number') return v;
+    let s = String(v).trim();
+    if (/^\d{1,3}(\.\d{3})+,\d+$/.test(s)) s = s.replace(/\./g,'').replace(',','.');
+    else if (/^\d{1,3}(,\d{3})+\.\d+$/.test(s)) s = s.replace(/,/g,'');
+    else s = s.replace(/[^0-9.\-]/g,'');
+    const n = Number(s);
+    return isNaN(n) ? 0 : n;
+}
+
+function xmlConvert() {
+    if (!xmlExcelData || !xmlExcelData.length) return;
+    if (!xmlSelectedTIN) { alert('⚠️ Silakan pilih perusahaan terlebih dahulu!'); return; }
+    const fixed = { TIN: xmlSelectedTIN, TaxInvoiceOpt:'Normal', TrxCode:'04', SellerIDTKU: xmlSelectedIDTKU, Unit:'UM.0021', STLGRate:'0', STLG:'0', Opt:'A', Code:'000000', BuyerCountry:'IDN', VATRate:'12' };
+    const grouped = {};
+    xmlExcelData.forEach(row => { const ref = row.RefDesc || 'NO-REF'; if (!grouped[ref]) grouped[ref] = []; grouped[ref].push(row); });
+    let xml = `<?xml version="1.0" encoding="utf-8" ?>\n<TaxInvoiceBulk xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TaxInvoice.xsd">\n\t<TIN>${fixed.TIN}</TIN>\n\t<ListOfTaxInvoice>\n`;
+    Object.keys(grouped).forEach(refDesc => {
+        const items = grouped[refDesc], first = items[0];
+        let buyerTin = '', buyerDocNum = '';
+        if (first.BuyerDocument === 'National ID') { buyerTin = '0000000000000000'; buyerDocNum = first.BuyerDocumentNumber || ''; }
+        else if (first.BuyerDocument === 'TIN') { buyerTin = first.BuyerDocumentNumber || ''; buyerDocNum = ''; }
+        let buyerIDTKU = first.BuyerDocument === 'National ID' ? '000000' : `${buyerTin}000000`.padEnd(22,'0');
+        xml += `\t<TaxInvoice>\n\t\t<TaxInvoiceDate>${xmlFormatDate(first.TaxInvoiceDate)}</TaxInvoiceDate>\n\t\t<TaxInvoiceOpt>${fixed.TaxInvoiceOpt}</TaxInvoiceOpt>\n\t\t<TrxCode>${fixed.TrxCode}</TrxCode>\n\t\t<AddInfo/>\n\t\t<CustomDoc/>\n\t\t<CustomDocMonthYear/>\n\t\t<RefDesc>${xmlEscape(refDesc)}</RefDesc>\n\t\t<FacilityStamp/>\n\t\t<SellerIDTKU>${fixed.SellerIDTKU}</SellerIDTKU>\n\t\t<BuyerTin>${buyerTin}</BuyerTin>\n\t\t<BuyerDocument>${first.BuyerDocument||''}</BuyerDocument>\n\t\t<BuyerCountry>${fixed.BuyerCountry}</BuyerCountry>\n\t\t<BuyerDocumentNumber>${buyerDocNum}</BuyerDocumentNumber>\n\t\t<BuyerName>${xmlEscape(first.BuyerName)}</BuyerName>\n\t\t<BuyerAdress>${xmlEscape(first.BuyerAdress)}</BuyerAdress>\n\t\t<BuyerEmail>${xmlEscape(first.BuyerEmail)}</BuyerEmail>\n\t\t<BuyerIDTKU>${buyerIDTKU}</BuyerIDTKU>\n\t\t<ListOfGoodService>\n`;
+        items.forEach(row => {
+            const nk = k => k.replace(/\s+/g,'').toLowerCase();
+            const fr = {};
+            for (const k in row) {
+                const nkk = nk(k);
+                if (nkk==='price') fr.Price=row[k]; if (nkk==='qty') fr.Qty=row[k];
+                if (nkk==='totaldisco'||nkk==='totaldiscount') fr.TotalDiscount=row[k];
+                if (nkk==='taxbase') fr.TaxBase=row[k]; if (nkk==='type') fr.Type=row[k];
+                if (nkk==='kodeobjekpajak'||nkk==='kodepajak'||nkk==='kop') fr.KodeObjekPajak=row[k];
+                if (nkk==='name') fr.Name=row[k];
+            }
+            const price = xmlNum(fr.Price), qty = xmlNum(fr.Qty), discount = xmlNum(fr.TotalDiscount), vatRate = xmlNum(fr.VATRate||fixed.VATRate);
+            let taxBase = xmlNum(fr.TaxBase);
+            if (!taxBase) taxBase = Number((price*qty-discount).toFixed(2));
+            const otherTaxBase = Number((taxBase*11/12).toFixed(2));
+            const vat = Number((otherTaxBase*vatRate/100).toFixed(2));
+            const codeObj = fr.KodeObjekPajak || fixed.Code;
+            let opt = fixed.Opt;
+            if (fr.Type) { const t = String(fr.Type).toLowerCase().trim(); if (t==='barang'||t==='a') opt='A'; else if (t==='jasa'||t==='b') opt='B'; }
+            const unit = opt==='A' ? 'UM.0021' : 'UM.0033';
+            xml += `\t\t\t<GoodService>\n\t\t\t\t<Opt>${opt}</Opt>\n\t\t\t\t<Code>${codeObj}</Code>\n\t\t\t\t<Name>${xmlEscape(fr.Name)}</Name>\n\t\t\t\t<Unit>${unit}</Unit>\n\t\t\t\t<Price>${price}</Price>\n\t\t\t\t<Qty>${qty}</Qty>\n\t\t\t\t<TotalDiscount>${discount}</TotalDiscount>\n\t\t\t\t<TaxBase>${taxBase.toFixed(2)}</TaxBase>\n\t\t\t\t<OtherTaxBase>${otherTaxBase.toFixed(2)}</OtherTaxBase>\n\t\t\t\t<VATRate>${vatRate.toFixed(2)}</VATRate>\n\t\t\t\t<VAT>${vat.toFixed(2)}</VAT>\n\t\t\t\t<STLGRate>${fixed.STLGRate}</STLGRate>\n\t\t\t\t<STLG>${fixed.STLG}</STLG>\n\t\t\t</GoodService>\n`;
+        });
+        xml += `\t\t</ListOfGoodService>\n\t</TaxInvoice>\n`;
+    });
+    xml += `\t</ListOfTaxInvoice>\n</TaxInvoiceBulk>`;
+    xmlContent = xml;
+    document.getElementById('xmlPreviewBox').textContent = xml;
+    document.getElementById('xmlPreview').style.display = 'block';
+    document.getElementById('xmlDownloadBtn').style.display = 'inline-flex';
+    document.getElementById('xmlCopyBtn').style.display = 'inline-flex';
+}
+
+function xmlCopy() {
+    navigator.clipboard.writeText(xmlContent).then(() => {
+        const b = document.getElementById('xmlCopyBtn');
+        const orig = b.innerHTML; b.innerHTML = '✓ Copied!';
+        setTimeout(() => b.innerHTML = orig, 2000);
+    });
+}
+
+function xmlDownloadFile() {
+    const blob = new Blob([xmlContent], {type:'application/xml;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `TaxInvoice_${xmlSelectedCompany}_${Date.now()}.xml`;
+    a.click();
+}
+
+// ════════════════════════════════════════════════
+//  TAB 2: MODE SWITCH
+// ════════════════════════════════════════════════
+function switchCalcMode(mode) {
+    document.getElementById('calcModeBiasa').style.display = mode === 'biasa' ? 'block' : 'none';
+    document.getElementById('calcModeGrossup').style.display = mode === 'grossup' ? 'block' : 'none';
+    document.getElementById('modeBtnBiasa').classList.toggle('active', mode === 'biasa');
+    document.getElementById('modeBtnGrossup').classList.toggle('active', mode === 'grossup');
+}
+
+// ════════════════════════════════════════════════
+//  TAB 2: KALKULATOR BIASA (DPP → Pajak)
+// ════════════════════════════════════════════════
+// Note: kb inputs are registered after guSetupInput is defined (see below)
+
+function kbUpdatePPh23() {
+    const v = document.getElementById('kb_jenisPPh23').value;
+    document.getElementById('kb_customTarifPPh23Group').style.display = v==='custom'?'block':'none';
+}
+function kbUpdatePPh4() {
+    const v = document.getElementById('kb_jenisPPh4').value;
+    document.getElementById('kb_customTarifPPh4Group').style.display = v==='custom'?'block':'none';
+}
+function kbUpdatePPh22() {
+    const v = document.getElementById('kb_jenisPPh22').value;
+    document.getElementById('kb_customTarifPPh22Group').style.display = v==='custom'?'block':'none';
+}
+function kbUpdatePPN() {
+    const v = document.getElementById('kb_tarifPPN').value;
+    document.getElementById('kb_customTarifPPNGroup').style.display = v==='custom'?'block':'none';
+}
+function kbUpdatePPh15() {
+    const v = document.getElementById('kb_jenisPPh15').value;
+    document.getElementById('kb_customTarifPPh15Group').style.display = v==='custom'?'block':'none';
+}
+
+document.getElementById('kb_inputTypePPN').addEventListener('change', function() {
+    document.getElementById('kb_labelPPN').textContent = this.value === 'total' ? 'Total Termasuk PPN (Rp)' : 'DPP (Rp)';
+});
+
+function kbShowResult(id, rows, cardColorVar) {
+    const el = document.getElementById(id);
+    const color = cardColorVar || 'var(--card-color)';
+    el.innerHTML = rows.map((r,i) => `<div class="result-row" style="${i===rows.length-1?'border-top:2px solid '+color+';border-bottom:none;margin-top:4px;padding-top:12px;':''}"><span class="result-label">${r[0]}</span><span class="result-value" style="${i===rows.length-1?'color:'+color+';font-size:15px;':''}">${r[1]}</span></div>`).join('');
+    el.classList.add('show');
+}
+
+function kbHitungPPh21() {
+    const dpp = guParseInput(document.getElementById('kb_dppPPh21').value);
+    const tarif = parseFloat(document.getElementById('kb_tarifPPh21').value);
+    if (dpp <= 0) { alert('Masukkan nilai DPP yang valid!'); return; }
+    const pajak = dpp * tarif / 100;
+    const nett = dpp - pajak;
+    kbShowResult('kb_resultPPh21', [
+        ['DPP / Bruto', guFormatRupiah(dpp)],
+        ['Tarif PPh 21', tarif + '%'],
+        ['PPh 21 Dipotong', guFormatRupiah(pajak)],
+        ['Nett Diterima', guFormatRupiah(nett)],
+    ], 'var(--cyan)');
+}
+
+function kbHitungPPh23() {
+    const dpp = guParseInput(document.getElementById('kb_dppPPh23').value);
+    const jenis = document.getElementById('kb_jenisPPh23').value;
+    const tarif = jenis === 'custom' ? parseFloat(document.getElementById('kb_customTarifPPh23').value)||0 : 2;
+    if (dpp <= 0) { alert('Masukkan nilai DPP yang valid!'); return; }
+    const pajak = dpp * tarif / 100;
+    const nett = dpp - pajak;
+    kbShowResult('kb_resultPPh23', [
+        ['DPP / Bruto', guFormatRupiah(dpp)],
+        ['Tarif PPh 23', tarif + '%'],
+        ['PPh 23 Dipotong', guFormatRupiah(pajak)],
+        ['Nett Diterima', guFormatRupiah(nett)],
+    ], 'var(--pink)');
+}
+
+function kbHitungPPh4() {
+    const dpp = guParseInput(document.getElementById('kb_dppPPh4').value);
+    const jenis = document.getElementById('kb_jenisPPh4').value;
+    const tarif = jenis === 'custom' ? parseFloat(document.getElementById('kb_customTarifPPh4').value)||0 : parseFloat(jenis);
+    if (dpp <= 0) { alert('Masukkan nilai DPP yang valid!'); return; }
+    const pajak = dpp * tarif / 100;
+    const nett = dpp - pajak;
+    kbShowResult('kb_resultPPh4', [
+        ['DPP / Bruto', guFormatRupiah(dpp)],
+        ['Tarif PPh 4(2)', tarif + '%'],
+        ['PPh 4(2) Dipotong', guFormatRupiah(pajak)],
+        ['Nett Diterima', guFormatRupiah(nett)],
+    ], 'var(--yellow)');
+}
+
+function kbHitungPPh22() {
+    const nilai = guParseInput(document.getElementById('kb_dppPPh22').value);
+    const jenis = document.getElementById('kb_jenisPPh22').value;
+    const tarif = jenis === 'custom' ? parseFloat(document.getElementById('kb_customTarifPPh22').value)||0 : parseFloat(jenis);
+    if (nilai <= 0) { alert('Masukkan nilai transaksi yang valid!'); return; }
+    const pajak = nilai * tarif / 100;
+    kbShowResult('kb_resultPPh22', [
+        ['Nilai Transaksi / DPP', guFormatRupiah(nilai)],
+        ['Tarif PPh 22', tarif + '%'],
+        ['PPh 22 Dipungut', guFormatRupiah(pajak)],
+    ], 'var(--purple)');
+}
+
+function kbHitungPPN() {
+    const input = guParseInput(document.getElementById('kb_dppPPN').value);
+    const tv = document.getElementById('kb_tarifPPN').value;
+    const tarif = tv === 'custom' ? parseFloat(document.getElementById('kb_customTarifPPN').value)||0 : parseFloat(tv);
+    const inputType = document.getElementById('kb_inputTypePPN').value;
+    if (input <= 0) { alert('Masukkan nilai yang valid!'); return; }
+
+    let dpp, ppn, total;
+    if (inputType === 'total') {
+        // Total sudah termasuk PPN → ekstrak DPP
+        // total = DPP + PPN = DPP + (DPP*nilaiLain*tarif/100)
+        // Untuk tarif 12%: total = DPP + DPP*(11/12)*(12/100) = DPP * (1 + 11/100) = DPP * 1.11
+        if (tarif === 12) {
+            dpp = input / 1.11;
+        } else {
+            dpp = input / (1 + tarif/100);
+        }
+        ppn = input - dpp;
+        total = input;
+    } else {
+        dpp = input;
+        const dppNilaiLain = tarif === 12 ? dpp * 11/12 : dpp;
+        ppn = dppNilaiLain * tarif / 100;
+        total = dpp + ppn;
+    }
+
+    const dppNilaiLain = tarif === 12 ? dpp * 11/12 : dpp;
+    kbShowResult('kb_resultPPN', [
+        ['DPP', guFormatRupiah(dpp)],
+        ['DPP Nilai Lain' + (tarif===12?' (11/12)':''), guFormatRupiah(dppNilaiLain)],
+        ['Tarif PPN', tarif + '%'],
+        ['PPN Terutang', guFormatRupiah(ppn)],
+        ['Total (DPP + PPN)', guFormatRupiah(total)],
+    ], 'var(--orange)');
+}
+
+function kbHitungPPh15() {
+    const bruto = guParseInput(document.getElementById('kb_dppPPh15').value);
+    const jenis = document.getElementById('kb_jenisPPh15').value;
+    const tarif = jenis === 'custom' ? parseFloat(document.getElementById('kb_customTarifPPh15').value)||0 : parseFloat(jenis);
+    if (bruto <= 0) { alert('Masukkan nilai peredaran bruto yang valid!'); return; }
+    const pajak = bruto * tarif / 100;
+    const nett = bruto - pajak;
+    document.getElementById('kb_resultPPh15').innerHTML = [
+        ['Peredaran Bruto', guFormatRupiah(bruto)],
+        ['Tarif PPh 15', tarif + '%'],
+        ['PPh 15 Dipotong', guFormatRupiah(pajak)],
+        ['Nett Diterima', guFormatRupiah(nett)],
+    ].map((r,i,arr) => `<div class="result-row" style="${i===arr.length-1?'border-top:2px solid var(--green);border-bottom:none;margin-top:4px;padding-top:12px;':''}"><span class="result-label">${r[0]}</span><span class="result-value" style="${i===arr.length-1?'color:var(--green);font-size:15px;':''}">${r[1]}</span></div>`).join('');
+    document.getElementById('kb_resultPPh15').classList.add('show');
+}
+
+// ════════════════════════════════════════════════
+//  TAB 2: GROSS UP CALCULATOR
+// ════════════════════════════════════════════════
+function guFormatRupiah(n) { return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n); }
+function guFormatInput(s) { return s.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+function guParseInput(s) { return parseFloat(s.replace(/\./g,'').replace(/,/g,'.')) || 0; }
+
+function guSetupInput(id) {
+    const el = document.getElementById(id);
+    el.addEventListener('input', e => {
+        let v = e.target.value.replace(/[^\d.,]/g,'');
+        const parts = v.replace(/\./g,'').split(',');
+        if (parts[0]) parts[0] = guFormatInput(parts[0]);
+        e.target.value = parts.length > 1 ? parts[0] + ',' + parts[1] : parts[0];
+    });
+    el.addEventListener('blur', e => { if (e.target.value) e.target.value = guFormatInput(guParseInput(e.target.value)); });
+    el.addEventListener('keypress', e => { if (e.key==='Enter') { const card = el.closest('.calc-card, .kb-calc-card'); if(card) card.querySelector('.calc-btn').click(); } });
+}
+
+['gu_nettPPh21','gu_nettPPh23','gu_nettPPh4','gu_nettPPN'].forEach(guSetupInput);
+['kb_dppPPh21','kb_dppPPh23','kb_dppPPh4','kb_dppPPh22','kb_dppPPN','kb_dppPPh15'].forEach(guSetupInput);
+
+function guUpdateTarifPPh23() {
+    const v = document.getElementById('gu_jenisPPh23').value;
+    document.getElementById('gu_customTarifPPh23Group').style.display = v==='custom' ? 'block':'none';
+}
+function guUpdateTarifPPh4() {
+    const v = document.getElementById('gu_jenisPPh4').value;
+    document.getElementById('gu_customTarifPPh4Group').style.display = v==='custom' ? 'block':'none';
+}
+function guUpdateTarifPPN() {
+    const v = document.getElementById('gu_tarifPPN').value;
+    document.getElementById('gu_customTarifPPNGroup').style.display = v==='custom' ? 'block':'none';
+}
+
+function guGrossUp(nett, tarif) {
+    const dpp = nett / (1 - tarif/100);
+    return { dpp, pajak: dpp - nett };
+}
+
+function guShowResult(id, nett, dpp, pajak, tarif) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<div class="result-row"><span class="result-label">Jumlah Nett</span><span class="result-value">${guFormatRupiah(nett)}</span></div><div class="result-row"><span class="result-label">Tarif Pajak</span><span class="result-value">${tarif}%</span></div><div class="result-row"><span class="result-label">PPh Dipotong</span><span class="result-value">${guFormatRupiah(pajak)}</span></div><div class="result-row"><span class="result-label">DPP / Gross Up</span><span class="result-value">${guFormatRupiah(dpp)}</span></div>`;
+    el.classList.add('show');
+}
+
+function guShowResultPPN(dpp, dppNilaiLain, ppn, total, tarif) {
+    const el = document.getElementById('gu_resultPPN');
+    el.innerHTML = `<div class="result-row"><span class="result-label">DPP</span><span class="result-value">${guFormatRupiah(dpp)}</span></div><div class="result-row"><span class="result-label">DPP Nilai Lain ${tarif===12?'(11/12)':''}</span><span class="result-value">${guFormatRupiah(dppNilaiLain)}</span></div><div class="result-row"><span class="result-label">PPN ${tarif}%</span><span class="result-value">${guFormatRupiah(ppn)}</span></div><div class="result-row"><span class="result-label">Total (DPP + PPN)</span><span class="result-value">${guFormatRupiah(total)}</span></div>`;
+    el.classList.add('show');
+}
+
+function guHitungPPh21() {
+    const nett = guParseInput(document.getElementById('gu_nettPPh21').value);
+    const tarif = parseFloat(document.getElementById('gu_tarifPPh21').value);
+    if (nett <= 0) { alert('Masukkan jumlah nett yang valid!'); return; }
+    const { dpp, pajak } = guGrossUp(nett, tarif);
+    guShowResult('gu_resultPPh21', nett, dpp, pajak, tarif);
+}
+
+function guHitungPPh23() {
+    const nett = guParseInput(document.getElementById('gu_nettPPh23').value);
+    const jenis = document.getElementById('gu_jenisPPh23').value;
+    const tarif = jenis==='custom' ? parseFloat(document.getElementById('gu_customTarifPPh23').value)||0 : 2;
+    if (nett <= 0) { alert('Masukkan jumlah nett yang valid!'); return; }
+    const { dpp, pajak } = guGrossUp(nett, tarif);
+    guShowResult('gu_resultPPh23', nett, dpp, pajak, tarif);
+}
+
+function guHitungPPh4() {
+    const nett = guParseInput(document.getElementById('gu_nettPPh4').value);
+    const jenis = document.getElementById('gu_jenisPPh4').value;
+    const tarif = jenis==='custom' ? parseFloat(document.getElementById('gu_customTarifPPh4').value)||0 : parseFloat(jenis);
+    if (nett <= 0) { alert('Masukkan jumlah nett yang valid!'); return; }
+    const { dpp, pajak } = guGrossUp(nett, tarif);
+    guShowResult('gu_resultPPh4', nett, dpp, pajak, tarif);
+}
+
+function guHitungPPN() {
+    const dpp = guParseInput(document.getElementById('gu_nettPPN').value);
+    const tv = document.getElementById('gu_tarifPPN').value;
+    const tarif = tv==='custom' ? parseFloat(document.getElementById('gu_customTarifPPN').value)||0 : parseFloat(tv);
+    if (dpp <= 0) { alert('Masukkan jumlah DPP yang valid!'); return; }
+    const dppNilaiLain = tarif===12 ? dpp*11/12 : dpp;
+    const ppn = dppNilaiLain * tarif/100;
+    guShowResultPPN(dpp, dppNilaiLain, ppn, dpp+ppn, tarif);
+}
+
+// ════════════════════════════════════════════════
+//  SHARED PDF UTILS
+// ════════════════════════════════════════════════
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+function pdfReadAsArrayBuffer(file) {
+    return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = e => res(e.target.result);
+        r.onerror = rej;
+        r.readAsArrayBuffer(file);
+    });
+}
+
+// ── Helper: parse Indonesian number string → JS number ──
+// "146.234" → 146234 | "2.925" → 2925 | "2,5" → 2.5 | "2" → 2
+function parseIDNum(str) {
+    if (str === null || str === undefined || str === '') return '';
+    const s = String(str).trim();
+    if (!s) return '';
+    const cleaned = s.replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? '' : n;
+}
+
+// ── Helper: apply accounting format #,##0.00 to all numeric cells in worksheet ──
+function applyNumFmt(ws) {
+    if (!ws || !ws['!ref']) return;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; R++) {
+        for (let C = range.s.c; C <= range.e.c; C++) {
+            const addr = XLSX.utils.encode_cell({r: R, c: C});
+            const cell = ws[addr];
+            if (cell && cell.t === 'n') {
+                cell.z = '#,##0.00';
+            }
+        }
+    }
+}
+
+function buildFileManager(prefix, extractFn, headers) {
+    let files = [], workbook = null;
+    const ua = document.getElementById(prefix+'UploadArea');
+    const fi = document.getElementById(prefix+'FileInput');
+    const fl = document.getElementById(prefix+'FileList');
+    const fitems = document.getElementById(prefix+'FileItems');
+    const cb = document.getElementById(prefix+'ConvertBtn');
+    const clr = document.getElementById(prefix+'ClearBtn');
+    const prog = document.getElementById(prefix+'Progress');
+    const progFill = document.getElementById(prefix+'ProgressFill');
+    const progText = document.getElementById(prefix+'ProgressText');
+    const resultArea = document.getElementById(prefix+'ResultArea');
+    const previewArea = document.getElementById(prefix+'PreviewArea');
+    const errBox = document.getElementById(prefix+'ErrorBox');
+
+    if (ua) {
+        ua.addEventListener('click', () => fi.click());
+        ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragover'); });
+        ua.addEventListener('dragleave', () => ua.classList.remove('dragover'));
+        ua.addEventListener('drop', e => { e.preventDefault(); ua.classList.remove('dragover'); addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf')); });
+        fi.addEventListener('change', e => addFiles([...e.target.files].filter(f=>f.type==='application/pdf')));
+    }
+
+    if (clr) clr.addEventListener('click', () => { files=[]; updateList(); });
+
+    function addFiles(newFiles) {
+        newFiles.forEach(f => { if (!files.some(x=>x.name===f.name&&x.size===f.size)) files.push(f); });
+        updateList();
+    }
+
+    window[prefix+'RemoveFile'] = function(i) { files.splice(i,1); updateList(); };
+
+    function updateList() {
+        if (!files.length) { fl.style.display='none'; cb.style.display='none'; return; }
+        fl.style.display = 'block'; cb.style.display = 'inline-flex';
+        fitems.innerHTML = files.map((f,i) => `<div class="file-item"><div class="file-item-info"><div class="file-item-name">📄 ${f.name}</div><div class="file-item-size">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="file-remove-btn" onclick="${prefix}RemoveFile(${i})">✕</button></div>`).join('');
+        errBox.style.display='none';
+    }
+
+    window[prefix+'Convert'] = async function() {
+        if (!files.length) return;
+        try {
+            prog.style.display='block'; resultArea.style.display='none'; errBox.style.display='none';
+            cb.style.display='none';
+            let wb = XLSX.utils.book_new(), allData = [];
+            const taxMode = document.getElementById(prefix+'_taxDocMode').checked;
+            const merge = document.getElementById(prefix+'_mergePages').checked;
+            const separate = document.getElementById(prefix+'_separateFiles').checked;
+            const detect = document.getElementById(prefix+'_detectTables').checked;
+            const smart = document.getElementById(prefix+'_smartCols').checked;
+
+            if (taxMode) allData.push(headers);
+
+            for (let idx=0; idx<files.length; idx++) {
+                progFill.style.width = (idx/files.length*90)+'%';
+                progText.textContent = `Memproses ${idx+1}/${files.length}: ${files[idx].name}`;
+                const ab = await pdfReadAsArrayBuffer(files[idx]);
+                const pdf = await pdfjsLib.getDocument({data: new Uint8Array(ab)}).promise;
+                let fileData = [];
+                for (let pg=1; pg<=pdf.numPages; pg++) {
+                    const page = await pdf.getPage(pg);
+                    const tc = await page.getTextContent();
+                    const pd = pdfExtractPage(tc, detect, true, taxMode, smart, extractFn);
+                    if (pd.length) fileData = fileData.concat(pd);
+                }
+                if (separate && fileData.length) {
+                    let sd = taxMode ? [headers, ...fileData] : fileData;
+                    const wsS = XLSX.utils.aoa_to_sheet(sd);
+                    applyNumFmt(wsS);
+                    XLSX.utils.book_append_sheet(wb, wsS, files[idx].name.replace('.pdf','').substring(0,31));
+                } else if (merge) allData = allData.concat(fileData);
+            }
+            progFill.style.width='100%'; progText.textContent='Selesai!';
+            if (merge && !separate && allData.length) { const wsM = XLSX.utils.aoa_to_sheet(allData); applyNumFmt(wsM); XLSX.utils.book_append_sheet(wb, wsM, 'Semua Data'); }
+            workbook = wb;
+            window[prefix+'Workbook'] = wb;
+            prog.style.display='none'; cb.style.display='inline-flex'; resultArea.style.display='block';
+            renderPreview(previewArea, allData.slice(0,15));
+        } catch(e) {
+            prog.style.display='none'; cb.style.display='inline-flex';
+            errBox.style.display='block'; errBox.textContent='❌ Error: ' + e.message;
+        }
+    };
+
+    window[prefix+'Download'] = function() {
+        const wb = window[prefix+'Workbook'];
+        if (wb) XLSX.writeFile(wb, `${prefix}_export_${Date.now()}.xlsx`);
+    };
+}
+
+function pdfExtractPage(tc, detect, preserve, taxMode, smart, extractFn) {
+    if (taxMode && detect) {
+        const r = extractFn(tc.items);
+        if (r.length) return r;
+    }
+    const items = tc.items;
+    if (!detect) return items.filter(i=>i.str.trim()).map(i=>[i.str.trim()]);
+    const lines = {};
+    items.forEach(item => {
+        const y = smart ? Math.round(item.transform[5]/2)*2 : Math.round(item.transform[5]);
+        if (!lines[y]) lines[y]=[];
+        lines[y].push({text:item.str.trim(), x:item.transform[4], width:item.width||0});
+    });
+    const data = [];
+    Object.keys(lines).map(Number).sort((a,b)=>b-a).forEach(y => {
+        lines[y].sort((a,b)=>a.x-b.x);
+        if (!smart) { const r = lines[y].filter(i=>i.text).map(i=>i.text); if(r.length) data.push(r); return; }
+        const row=[]; let cx=-1;
+        lines[y].forEach(item => {
+            if (!item.text) return;
+            if (item.x-cx>30 || cx===-1) { row.push(item.text); cx=item.x+(item.width||0); }
+            else if (row.length) row[row.length-1]+=' '+item.text;
+        });
+        if (row.length) data.push(row);
+    });
+    return data;
+}
+
+function renderPreview(container, data) {
+    if (!data || !data.length) { container.innerHTML='<p style="color:var(--text-dim)">⚠️ Tidak ada data</p>'; return; }
+    let html = '<div class="preview-table-wrap"><table class="preview-table">';
+    data.forEach((row,i) => {
+        html += '<tr>';
+        (Array.isArray(row)?row:[row]).forEach(cell => {
+            const s = String(cell||'');
+            const tag = i===0 ? 'th':'td';
+            html += `<${tag} title="${s.replace(/"/g,"'")}">${s.substring(0,45)}${s.length>45?'…':''}</${tag}>`;
+        });
+        html += '</tr>';
+    });
+    html += '</table></div>';
+    container.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════
+//  TAB 3: PDF PPh21
+// ════════════════════════════════════════════════
+const pph21Headers = ['NOMOR','MASA PAJAK','NIK/NPWP','NAMA','KODE OBJEK PAJAK','OBJEK PAJAK','PENGHASILAN BRUTO','DPP (%)','TARIF (%)','PPh DIPOTONG','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN'];
+
+function extractPPh21Data(items) {
+    const textItems = items.map(i=>({text:i.str.trim(), x:Math.round(i.transform[4]), y:Math.round(i.transform[5])})).filter(i=>i.text);
+    textItems.sort((a,b)=>b.y-a.y||a.x-b.x);
+    const allText = textItems.map(i=>i.text).join(' ');
+    const d = {};
+
+    for (const item of textItems) { if (/^[0-9]{6,8}[A-Z]{1,2}$/.test(item.text)) { d.nomor=item.text; break; } }
+    if (!d.nomor) for (const item of textItems) { if (/^[A-Z0-9]{8,9}$/.test(item.text)) { d.nomor=item.text; break; } }
+
+    const masaM = allText.match(/(\d{2}-\d{4})/);
+    if (masaM) d.masaPajak = masaM[1];
+
+    const kodeM = allText.match(/(\d{2}-\d{3}-\d{2})(?=\s+[A-Za-z])/);
+    if (kodeM) d.kodeObjekPajak = kodeM[1];
+
+    for (const pat of [/(\d{2}-\d{3}-\d{2})\s+(.*?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d+\s+\d)/i, /B\.4\s+(.*?)(?=\s+B\.5)/i]) {
+        const m = allText.match(pat);
+        if (m && m[2||1] && (m[2||1]).length>=15) { d.objekPajak=(m[2]||m[1]).trim().replace(/\s+/g,' '); break; }
+    }
+
+    const finPats = [
+        /(\d{1,3}(?:\.\d{3})*)\s+(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:\.\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/,
+        /B\.4[^0-9]*(\d{1,3}(?:\.\d{3})*)[^0-9]*B\.5[^0-9]*(\d{1,3})[^0-9]*B\.6[^0-9]*(\d{1,2}(?:\.\d+)?)[^0-9]*B\.7[^0-9]*(\d{1,3}(?:\.\d{3})*)/i,
+        /(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:\.\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/
+    ];
+    for (const p of finPats) {
+        const m = allText.match(p);
+        if (m) {
+            if (m.length===5) { d.penghasilanBruto=m[1]; d.dpp=m[2]; d.tarif=m[3]; d.pajakPenghasilan=m[4]; }
+            else if (m.length===4) { d.dpp=m[1]; d.tarif=m[2]; d.pajakPenghasilan=m[3]; }
+            break;
+        }
+    }
+
+    for (const p of [/Jenis\s+Dokumen\s*:\s*([^\n]+)/i]) { const m=allText.match(p); if(m) { d.jenisDokumen=m[1].replace(/\s*Tanggal.*/i,'').trim(); break; } }
+    for (const p of [/Tanggal\s*:\s*(\d{1,2}\s+\w+\s+\d{4})/i, /(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i]) { const m=allText.match(p); if(m) { d.tanggal=m[1].trim(); break; } }
+    for (const p of [/Nomor\s+Dokumen\s*:\s*(CLM[A-Z0-9]+)/i, /Nomor\s+Dokumen\s*:\s*([A-Z0-9\.\-\/]+)/i]) { const m=allText.match(p); if(m) { d.nomorDokumen=m[1].trim().replace(/\s*NPWP.*$/i,'').replace(/\s*NIK.*$/i,'').trim(); break; } }
+    for (const p of [/A\.1\s+(?:NIK|NPWP)[^:]*:\s*(\d{15,16})/i, /A\.1[^:]*:\s*(\d{15,16})/i]) { const m=allText.match(p); if(m&&(m[1].length===15||m[1].length===16)) { d.nikNpwpPenerima=m[1]; break; } }
+    for (const p of [/A\.2\s+Nama\s*:\s*([A-Z][A-Z\s]+?)(?=A\.3|NITKU|$)/i]) { const m=allText.match(p); if(m) { d.namaPenerima=m[1].trim(); break; } }
+    for (const p of [/C\.1\s+NPWP\s*\/\s*NIK\s*:\s*(\d{16})/i, /C\.[^0-9]*(\d{16})/i]) { const m=allText.match(p); if(m&&m[1].length===16) { d.npwpNik=m[1]; break; } }
+    for (const p of [/C\.3\s+NAMA\s+PEMOTONG[^:]*:\s*([A-Z][A-Z\s,\.]+?)(?=C\.4|TANGGAL|$)/i]) { const m=allText.match(p); if(m) { d.namaPemotong=m[1].trim().replace(/\s+PPh$/i,''); break; } }
+    for (const p of [/C\.4\s+TANGGAL\s*:\s*(\d{1,2}\s+\w+\s+\d{4})/i]) { const m=allText.match(p); if(m) { d.tanggalPemotongan=m[1].trim(); break; } }
+    for (const p of [/\b(NORMAL|DIBATALKAN|PEMBETULAN)\b/i]) { const m=allText.match(p); if(m) { d.statusBukti=m[1]; break; } }
+
+    const row = [d.nomor||'',d.masaPajak||'',d.nikNpwpPenerima||'',d.namaPenerima||'',d.kodeObjekPajak||'',d.objekPajak||'',parseIDNum(d.penghasilanBruto),parseIDNum(d.dpp),parseIDNum(d.tarif),parseIDNum(d.pajakPenghasilan),d.jenisDokumen||'',d.tanggal||'',d.nomorDokumen||'',d.npwpNik||'',d.namaPemotong||'',d.tanggalPemotongan||'',d.statusBukti||''];
+    return row.some(c=>(c!==null&&c!==''&&c!==undefined&&String(c).length>0)) ? [row] : [];
+}
+
+buildFileManager('pph21', extractPPh21Data, pph21Headers);
+
+// ════════════════════════════════════════════════
+//  TAB 4: PDF BPPU
+// ════════════════════════════════════════════════
+const bppuHeaders = ['NOMOR','MASA PAJAK','NPWP/NIK YANG DIPOTONG','NAMA YANG DIPOTONG','KODE OBJEK PAJAK','OBJEK PAJAK','DPP','TARIF','PAJAK PENGHASILAN','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK PEMOTONG','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN'];
+
+function extractBPPUData(items) {
+    const textItems = items.map(i=>({text:i.str.trim(), x:Math.round(i.transform[4]), y:Math.round(i.transform[5])})).filter(i=>i.text);
+    textItems.sort((a,b)=>b.y-a.y||a.x-b.x);
+    const allText = textItems.map(i=>i.text).join(' ');
+    const d = {};
+
+    // ── Nomor BPPU — multi-format support (lama + Coretax) ──
+    const SKIP_NOMOR = /^(NORMAL|DIBATALKAN|PEMBETULAN|NPWP|NIK|NAMA|MASA|PAJAK|BUKTI|NOMOR|JENIS|TANGGAL|STATUS|TARIF|DPP|PPH|PEMOTONGAN|PEMUNGUTAN|UNIFIKASI|BERFORMAT|STANDAR|FINAL|TIDAK|INDONESIA|KEMENTERIAN|KEUANGAN|DIREKTORAT|JENDERAL|BPPU|PPH|DAN|ATAU|SIFAT|IDENTITAS)$/i;
+
+    // 1. Format Coretax baru: campuran digit+huruf, diawali digit, 7-12 karakter (contoh: 2600I9CGO)
+    for (const item of textItems) {
+        if (/^[0-9]{2,5}[A-Z0-9]{4,8}$/.test(item.text) && /[A-Z]/.test(item.text) && /[0-9]/.test(item.text) && !SKIP_NOMOR.test(item.text)) {
+            d.nomor = item.text; break;
+        }
+    }
+    // 2. Format lama: 6-8 digit diakhiri 1-2 huruf (contoh: 12345678AB)
+    if (!d.nomor) {
+        for (const item of textItems) { if (/^[0-9]{6,8}[A-Z]{1,2}$/.test(item.text)) { d.nomor=item.text; break; } }
+    }
+    // 3. Cari tepat setelah kolom NOMOR di tabel (posisi X dekat, Y lebih rendah)
+    if (!d.nomor) {
+        const nomorHeader = textItems.find(i => /^NOMOR$/.test(i.text));
+        if (nomorHeader) {
+            const candidates = textItems.filter(i =>
+                i.y < nomorHeader.y &&
+                Math.abs(i.x - nomorHeader.x) < 80 &&
+                /^[A-Z0-9]{6,15}$/.test(i.text) &&
+                !SKIP_NOMOR.test(i.text)
+            );
+            if (candidates.length) d.nomor = candidates[0].text;
+        }
+    }
+    // 4. Cari label "Nomor :" di teks
+    if (!d.nomor) {
+        const nomorLabelM = allText.match(/(?:^|\s)Nomor\s*:\s*([A-Z0-9\-\/\.]{6,25})(?=\s|$)/im);
+        if (nomorLabelM && !SKIP_NOMOR.test(nomorLabelM[1])) d.nomor = nomorLabelM[1].trim();
+    }
+    // 5. Fallback: token alfanumerik bersih 6–15 karakter di 50 item pertama
+    if (!d.nomor) {
+        for (const item of textItems.slice(0, 50)) {
+            if (/^[A-Z0-9]{6,15}$/.test(item.text) && !SKIP_NOMOR.test(item.text)) { d.nomor=item.text; break; }
+        }
+    }
+
+    const masaM = allText.match(/(\d{2}-\d{4})/);
+    if (masaM) d.masaPajak = masaM[1];
+
+    const kodeM = allText.match(/(\d{2}-\d{3}-\d{2})(?=\s+[A-Za-z])/);
+    if (kodeM) d.kodeObjekPajak = kodeM[1];
+
+    const fallbackM = allText.match(/\d{2}-\d{3}-\d{2}\s+([A-Za-z][\s\S]+?)(?=\s+\d{1,3}(?:\.\d{3})+)/i);
+    if (fallbackM && fallbackM[1]?.length >= 10) d.objekPajak = fallbackM[1].trim().replace(/\s+/g,' ');
+
+    const finPats = [
+        /(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:\.\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/,
+        /B\.5[^0-9]*(\d{1,3}(?:\.\d{3})*)[^0-9]*B\.6[^0-9]*(\d{1,2}(?:\.\d+)?)[^0-9]*B\.7[^0-9]*(\d{1,3}(?:\.\d{3})*)/i
+    ];
+    for (const p of finPats) {
+        const m = allText.match(p);
+        if (m) { d.dpp=m[1]; d.tarif=m[2]; d.pajakPenghasilan=m[3]; break; }
+    }
+
+    for (const p of [/Jenis\s+Dokumen\s*:\s*([^\n]+)/i]) { const m=allText.match(p); if(m) { d.jenisDokumen=m[1].trim(); break; } }
+    for (const p of [/(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i]) { const m=allText.match(p); if(m) { d.tanggal=m[1].trim(); break; } }
+    for (const p of [/B\.9\s+Nomor\s+Dokumen\s*:\s*([^\nB]+)/i, /Nomor\s+Dokumen\s*:\s*([^\nB]+)/i]) { const m=allText.match(p); if(m) { d.nomorDokumen=m[1].replace(/^NO\.?\s*/i,'').replace(/B$/,'').trim(); break; } }
+    for (const p of [/C\.1\s+NPWP\s*\/\s*NIK\s*:\s*(\d{16})/i, /C\.[^0-9]*(\d{16})/i]) { const m=allText.match(p); if(m&&m[1].length===16) { d.npwpNik=m[1]; break; } }
+    for (const p of [/C\.3\s+NAMA\s+PEMOTONG[^:]*:\s*([A-Z][A-Z\s,\.]+?)(?=C\.4|TANGGAL|$)/i]) { const m=allText.match(p); if(m) { d.namaPemotong=m[1].trim().replace(/\s+PPh$/i,''); break; } }
+    for (const p of [/C\.4\s+TANGGAL\s*:\s*(\d{1,2}\s+\w+\s+\d{4})/i]) { const m=allText.match(p); if(m) { d.tanggalPemotongan=m[1].trim(); break; } }
+    for (const p of [/\b(NORMAL|DIBATALKAN|PEMBETULAN)\b/i]) { const m=allText.match(p); if(m) { d.statusBukti=m[1]; break; } }
+
+    // A.1 NPWP/NIK dipotong
+    for (const p of [/A\.1\s+NPWP\s*\/\s*NIK\s*:\s*(\d{15,16})/i, /A\.1[^0-9]*(\d{15,16})/i]) { const m=allText.match(p); if(m&&(m[1].length===15||m[1].length===16)) { d.npwpDipotong=m[1]; break; } }
+    if (!d.npwpDipotong) { const all=[...allText.matchAll(/\b(\d{15,16})\b/g)]; if(all.length) d.npwpDipotong=all[0][1]; }
+    // A.2 Nama dipotong
+    for (const p of [/A\.2\s+NAMA\s*:\s*([A-Z][A-Z\s,\.]+?)(?=\s*A\.3|\s*NOMOR\s+IDENTITAS|\s*NITKU|$)/i]) { const m=allText.match(p); if(m) { d.namaDipotong=m[1].trim().replace(/\s+/g,' '); break; } }
+
+    const row = [d.nomor||'',d.masaPajak||'',d.npwpDipotong||'',d.namaDipotong||'',d.kodeObjekPajak||'',d.objekPajak||'',parseIDNum(d.dpp),parseIDNum(d.tarif),parseIDNum(d.pajakPenghasilan),d.jenisDokumen||'',d.tanggal||'',d.nomorDokumen||'',d.npwpNik||'',d.namaPemotong||'',d.tanggalPemotongan||'',d.statusBukti||''];
+    return row.some(c=>(c!==null&&c!==''&&c!==undefined&&String(c).length>0)) ? [row] : [];
+}
+
+buildFileManager('bppu', extractBPPUData, bppuHeaders);
+
+// ════════════════════════════════════════════════
+//  TAB 5: FAKTUR PAJAK CORETAX
+// ════════════════════════════════════════════════
+let fpUploadedFiles = [], fpExtractedData = [];
+
+(function() {
+    const ub = document.getElementById('fpUploadBox');
+    const fi = document.getElementById('fpFileInput');
+    ub.addEventListener('click', () => fi.click());
+    ub.addEventListener('dragover', e => { e.preventDefault(); ub.classList.add('dragover'); });
+    ub.addEventListener('dragleave', () => ub.classList.remove('dragover'));
+    ub.addEventListener('drop', e => { e.preventDefault(); ub.classList.remove('dragover'); fpAddFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf')); });
+    fi.addEventListener('change', e => fpAddFiles([...e.target.files]));
+})();
+
+function fpAddFiles(files) {
+    files.forEach(f => { if (!fpUploadedFiles.some(x=>x.name===f.name&&x.size===f.size)) fpUploadedFiles.push(f); });
+    fpUpdateFileInfo();
+}
+
+function fpUpdateFileInfo() {
+    const status = document.getElementById('fpStatus');
+    const processBtn = document.getElementById('fpProcessBtn');
+    const fi = document.getElementById('fpFileInfo');
+    if (!fpUploadedFiles.length) { status.textContent='Belum ada file yang dipilih'; processBtn.disabled=true; fi.innerHTML=''; return; }
+    processBtn.disabled=false;
+    fi.innerHTML = fpUploadedFiles.map((f,i) => `<div class="file-item"><div class="file-item-info"><div class="file-item-name">📄 ${f.name}</div><div class="file-item-size">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="file-remove-btn" onclick="fpRemove(${i})">✕</button></div>`).join('');
+    status.textContent = `${fpUploadedFiles.length} file siap diproses`;
+}
+
+function fpRemove(i) { fpUploadedFiles.splice(i,1); fpUpdateFileInfo(); }
+
+async function fpProcess() {
+    const statusEl = document.getElementById('fpStatus');
+    statusEl.innerHTML = '<span class="loading" style="display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle;"></span>Memproses...';
+    fpExtractedData = [];
+
+    const results = [];
+    try {
+        for (let idx=0; idx<fpUploadedFiles.length; idx++) {
+            const file = fpUploadedFiles[idx];
+            statusEl.textContent = `Memproses ${idx+1}/${fpUploadedFiles.length}: ${file.name}`;
+            const result = await fpProcessPDF(file);
+            results.push(result);
+        }
+
+        const successCount = results.filter(r=>r.success).length;
+        const failedCount  = results.filter(r=>!r.success).length;
+        const totalItems   = fpExtractedData.length;
+
+        let msg = `✅ Berhasil: ${successCount} file (${totalItems} baris data)`;
+        if (failedCount > 0) msg += ` | ❌ Gagal: ${failedCount} file`;
+
+        let detail = '<div style="margin-top:8px;font-size:12px;">';
+        results.forEach(r => {
+            detail += r.success
+                ? `<div style="color:var(--green);">✅ ${r.file}: ${r.items} item</div>`
+                : `<div style="color:#f87171;">❌ ${r.file}: Gagal ekstrak${r.error?' ('+r.error+')':''}</div>`;
+        });
+        detail += '</div>';
+        statusEl.innerHTML = msg + detail;
+
+        if (totalItems > 0) {
+            fpDisplayResults();
+            document.getElementById('fpResultSection').style.display='block';
+            document.getElementById('fpDownloadBtn').style.display='inline-flex';
+            document.getElementById('fpClearBtn').style.display='inline-flex';
+        } else {
+            statusEl.innerHTML = '❌ Tidak ada data berhasil diekstrak. Periksa format PDF.';
+        }
+    } catch(e) {
+        statusEl.textContent = '❌ Error: '+e.message;
+    }
+}
+
+async function fpProcessPDF(file) {
+    try {
+        const ab = await pdfReadAsArrayBuffer(file);
+        const pdf = await pdfjsLib.getDocument({data: new Uint8Array(ab)}).promise;
+
+        let fullText = '';
+        for (let pg = 1; pg <= pdf.numPages; pg++) {
+            const page = await pdf.getPage(pg);
+            const tc   = await page.getTextContent();
+            let lastY  = null;
+            const pageLines = [];
+            let curLine = [];
+            tc.items.forEach(item => {
+                const y = item.transform[5];
+                if (lastY !== null && Math.abs(y - lastY) > 2) {
+                    if (curLine.length) { pageLines.push(curLine.join(' ')); curLine = []; }
+                }
+                curLine.push(item.str);
+                lastY = y;
+            });
+            if (curLine.length) pageLines.push(curLine.join(' '));
+            fullText += pageLines.join('\n') + '\n\n<<<PAGE_BREAK>>>\n\n';
+        }
+
+        const chunks = fpSplitInvoices(fullText);
+        let totalExtracted = 0;
+        chunks.forEach((chunk, idx) => {
+            const before = fpExtractedData.length;
+            fpExtractFromText(chunk, `${file.name} (Invoice ${idx+1})`);
+            totalExtracted += fpExtractedData.length - before;
+        });
+
+        if (totalExtracted === 0) return { file: file.name, success: false, items: 0 };
+        return { file: file.name, success: true, items: totalExtracted };
+    } catch(e) {
+        return { file: file.name, success: false, items: 0, error: e.message };
+    }
+}
+
+function fpSplitInvoices(fullText) {
+    const chunks = [];
+    // Split by "X dari Y" end-of-invoice markers
+    const endMarkerRegex = /\d+\s+dari\s+\d+/gi;
+    const endPositions = [];
+    let match;
+    while ((match = endMarkerRegex.exec(fullText)) !== null) {
+        endPositions.push(match.index + match[0].length);
+    }
+
+    if (endPositions.length === 0) {
+        // Fallback: split by FAKTUR PAJAK headers
+        const markerPositions = [];
+        const markerRe = /FAKTUR\s+PAJAK/gi;
+        while ((match = markerRe.exec(fullText)) !== null) markerPositions.push(match.index);
+        if (markerPositions.length === 0) return [fullText];
+        for (let i = 0; i < markerPositions.length; i++) {
+            const chunk = fullText.substring(markerPositions[i], i < markerPositions.length-1 ? markerPositions[i+1] : fullText.length);
+            if (chunk.trim().length > 100) chunks.push(chunk);
+        }
+    } else {
+        let lastEnd = 0;
+        for (const endPos of endPositions) {
+            const chunk = fullText.substring(lastEnd, endPos);
+            if (chunk.includes('Faktur Pajak') || chunk.includes('FAKTUR PAJAK')) chunks.push(chunk.trim());
+            lastEnd = endPos;
+        }
+        const remaining = fullText.substring(lastEnd);
+        if (remaining.includes('Faktur Pajak') || remaining.includes('FAKTUR PAJAK')) chunks.push(remaining.trim());
+    }
+    return chunks.length > 0 ? chunks : [fullText];
+}
+
+function fpExtractFromText(text, filename) {
+    text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+
+    // ── Nomor Faktur ──
+    // Format Coretax: 16 digit angka (bisa juga diawali 0)
+    let nomorFaktur = '';
+    const nomorPatterns = [
+        /Kode dan Nomor Seri Faktur Pajak[:\s]+(\d+)/i,
+        /Nomor Seri Faktur Pajak[:\s]+(\d+)/i,
+        /Faktur Pajak[:\s]+(\d{16,})/i,
+        /#(\d{15,})/,
+        /\b(\d{16})\b/
+    ];
+    for (const pat of nomorPatterns) {
+        const m = text.match(pat);
+        if (m) { nomorFaktur = m[1]; break; }
+    }
+
+    // ── Penjual ──
+    let namaPenjual = '';
+    const penjualPatterns = [
+        /Pengusaha Kena Pajak[:\s]+Nama[:\s]+([^\n]+)/i,
+        /PKP[:\s]+Nama[:\s]+([^\n]+)/i,
+        /Nama[:\s]*:([^\n]+?)(?=Alamat|NPWP)/i
+    ];
+    for (const pat of penjualPatterns) {
+        const m = text.match(pat);
+        if (m) {
+            namaPenjual = m[1].trim().split(/\s+(?:Alamat|NPWP|#)/i)[0].trim();
+            if (namaPenjual.length > 3) break;
+        }
+    }
+
+    const npwpPenjualM = text.match(/Pengusaha\s+Kena\s+Pajak[\s\S]*?NPWP\s*:\s*([\d.]+)/i);
+    const npwpPenjual  = npwpPenjualM ? npwpPenjualM[1].replace(/\D/g,'') : '';
+
+    // ── Pembeli ──
+    let namaPembeli = '';
+    const pembeliPatterns = [
+        /Pembeli Barang Kena Pajak[\/\s]*Penerima Jasa Kena Pajak[:\s]+Nama[:\s]+([^\n]+)/i,
+        /Pembeli.*?Nama[:\s]+([^\n]+)/i,
+        /Penerima.*?Nama[:\s]+([^\n]+)/i
+    ];
+    for (const pat of pembeliPatterns) {
+        const m = text.match(pat);
+        if (m) {
+            namaPembeli = m[1].trim().split(/\s+(?:Alamat|NPWP|#)/i)[0].trim();
+            if (namaPembeli.length > 3) break;
+        }
+    }
+
+    let npwpPembeli = '';
+    const nikM = text.match(/NIK\s*:\s*(\d{16})/i);
+    if (nikM) {
+        npwpPembeli = nikM[1];
+    } else {
+        const npwpM = text.match(/Pembeli\s+Barang\s+Kena\s+Pajak\/Penerima\s+Jasa\s+Kena\s+Pajak[\s\S]*?NPWP\s*:\s*([\d.]+)/i);
+        if (npwpM) {
+            const cleaned = npwpM[1].replace(/\D/g,'');
+            if (!/^0+$/.test(cleaned)) npwpPembeli = cleaned;
+        }
+    }
+
+    // ── Referensi ──
+    let referensi = '';
+    const refPatterns = [
+        /\(Referensi:\s*([^\)]+)\)/i,
+        /\(Referensi\s+([^\)]+)\)/i,
+        /Referensi:\s*([^\n\)]+)/i,
+        /Referensi\s+([A-Z0-9\-]+)/i
+    ];
+    for (const pat of refPatterns) {
+        const m = text.match(pat);
+        if (m) { referensi = m[1].trim().replace(/[\)\s]+$/,''); if (referensi.length > 0) break; }
+    }
+
+    // ── Items: SUPER AGGRESSIVE — scan Rp price × qty patterns ──
+    const itemsFound = [];
+    const compactPat = /Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)(?:\s*(?:Bulan|Lainnya|Hari|Unit|Pcs|Piece))?/gi;
+    const priceMatches = [];
+    let m;
+    while ((m = compactPat.exec(text)) !== null) {
+        priceMatches.push({ index: m.index, harga: m[1], qty: m[2] });
+    }
+
+    for (const pm of priceMatches) {
+        const beforeText = text.substring(Math.max(0, pm.index - 300), pm.index);
+        const afterText  = text.substring(pm.index, Math.min(text.length, pm.index + 300));
+
+        let namaBarang = '';
+        for (const np of [/(\d{1,3})\s+(\d{6})\s+([^\n]+?)$/, /(\d{1,3})\s+([^\n]+?)$/]) {
+            const nm = beforeText.match(np);
+            if (nm) {
+                namaBarang = nm[nm.length-1].trim().replace(/^\d{6}\s+/,'').trim();
+                if (namaBarang.length > 2) break;
+            }
+        }
+
+        const discM    = afterText.match(/Potongan Harga\s*=\s*Rp\s*([\d.,]+)/i);
+        const discount = discM ? parseFloat(discM[1].replace(/\./g,'').replace(',','.')) : 0;
+
+        if (namaBarang) {
+            namaBarang = namaBarang
+                .replace(/\d{6,}/g,'').replace(/\s*Rp\s*[\d.,]+.*$/i,'')
+                .replace(/Potongan.*/i,'').replace(/PPnBM.*/i,'')
+                .replace(/\s+/g,' ').trim();
+
+            if (namaBarang.length > 2) {
+                const harga = parseFloat(pm.harga.replace(/\./g,'').replace(',','.'));
+                const qty   = parseFloat(pm.qty.replace(/\./g,'').replace(',','.'));
+                if (!isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
+                    const total = (harga * qty) - discount;
+                    const ppn   = total * 0.11;
+                    itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi});
+                }
+            }
+        }
+    }
+
+    // ── Fallback: line-by-line ──
+    if (itemsFound.length === 0) {
+        const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+        for (let i=0; i<lines.length; i++) {
+            const line = lines[i];
+            const itemNumM = line.match(/^(\d{1,3})\s+/);
+            if (!itemNumM || parseInt(itemNumM[1]) >= 100) continue;
+            let block = line;
+            for (let j=i+1; j<Math.min(i+10,lines.length); j++) {
+                const next = lines[j];
+                block += ' ' + next;
+                if (j>i+1 && next.match(/^\d{1,3}\s+/)) break;
+                if (next.match(/PPnBM/i)) break;
+            }
+            let namaBarang='', hargaStr='', qtyStr='', matched=false;
+            for (const pat of [
+                /^(\d+)\s+(\d{6})\s+(.+?)\s+Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)\s*(?:Piece|piece)/i,
+                /^(\d+)\s+([^R]+?)\s+Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)\s*(?:Piece|piece)/i
+            ]) {
+                const bm = block.match(pat);
+                if (bm) {
+                    namaBarang = pat.toString().includes('(\\d{6})') ? bm[3] : bm[2];
+                    hargaStr   = pat.toString().includes('(\\d{6})') ? bm[4] : bm[3];
+                    qtyStr     = pat.toString().includes('(\\d{6})') ? bm[5] : bm[4];
+                    matched=true; break;
+                }
+            }
+            const discM = block.match(/Potongan Harga\s*=\s*Rp\s*([\d.,]+)/i);
+            if (matched && discM && namaBarang) {
+                namaBarang = namaBarang.replace(/\d{6,}/g,'').replace(/\s*Rp\s*[\d.,]+.*$/i,'').replace(/Potongan.*/i,'').replace(/PPnBM.*/i,'').replace(/\s+/g,' ').trim();
+                if (namaBarang.length>2) {
+                    const harga = parseFloat(hargaStr.replace(/\./g,'').replace(',','.'));
+                    const qty   = parseFloat(qtyStr.replace(/\./g,'').replace(',','.'));
+                    const disc  = parseFloat(discM[1].replace(/\./g,'').replace(',','.'));
+                    if (!isNaN(harga)&&!isNaN(qty)&&!isNaN(disc)&&harga>0&&qty>0) {
+                        const total = harga*qty-disc;
+                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount:disc,total,ppn:total*0.11,namaPembeli,npwpPembeli,referensi});
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Fallback SINGLE ITEM ──
+    if (itemsFound.length === 0) {
+        let namaBarangFallback = '';
+        const nbM = text.match(/No\.\s*Kode\s*Barang\/\s*Jasa[\s\S]*?\d+\s+\d+\s+([\s\S]+?)\s+Rp/i);
+        if (nbM) {
+            namaBarangFallback = nbM[1]
+                .replace(/Potongan Harga.*$/i,'').replace(/Nama Barang Kena Pajak \/ Jasa Kena Pajak/i,'')
+                .replace(/PPnBM.*$/i,'').replace(/\s+/g,' ').trim();
+        }
+        const tahunM = text.match(/\b(20\d{2})\b/);
+        if (tahunM && namaBarangFallback && !namaBarangFallback.includes(tahunM[1])) {
+            namaBarangFallback += ' ' + tahunM[1];
+        }
+
+        const itemM = text.match(/Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)\s*(?:Bulan|Lainnya|Hari|Unit|Pcs|Piece)?/i);
+        const dppM  = text.match(/Dasar Pengenaan Pajak\s+([\d.,]+)/i);
+        if (itemM) {
+            const harga = parseFloat(itemM[1].replace(/\./g,'').replace(',','.'));
+            const qty   = parseFloat(itemM[2].replace(/\./g,'').replace(',','.'));
+            const total = harga * qty;
+            const dpp   = dppM ? parseFloat(dppM[1].replace(/\./g,'').replace(',','.')) : total*11/12;
+            const ppn   = dpp * 0.12;
+            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang:namaBarangFallback||'Jasa / Barang (Single Item)',harga,qty,discount:0,total,ppn,namaPembeli,npwpPembeli,referensi});
+        }
+    }
+
+    fpExtractedData.push(...itemsFound);
+}
+
+function fpDisplayResults() {
+    const tbody = document.getElementById('fpResultBody');
+    tbody.innerHTML = fpExtractedData.map(r => `<tr>
+        <td>${r.nomorFaktur}</td><td>${r.namaPenjual}</td><td>${r.npwpPenjual}</td>
+        <td>${r.namaBarang}</td><td>Rp ${r.harga.toLocaleString('id-ID')}</td>
+        <td>${r.qty}</td><td>Rp ${r.discount.toLocaleString('id-ID')}</td>
+        <td>Rp ${r.total.toLocaleString('id-ID')}</td><td>Rp ${r.ppn.toLocaleString('id-ID')}</td>
+        <td>${r.namaPembeli}</td><td>${r.npwpPembeli}</td><td>${r.referensi}</td>
+    </tr>`).join('');
+}
+
+function fpDownload() {
+    const ws_data = [['No. Faktur Pajak','Nama Penjual','NPWP Penjual','Nama Barang','Harga','Qty','Discount','Total','PPN','Nama Pembeli','NPWP Pembeli','Referensi']];
+    fpExtractedData.forEach(r => ws_data.push([r.nomorFaktur,r.namaPenjual,r.npwpPenjual,r.namaBarang,r.harga,r.qty,r.discount,r.total,r.ppn,r.namaPembeli,r.npwpPembeli,r.referensi]));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:40},{wch:15},{wch:10},{wch:15},{wch:15},{wch:15},{wch:30},{wch:20},{wch:20}];
+    applyNumFmt(ws);
+    XLSX.utils.book_append_sheet(wb, ws, 'Faktur Pajak');
+    XLSX.writeFile(wb, 'Faktur_Pajak_Export.xlsx');
+}
+
+function fpClear() {
+    fpExtractedData=[]; fpUploadedFiles=[];
+    document.getElementById('fpResultBody').innerHTML='';
+    document.getElementById('fpFileInput').value='';
+    document.getElementById('fpProcessBtn').disabled=true;
+    document.getElementById('fpDownloadBtn').style.display='none';
+    document.getElementById('fpClearBtn').style.display='none';
+    document.getElementById('fpResultSection').style.display='none';
+    document.getElementById('fpStatus').textContent='Belum ada file yang dipilih';
+    document.getElementById('fpFileInfo').innerHTML='';
+}
+
+// CSS animation for loading spinner
+const style = document.createElement('style');
+style.textContent = `@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>
