@@ -2773,9 +2773,10 @@ function extractPPh21Data(items) {
     const kodeM = allText.match(/(\d{2}-\d{3}-\d{2})(?=\s+[A-Za-z])/);
     if (kodeM) d.kodeObjekPajak = kodeM[1];
 
-    for (const pat of [/(\d{2}-\d{3}-\d{2})\s+(.*?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d+\s+\d)/i, /B\.4\s+(.*?)(?=\s+B\.5)/i]) {
+    for (const pat of [/(\d{2}-\d{3}-\d{2})\s+(.*?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d+\s+\d)/i, /(\d{2}-\d{3}-\d{2})\s+([A-Za-z][A-Za-z\s,\/]+?)(?=\s+\d{2,3}(?:\.\d{3})*\s)/i, /B\.4\s+(.*?)(?=\s+B\.5)/i]) {
         const m = allText.match(pat);
-        if (m && m[2||1] && (m[2||1]).length>=15) { d.objekPajak=(m[2]||m[1]).trim().replace(/\s+/g,' '); break; }
+        const val = m && (m[2] || m[1]);
+        if (val && val.length >= 10) { d.objekPajak = val.trim().replace(/\s+/g,' '); break; }
     }
 
     const finPats = [
@@ -2863,8 +2864,15 @@ function extractBPPUData(items) {
     const kodeM = allText.match(/(\d{2}-\d{3}-\d{2})(?=\s+[A-Za-z])/);
     if (kodeM) d.kodeObjekPajak = kodeM[1];
 
-    const fallbackM = allText.match(/\d{2}-\d{3}-\d{2}\s+([A-Za-z][\s\S]+?)(?=\s+\d{1,3}(?:\.\d{3})+)/i);
-    if (fallbackM && fallbackM[1]?.length >= 10) d.objekPajak = fallbackM[1].trim().replace(/\s+/g,' ');
+    const objekPatterns = [
+        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z\s,\/]+?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d)/i,
+        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z\s,\/]+?)(?=\s+\d{2,3}(?:\.\d{3})*\s)/i,
+        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z\s,\/]{9,}?)(?=\s+[\d])/i
+    ];
+    for (const op of objekPatterns) {
+        const fallbackM = allText.match(op);
+        if (fallbackM && fallbackM[1]?.length >= 10) { d.objekPajak = fallbackM[1].trim().replace(/\s+/g,' '); break; }
+    }
 
     const finPats = [
         /(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:\.\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/,
@@ -2875,7 +2883,7 @@ function extractBPPUData(items) {
         if (m) { d.dpp=m[1]; d.tarif=m[2]; d.pajakPenghasilan=m[3]; break; }
     }
 
-    for (const p of [/Jenis\s+Dokumen\s*:\s*([^\n]+)/i]) { const m=allText.match(p); if(m) { d.jenisDokumen=m[1].trim(); break; } }
+    for (const p of [/Jenis\s+Dokumen\s*:\s*([^\n]+)/i]) { const m=allText.match(p); if(m) { d.jenisDokumen=m[1].replace(/\s*Tanggal.*/i,'').replace(/\s*Nomor.*/i,'').replace(/\s*B\.\d.*/i,'').trim(); break; } }
     for (const p of [/(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i]) { const m=allText.match(p); if(m) { d.tanggal=m[1].trim(); break; } }
     for (const p of [/B\.9\s+Nomor\s+Dokumen\s*:\s*([^\nB]+)/i, /Nomor\s+Dokumen\s*:\s*([^\nB]+)/i]) { const m=allText.match(p); if(m) { d.nomorDokumen=m[1].replace(/^NO\.?\s*/i,'').replace(/B$/,'').trim(); break; } }
     for (const p of [/C\.1\s+NPWP\s*\/\s*NIK\s*:\s*(\d{16})/i, /C\.[^0-9]*(\d{16})/i]) { const m=allText.match(p); if(m&&m[1].length===16) { d.npwpNik=m[1]; break; } }
