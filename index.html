@@ -2599,12 +2599,19 @@ function parseIDNum(str) {
     if (str === null || str === undefined || str === '') return '';
     const s = String(str).trim();
     if (!s) return '';
+    // Format ID: titik=pemisah ribuan, koma=desimal  (contoh: 5.000.000 atau 5.000,50)
     const cleaned = s.replace(/\./g, '').replace(',', '.');
     const n = parseFloat(cleaned);
     return isNaN(n) ? '' : n;
 }
 
-// ── Helper: apply accounting format #,##0.00 to all numeric cells in worksheet ──
+// Format angka jadi accounting Indonesia (1.000.000,00) untuk preview tabel
+function fmtAcc(n) {
+    if (n === '' || n === null || n === undefined) return '';
+    return Number(n).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+// ── Helper: apply accounting format dengan koma sebagai desimal (format ID) ──
 function applyNumFmt(ws) {
     if (!ws || !ws['!ref']) return;
     const range = XLSX.utils.decode_range(ws['!ref']);
@@ -2613,7 +2620,9 @@ function applyNumFmt(ws) {
             const addr = XLSX.utils.encode_cell({r: R, c: C});
             const cell = ws[addr];
             if (cell && cell.t === 'n') {
-                cell.z = '#,##0.00';
+                // Format accounting: #.##0,00 (Indonesia) — titik ribuan, koma desimal
+                // SheetJS: gunakan z dengan format string Excel (swap . dan , sesuai locale)
+                cell.z = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)';
             }
         }
     }
@@ -2773,23 +2782,33 @@ function extractPPh21Data(items) {
     const kodeM = allText.match(/(\d{2}-\d{3}-\d{2})(?=\s+[A-Za-z])/);
     if (kodeM) d.kodeObjekPajak = kodeM[1];
 
-    for (const pat of [/(\d{2}-\d{3}-\d{2})\s+(.*?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d+\s+\d)/i, /(\d{2}-\d{3}-\d{2})\s+([A-Za-z][A-Za-z\s,\/]+?)(?=\s+\d{2,3}(?:\.\d{3})*\s)/i, /B\.4\s+(.*?)(?=\s+B\.5)/i]) {
+    // Objek Pajak PPh21: dari kolom B.3 (setelah kode objek pajak, sebelum angka)
+    // PPh21 format: B.3 = Objek Pajak (teks multiline), B.4 = Penghasilan Bruto
+    const objek21Pats = [
+        /B\.3\s+([\s\S]+?)(?=\s+B\.4)/i,
+        /(\d{2}-\d{3}-\d{2})\s+([A-Za-z][A-Za-z,\/\(\)\s]{10,}?)(?=\s+\d{1,3}(?:\.\d{3})+)/i,
+        /(\d{2}-\d{3}-\d{2})\s+([A-Za-z][A-Za-z,\/\(\)\s]{10,}?)(?=\s+\d{1,2}\s)/i
+    ];
+    for (const pat of objek21Pats) {
         const m = allText.match(pat);
         const val = m && (m[2] || m[1]);
-        if (val && val.length >= 10) { d.objekPajak = val.trim().replace(/\s+/g,' '); break; }
+        if (val && val.replace(/\d/g,'').trim().length >= 10) {
+            d.objekPajak = val.trim().replace(/\s+/g,' ');
+            break;
+        }
     }
 
-    const finPats = [
-        /(\d{1,3}(?:\.\d{3})*)\s+(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:\.\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/,
-        /B\.4[^0-9]*(\d{1,3}(?:\.\d{3})*)[^0-9]*B\.5[^0-9]*(\d{1,3})[^0-9]*B\.6[^0-9]*(\d{1,2}(?:\.\d+)?)[^0-9]*B\.7[^0-9]*(\d{1,3}(?:\.\d{3})*)/i,
-        /(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:\.\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/
-    ];
-    for (const p of finPats) {
-        const m = allText.match(p);
-        if (m) {
-            if (m.length===5) { d.penghasilanBruto=m[1]; d.dpp=m[2]; d.tarif=m[3]; d.pajakPenghasilan=m[4]; }
-            else if (m.length===4) { d.dpp=m[1]; d.tarif=m[2]; d.pajakPenghasilan=m[3]; }
-            break;
+    // Kolom PPh21: B.4=Penghasilan Bruto, B.5=DPP(%), B.6=Tarif(%), B.7=PPh Dipotong
+    const finB21 = allText.match(/B\.4[^0-9]*(\d{1,3}(?:\.\d{3})*(?:,\d+)?)[^0-9]*B\.5[^0-9]*(\d{1,3}(?:\.\d{3})*)[^0-9]*B\.6[^0-9]*(\d{1,2}(?:[,.]\d+)?)[^0-9]*B\.7[^0-9]*(\d{1,3}(?:\.\d{3})*)/i);
+    if (finB21) {
+        d.penghasilanBruto = finB21[1]; d.dpp = finB21[2]; d.tarif = finB21[3]; d.pajakPenghasilan = finB21[4];
+    } else {
+        // Fallback: 4 angka berurutan = bruto, dpp, tarif, pph
+        const fin4 = allText.match(/(\d{1,3}(?:\.\d{3})+)\s+(\d{1,3}(?:\.\d{3})*)\s+(\d{1,2}(?:[,.]\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/);
+        if (fin4) { d.penghasilanBruto=fin4[1]; d.dpp=fin4[2]; d.tarif=fin4[3]; d.pajakPenghasilan=fin4[4]; }
+        else {
+            const fin3 = allText.match(/(\d{1,3}(?:\.\d{3})+)\s+(\d{1,2}(?:[,.]\d+)?)\s+(\d{1,3}(?:\.\d{3})*)/);
+            if (fin3) { d.penghasilanBruto=fin3[1]; d.tarif=fin3[2]; d.pajakPenghasilan=fin3[3]; }
         }
     }
 
@@ -2864,14 +2883,17 @@ function extractBPPUData(items) {
     const kodeM = allText.match(/(\d{2}-\d{3}-\d{2})(?=\s+[A-Za-z])/);
     if (kodeM) d.kodeObjekPajak = kodeM[1];
 
+    // Objek Pajak BPPU/PPh23: dari kolom B.4 (setelah kode objek pajak, bisa multiline dengan kurung)
     const objekPatterns = [
-        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z\s,\/]+?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d)/i,
-        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z\s,\/]+?)(?=\s+\d{2,3}(?:\.\d{3})*\s)/i,
-        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z\s,\/]{9,}?)(?=\s+[\d])/i
+        /B\.4\s+([\s\S]+?)(?=\s+B\.5)/i,
+        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z,\/\(\)\s]{10,}?)(?=\s+\d{1,3}(?:\.\d{3})+\s+\d)/i,
+        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z,\/\(\)\s]{10,}?)(?=\s+\d{1,3}(?:\.\d{3})+)/i,
+        /\d{2}-\d{3}-\d{2}\s+([A-Za-z][A-Za-z,\/\(\)\s]{9,}?)(?=\s+\d)/i
     ];
     for (const op of objekPatterns) {
         const fallbackM = allText.match(op);
-        if (fallbackM && fallbackM[1]?.length >= 10) { d.objekPajak = fallbackM[1].trim().replace(/\s+/g,' '); break; }
+        const val = fallbackM && (fallbackM[2] || fallbackM[1]);
+        if (val && val.replace(/\d/g,'').trim().length >= 10) { d.objekPajak = val.trim().replace(/\s+/g,' '); break; }
     }
 
     const finPats = [
