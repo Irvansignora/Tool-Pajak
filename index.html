@@ -1075,6 +1075,7 @@
                 <button class="btn btn-primary" id="xmlConvertBtn" disabled>⚡ Convert ke XML</button>
                 <button class="btn btn-green" id="xmlDownloadBtn" style="display:none;">💾 Download XML</button>
                 <button class="btn btn-teal" id="xmlCopyBtn" style="display:none;">📋 Copy XML</button>
+                <button class="btn btn-red" id="xmlResetBtn" onclick="xmlReset()" style="display:none;">🔄 Upload Ulang</button>
             </div>
 
             <!-- Preview -->
@@ -2009,7 +2010,7 @@ function xmlUpdateCustom() {
     ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragover'); });
     ua.addEventListener('dragleave', () => ua.classList.remove('dragover'));
     ua.addEventListener('drop', e => { e.preventDefault(); ua.classList.remove('dragover'); xmlHandleFile(e.dataTransfer.files[0]); });
-    fi.addEventListener('change', e => xmlHandleFile(e.target.files[0]));
+    fi.addEventListener('change', e => { if (e.target.files[0]) xmlHandleFile(e.target.files[0]); });
     document.getElementById('xmlConvertBtn').addEventListener('click', xmlConvert);
     document.getElementById('xmlCopyBtn').addEventListener('click', xmlCopy);
     document.getElementById('xmlDownloadBtn').addEventListener('click', xmlDownloadFile);
@@ -2021,14 +2022,46 @@ function xmlHandleFile(file) {
     reader.onload = e => {
         const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
         xmlExcelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+        // Update display WITHOUT replacing innerHTML (fix re-upload bug)
         const ua = document.getElementById('xmlUploadArea');
-        ua.innerHTML = `<span class="upload-icon" style="color:var(--green);">✅</span><div class="upload-title" style="color:var(--green);">${file.name}</div><div class="upload-sub">${xmlExcelData.length} baris data terdeteksi</div><input type="file" id="xmlFileInput" accept=".xlsx,.xls" style="display:none">`;
-        ua.querySelector('#xmlFileInput').addEventListener('change', ev => xmlHandleFile(ev.target.files[0]));
-        ua.onclick = () => ua.querySelector('#xmlFileInput').click();
+        ua.querySelector('.upload-icon').textContent = '✅';
+        ua.querySelector('.upload-icon').style.color = 'var(--green)';
+        ua.querySelector('.upload-title').textContent = file.name;
+        ua.querySelector('.upload-title').style.color = 'var(--green)';
+        ua.querySelector('.upload-sub').textContent = `${xmlExcelData.length} baris data terdeteksi`;
         ua.classList.add('success');
+        // Reset input value so same file can be re-selected
+        document.getElementById('xmlFileInput').value = '';
         if (xmlSelectedTIN) document.getElementById('xmlConvertBtn').disabled = false;
+        document.getElementById('xmlResetBtn').style.display = 'inline-flex';
+        // Hide previous result if any
+        document.getElementById('xmlPreview').style.display = 'none';
+        document.getElementById('xmlDownloadBtn').style.display = 'none';
+        document.getElementById('xmlCopyBtn').style.display = 'none';
+        xmlContent = '';
     };
     reader.readAsArrayBuffer(file);
+}
+
+function xmlReset() {
+    // Reset semua state Excel to XML
+    xmlExcelData = null;
+    xmlContent = '';
+    const ua = document.getElementById('xmlUploadArea');
+    ua.querySelector('.upload-icon').textContent = '📤';
+    ua.querySelector('.upload-icon').style.color = '';
+    ua.querySelector('.upload-title').textContent = 'Klik atau Drag & Drop File Excel';
+    ua.querySelector('.upload-title').style.color = '';
+    ua.querySelector('.upload-sub').textContent = 'Support: .xlsx, .xls';
+    ua.classList.remove('success');
+    // Reset file input
+    document.getElementById('xmlFileInput').value = '';
+    document.getElementById('xmlConvertBtn').disabled = true;
+    document.getElementById('xmlDownloadBtn').style.display = 'none';
+    document.getElementById('xmlCopyBtn').style.display = 'none';
+    document.getElementById('xmlResetBtn').style.display = 'none';
+    document.getElementById('xmlPreview').style.display = 'none';
+    document.getElementById('xmlPreviewBox').textContent = '';
 }
 
 function xmlDownloadTemplate() {
