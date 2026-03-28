@@ -950,7 +950,7 @@
     <p>Platform lengkap untuk kebutuhan perpajakan Indonesia — konversi PDF, generate XML Coretax, kalkulator Pajak, dan lebih banyak lagi.</p>
     <div class="hero-stats">
         <div class="hero-stat">
-            <div class="hero-stat-num">5</div>
+            <div class="hero-stat-num">6</div>
             <div class="hero-stat-label">Fitur Tools</div>
         </div>
         <div class="hero-stat">
@@ -991,6 +991,11 @@
             <span class="tab-icon">🧾</span>
             <span class="tab-label">Faktur Pajak</span>
             <span class="tab-tag">PDF→EXCEL</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('return-masukan')">
+            <span class="tab-icon">↩️</span>
+            <span class="tab-label">Return Masukan</span>
+            <span class="tab-tag">EXCEL→XML</span>
         </button>
     </div>
 </div>
@@ -1848,6 +1853,144 @@
         </div>
     </div>
 
+    <!-- ────────── TAB 6: Return Pajak Masukan (Excel → XML) ────────── -->
+    <div id="tab-return-masukan" class="tool-panel">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(0,212,170,0.15),rgba(45,110,245,0.1));border:1px solid rgba(0,212,170,0.3)">↩️</div>
+                <div>
+                    <div class="tool-card-title">Return Pajak Masukan — Excel to XML</div>
+                    <div class="tool-card-desc">Konversi Faktur Pajak Masukan Excel ke format XML InputTaxInvoiceReturn Coretax</div>
+                </div>
+            </div>
+
+            <!-- Steps indicator -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px;">
+                <div style="background:var(--bg);border:1px solid var(--accent);border-radius:12px;padding:16px;box-shadow:0 0 20px rgba(59,130,246,0.12);" id="rm_step1">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Step 01</div>
+                    <div style="font-weight:600;font-size:13px;">Upload Excel</div>
+                    <div style="color:var(--text-dim);font-size:11px;margin-top:3px;">Faktur pajak masukan (.xlsx)</div>
+                </div>
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:16px;" id="rm_step2">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Step 02</div>
+                    <div style="font-weight:600;font-size:13px;">Konfigurasi</div>
+                    <div style="color:var(--text-dim);font-size:11px;margin-top:3px;">Tanggal return & NPWP pembeli</div>
+                </div>
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:16px;" id="rm_step3">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Step 03</div>
+                    <div style="font-weight:600;font-size:13px;">Download XML</div>
+                    <div style="color:var(--text-dim);font-size:11px;margin-top:3px;">Siap upload ke Coretax</div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);color:#fda4af;align-items:center;gap:10px;" id="rm_alertError">
+                <span>⚠</span><span id="rm_alertErrorMsg">Error</span>
+            </div>
+            <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;align-items:center;gap:10px;" id="rm_alertWarn">
+                <span>ℹ</span><span id="rm_alertWarnMsg"></span>
+            </div>
+
+            <!-- Upload Zone -->
+            <div class="upload-area" id="rm_uploadZone" onclick="document.getElementById('rm_fileInput').click()">
+                <span class="upload-icon">📊</span>
+                <div class="upload-title">Drop file Excel di sini atau klik untuk pilih</div>
+                <div class="upload-sub">Kolom yang dibutuhkan: No. Faktur Pajak, NPWP Penjual, Nama Barang, Harga, Qty, Discount, Total, PPN</div>
+                <input type="file" id="rm_fileInput" accept=".xlsx,.xls" onchange="rmHandleFile(event)">
+            </div>
+
+            <!-- Config Panel -->
+            <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:20px;display:none;" id="rm_configPanel">
+                <div style="font-weight:600;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;"></span>
+                    Konfigurasi Return
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                    <div class="form-group">
+                        <label class="form-label">NPWP Pembeli (TIN)</label>
+                        <input type="text" class="form-input" id="rm_cfgTIN" placeholder="0991183559012000" maxlength="16">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal Return</label>
+                        <input type="date" class="form-input" id="rm_cfgDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit Satuan Default</label>
+                        <select class="form-select" id="rm_cfgUnit">
+                            <option value="UM.0021">UM.0021 (Unit)</option>
+                            <option value="UM.0001">UM.0001 (Buah)</option>
+                            <option value="UM.0002">UM.0002 (Kg)</option>
+                            <option value="UM.0003">UM.0003 (Gram)</option>
+                            <option value="UM.0005">UM.0005 (Liter)</option>
+                            <option value="UM.0010">UM.0010 (Meter)</option>
+                            <option value="UM.0018">UM.0018 (Karton)</option>
+                            <option value="UM.0019">UM.0019 (Dos/Box)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kode Barang Default</label>
+                        <input type="text" class="form-input" id="rm_cfgCode" placeholder="000000" value="000000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kolom No. Faktur</label>
+                        <input type="text" class="form-input" id="rm_cfgColInvoice" placeholder="No. Faktur Pajak" value="No. Faktur Pajak">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kolom NPWP Penjual</label>
+                        <input type="text" class="form-input" id="rm_cfgColSellerTIN" placeholder="NPWP Penjual" value="NPWP Penjual">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div style="display:none;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;" id="rm_statsBar">
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total Faktur</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statCount">0</div>
+                </div>
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total DPP</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statDPP">0</div>
+                </div>
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total PPN</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statPPN">0</div>
+                </div>
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Status</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--yellow);" id="rm_statStatus">Menunggu</div>
+                </div>
+            </div>
+
+            <!-- Preview Table -->
+            <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:20px;display:none;" id="rm_previewSection">
+                <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
+                    <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">📋 Preview Data Excel</div>
+                    <span style="background:rgba(59,130,246,0.12);color:var(--accent2);border:1px solid rgba(59,130,246,0.25);padding:2px 10px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;" id="rm_rowCountBadge">0 rows</span>
+                </div>
+                <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;" id="rm_previewTable"></table>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-row" style="margin-bottom:20px;">
+                <button class="btn btn-primary" id="rm_btnConvert" onclick="rmConvertToXML()" disabled>⚡ Generate XML</button>
+                <button class="btn btn-green" id="rm_btnDownload" onclick="rmDownloadXML()" style="display:none;">⬇ Download XML</button>
+                <button class="btn btn-teal" id="rm_btnCopy" onclick="rmCopyXML()" style="display:none;">📋 Copy XML</button>
+                <button class="btn btn-red" onclick="rmResetAll()" style="display:none;" id="rm_btnReset">↺ Reset</button>
+            </div>
+
+            <!-- XML Output -->
+            <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;" id="rm_xmlPreview">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;">🗂 XML Output Preview</div>
+                </div>
+                <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="rm_xmlContent"></pre>
+            </div>
+        </div>
+    </div>
+
     <!-- ────────── TAB 5: Faktur Pajak Coretax ────────── -->
     <div id="tab-faktur" class="tool-panel">
         <div class="tool-card">
@@ -1915,7 +2058,7 @@
 // ════════════════════════════════════════════════
 function switchTab(id) {
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const tabs = ['xml','grossup','pph21','bppu','faktur'];
+        const tabs = ['xml','grossup','pph21','bppu','faktur','return-masukan'];
         b.classList.toggle('active', tabs[i] === id);
     });
     document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
@@ -3181,44 +3324,111 @@ function fpExtractFromText(text, filename) {
         if (m) { referensi = m[1].trim().replace(/[\)\s]+$/,''); if (referensi.length > 0) break; }
     }
 
-    // ── Items: SUPER AGGRESSIVE — scan Rp price × qty patterns ──
+    // ── Items: parse per-line dengan nomor urut item ──
     const itemsFound = [];
-    const compactPat = /Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)(?:\s*(?:Bulan|Lainnya|Hari|Unit|Pcs|Piece))?/gi;
-    const priceMatches = [];
-    let m;
-    while ((m = compactPat.exec(text)) !== null) {
-        priceMatches.push({ index: m.index, harga: m[1], qty: m[2] });
-    }
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-    for (const pm of priceMatches) {
-        const beforeText = text.substring(Math.max(0, pm.index - 300), pm.index);
-        const afterText  = text.substring(pm.index, Math.min(text.length, pm.index + 300));
-
-        let namaBarang = '';
-        for (const np of [/(\d{1,3})\s+(\d{6})\s+([^\n]+?)$/, /(\d{1,3})\s+([^\n]+?)$/]) {
-            const nm = beforeText.match(np);
-            if (nm) {
-                namaBarang = nm[nm.length-1].trim().replace(/^\d{6}\s+/,'').trim();
-                if (namaBarang.length > 2) break;
+    // Kumpulkan semua blok item: dimulai dari baris dengan pola "angka (kode6digit) nama_barang"
+    // atau "angka nama_barang", lalu lanjut sampai baris berikutnya yang diawali nomor urut baru
+    // atau sampai "Harga Jual"
+    const itemBlocks = [];
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i];
+        // Deteksi baris awal item: diawali angka 1–99 lalu spasi lalu kode 6 digit atau langsung nama
+        const itemStartM = line.match(/^(\d{1,2})\s+(\d{6})\s+(.+)/) || line.match(/^(\d{1,2})\s+((?!\d{6})[A-Za-z].+)/);
+        if (itemStartM) {
+            const itemNo = parseInt(itemStartM[1]);
+            if (itemNo >= 1 && itemNo <= 50) {
+                // Kumpulkan baris-baris blok item ini
+                let block = line;
+                let j = i + 1;
+                while (j < lines.length) {
+                    const nextLine = lines[j];
+                    // Stop jika baris berikutnya adalah item baru atau total/footer
+                    if (nextLine.match(/^(\d{1,2})\s+(\d{6})\s+/) || nextLine.match(/^(\d{1,2})\s+(?!\d)[A-Za-z]/)) break;
+                    if (nextLine.match(/^Harga Jual\s*\/\s*Penggantian/i)) break;
+                    if (nextLine.match(/^Dikurangi|^Dasar Pengenaan|^Jumlah PPN|^Sesuai dengan/i)) break;
+                    block += ' ' + nextLine;
+                    j++;
+                }
+                itemBlocks.push(block);
+                i = j;
+                continue;
             }
         }
+        i++;
+    }
 
-        const discM    = afterText.match(/Potongan Harga\s*=\s*Rp\s*([\d.,]+)/i);
+    // Parse setiap blok item
+    for (const block of itemBlocks) {
+        // Cari nama barang: setelah nomor urut (dan opsional kode 6 digit), sebelum "Rp"
+        let namaBarang = '';
+        const namaM = block.match(/^\d{1,2}\s+\d{6}\s+(.+?)\s+Rp\s*[\d.,]+/i)
+                   || block.match(/^\d{1,2}\s+(.+?)\s+Rp\s*[\d.,]+/i);
+        if (namaM) {
+            namaBarang = namaM[1].trim()
+                .replace(/\d{6,}/g, '').replace(/\s+/g, ' ')
+                .replace(/Potongan.*/i, '').replace(/PPnBM.*/i, '').trim();
+        }
+
+        // Cari semua pasangan Rp harga x qty dalam blok
+        const priceRe = /Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)(?:\s*(?:Bulan|Lainnya|Hari|Unit|Pcs|Piece))?/gi;
+        let pm;
+        const priceMatches = [];
+        while ((pm = priceRe.exec(block)) !== null) {
+            priceMatches.push({ harga: pm[1], qty: pm[2] });
+        }
+
+        if (priceMatches.length === 0) continue;
+        const firstPrice = priceMatches[0];
+        const harga = parseFloat(firstPrice.harga.replace(/\./g,'').replace(',','.'));
+        const qty   = parseFloat(firstPrice.qty.replace(/\./g,'').replace(',','.'));
+
+        const discM    = block.match(/Potongan Harga\s*=\s*Rp\s*([\d.,]+)/i);
         const discount = discM ? parseFloat(discM[1].replace(/\./g,'').replace(',','.')) : 0;
 
-        if (namaBarang) {
-            namaBarang = namaBarang
-                .replace(/\d{6,}/g,'').replace(/\s*Rp\s*[\d.,]+.*$/i,'')
-                .replace(/Potongan.*/i,'').replace(/PPnBM.*/i,'')
-                .replace(/\s+/g,' ').trim();
+        if (namaBarang && namaBarang.length > 2 && !isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
+            const total = (harga * qty) - discount;
+            const ppn   = total * 0.11;
+            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi});
+        }
+    }
 
-            if (namaBarang.length > 2) {
-                const harga = parseFloat(pm.harga.replace(/\./g,'').replace(',','.'));
-                const qty   = parseFloat(pm.qty.replace(/\./g,'').replace(',','.'));
-                if (!isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
-                    const total = (harga * qty) - discount;
-                    const ppn   = total * 0.11;
-                    itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi});
+    // ── Fallback lama: scan Rp price × qty jika parsing berbasis nomor urut gagal ──
+    if (itemsFound.length === 0) {
+        const compactPat = /Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)(?:\s*(?:Bulan|Lainnya|Hari|Unit|Pcs|Piece))?/gi;
+        const priceMatchesFallback = [];
+        let m;
+        while ((m = compactPat.exec(text)) !== null) {
+            priceMatchesFallback.push({ index: m.index, harga: m[1], qty: m[2] });
+        }
+        for (const pm of priceMatchesFallback) {
+            const beforeText = text.substring(Math.max(0, pm.index - 300), pm.index);
+            const afterText  = text.substring(pm.index, Math.min(text.length, pm.index + 300));
+            let namaBarang = '';
+            for (const np of [/(\d{1,3})\s+(\d{6})\s+([^\n]+)/m, /(\d{1,3})\s+([^\n]+)/m]) {
+                const nm = beforeText.match(np);
+                if (nm) {
+                    namaBarang = nm[nm.length-1].trim().replace(/^\d{6}\s+/,'').trim();
+                    if (namaBarang.length > 2) break;
+                }
+            }
+            const discM    = afterText.match(/Potongan Harga\s*=\s*Rp\s*([\d.,]+)/i);
+            const discount = discM ? parseFloat(discM[1].replace(/\./g,'').replace(',','.')) : 0;
+            if (namaBarang) {
+                namaBarang = namaBarang
+                    .replace(/\d{6,}/g,'').replace(/\s*Rp\s*[\d.,]+.*$/i,'')
+                    .replace(/Potongan.*/i,'').replace(/PPnBM.*/i,'')
+                    .replace(/\s+/g,' ').trim();
+                if (namaBarang.length > 2) {
+                    const harga = parseFloat(pm.harga.replace(/\./g,'').replace(',','.'));
+                    const qty   = parseFloat(pm.qty.replace(/\./g,'').replace(',','.'));
+                    if (!isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
+                        const total = (harga * qty) - discount;
+                        const ppn   = total * 0.11;
+                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi});
+                    }
                 }
             }
         }
@@ -3720,7 +3930,311 @@ function impDownloadResult() {
     XLSX.writeFile(wb, `Hasil_${jenis}_${Date.now()}.xlsx`);
 }
 
-// Init import info on load
+// ════════════════════════════════════════════════
+//  TAB 6: RETURN PAJAK MASUKAN (Excel → XML)
+// ════════════════════════════════════════════════
+(function() {
+    let rmParsedData = [], rmHeaders = [], rmXmlOutput = '';
+
+    // Set today's date on load
+    window.addEventListener('DOMContentLoaded', () => {
+        const t = new Date();
+        const dd2 = String(t.getDate()).padStart(2,'0');
+        const mm2 = String(t.getMonth()+1).padStart(2,'0');
+        document.getElementById('rm_cfgDate').value = `${t.getFullYear()}-${mm2}-${dd2}`;
+
+        // Drag & drop on upload zone
+        const uz = document.getElementById('rm_uploadZone');
+        uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
+        uz.addEventListener('dragleave', () => uz.classList.remove('dragover'));
+        uz.addEventListener('drop', e => {
+            e.preventDefault(); uz.classList.remove('dragover');
+            const f = e.dataTransfer.files[0];
+            if (f) rmProcessFile(f);
+        });
+    });
+
+    function rmShowError(msg) {
+        const el = document.getElementById('rm_alertError');
+        document.getElementById('rm_alertErrorMsg').textContent = msg;
+        el.style.display = 'flex';
+        setTimeout(() => el.style.display = 'none', 6000);
+    }
+
+    function rmSetStep(n) {
+        for (let i = 1; i <= 3; i++) {
+            const el = document.getElementById(`rm_step${i}`);
+            if (!el) continue;
+            el.style.border = '';
+            el.style.boxShadow = '';
+            const numEl = el.querySelector('div:first-child');
+            if (i < n) {
+                el.style.border = '1px solid rgba(0,212,170,0.4)';
+                if (numEl) numEl.style.color = 'var(--green)';
+            } else if (i === n) {
+                el.style.border = '1px solid var(--accent)';
+                el.style.boxShadow = '0 0 20px rgba(59,130,246,0.12)';
+                if (numEl) numEl.style.color = 'var(--accent)';
+            } else {
+                el.style.border = '1px solid var(--border2)';
+                if (numEl) numEl.style.color = 'var(--text-muted)';
+            }
+        }
+    }
+
+    function rmFormatRp(n) {
+        if (n >= 1e9) return (n/1e9).toFixed(1) + 'M';
+        if (n >= 1e6) return (n/1e6).toFixed(1) + 'jt';
+        return n.toLocaleString('id-ID');
+    }
+
+    window.rmHandleFile = function(e) {
+        const f = e.target.files[0];
+        if (f) rmProcessFile(f);
+    };
+
+    function rmProcessFile(file) {
+        if (!file.name.match(/\.(xlsx|xls)$/i)) {
+            rmShowError('File harus berformat Excel (.xlsx atau .xls)');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = e2 => {
+            try {
+                const wb = XLSX.read(e2.target.result, { type: 'binary', cellText: false, cellDates: false });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                if (data.length < 2) { rmShowError('File kosong atau hanya memiliki header.'); return; }
+
+                rmHeaders = data[0].map(h => String(h).trim());
+                rmParsedData = data.slice(1).filter(row => row.some(c => c !== ''));
+
+                // Auto-fill NPWP from data
+                const npwpIdx = rmHeaders.findIndex(h => h.toLowerCase().includes('npwp pembeli') || h.toLowerCase().includes('tin pembeli'));
+                if (npwpIdx >= 0 && rmParsedData.length > 0) {
+                    const tin = String(rmParsedData[0][npwpIdx] || '').replace(/\D/g,'').padEnd(16,'0').slice(0,16);
+                    if (tin.length === 16) document.getElementById('rm_cfgTIN').value = tin;
+                }
+
+                rmRenderPreview();
+                rmUpdateStats();
+
+                document.getElementById('rm_configPanel').style.display = 'block';
+                document.getElementById('rm_previewSection').style.display = 'block';
+                const sb = document.getElementById('rm_statsBar');
+                sb.style.display = 'grid';
+                document.getElementById('rm_btnConvert').disabled = false;
+                document.getElementById('rm_uploadZone').classList.add('success');
+                rmSetStep(2);
+
+            } catch(err) { rmShowError('Gagal membaca file: ' + err.message); }
+        };
+        reader.readAsBinaryString(file);
+    }
+
+    function rmRenderPreview() {
+        const table = document.getElementById('rm_previewTable');
+        const numCols = new Set(['Harga','Qty','Discount','Total','PPN','Jumlah']);
+        let html = `<thead><tr style="background:rgba(59,130,246,0.08);">${rmHeaders.map(h => `<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent2);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border);">${h}</th>`).join('')}</tr></thead><tbody>`;
+        rmParsedData.slice(0,50).forEach((row, ri) => {
+            html += `<tr style="${ri%2===1?'background:rgba(255,255,255,0.02)':''}">` + rmHeaders.map((h,i) => {
+                const val = row[i] ?? '';
+                const isNum = numCols.has(h);
+                const disp = isNum && typeof val === 'number' ? val.toLocaleString('id-ID') : val;
+                return `<td style="padding:8px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04);${isNum?'text-align:right;color:var(--cyan);':''}">${disp}</td>`;
+            }).join('') + '</tr>';
+        });
+        html += '</tbody>';
+        table.innerHTML = html;
+        document.getElementById('rm_rowCountBadge').textContent = rmParsedData.length + ' rows';
+    }
+
+    function rmUpdateStats() {
+        const ppnIdx = rmHeaders.findIndex(h => h.toLowerCase() === 'ppn');
+        const totalIdx = rmHeaders.findIndex(h => h.toLowerCase() === 'total');
+        let totalPPN = 0, totalDPP = 0;
+        rmParsedData.forEach(row => {
+            if (ppnIdx >= 0) totalPPN += Number(row[ppnIdx]) || 0;
+            if (totalIdx >= 0) totalDPP += Number(row[totalIdx]) || 0;
+        });
+        document.getElementById('rm_statCount').textContent = rmParsedData.length;
+        document.getElementById('rm_statDPP').textContent = rmFormatRp(totalDPP);
+        document.getElementById('rm_statPPN').textContent = rmFormatRp(totalPPN);
+        document.getElementById('rm_statStatus').textContent = 'Siap';
+        document.getElementById('rm_statStatus').style.color = 'var(--green)';
+    }
+
+    function rmGetColIdx(customId, fallbackName) {
+        const customVal = document.getElementById(customId).value;
+        const key = customVal || fallbackName;
+        return rmHeaders.findIndex(h => h.toLowerCase().trim() === key.toLowerCase().trim());
+    }
+
+    window.rmConvertToXML = function() {
+        try {
+            const colInvoice   = rmGetColIdx('rm_cfgColInvoice', 'No. Faktur Pajak');
+            const colSellerTIN = rmGetColIdx('rm_cfgColSellerTIN', 'NPWP Penjual');
+            const colNamaBarang = rmHeaders.findIndex(h => h.toLowerCase().includes('nama barang') || h.toLowerCase().includes('barang'));
+            const colHarga     = rmHeaders.findIndex(h => h.toLowerCase() === 'harga');
+            const colQty       = rmHeaders.findIndex(h => h.toLowerCase() === 'qty' || h.toLowerCase() === 'quantity');
+            const colDiscount  = rmHeaders.findIndex(h => h.toLowerCase().includes('discount') || h.toLowerCase().includes('diskon'));
+            const colTotal     = rmHeaders.findIndex(h => h.toLowerCase() === 'total');
+            const colPPN       = rmHeaders.findIndex(h => h.toLowerCase() === 'ppn');
+
+            if (colInvoice < 0) { rmShowError('Kolom "No. Faktur Pajak" tidak ditemukan. Cek nama kolom di konfigurasi.'); return; }
+            if (colSellerTIN < 0) { rmShowError('Kolom "NPWP Penjual" tidak ditemukan. Cek nama kolom di konfigurasi.'); return; }
+
+            const tin = document.getElementById('rm_cfgTIN').value.replace(/\D/g,'').padEnd(16,'0');
+            const dateRaw = document.getElementById('rm_cfgDate').value; // yyyy-mm-dd
+            const [y,mo,d] = dateRaw.split('-');
+            const returnDate = `${d}-${mo}-${y}`; // dd-mm-yyyy
+            const unit = document.getElementById('rm_cfgUnit').value;
+            const code = document.getElementById('rm_cfgCode').value || '000000';
+
+            // Group by invoice number
+            const invoiceMap = new Map();
+            rmParsedData.forEach(row => {
+                const inv = String(row[colInvoice] || '').trim();
+                if (!inv) return;
+                if (!invoiceMap.has(inv)) invoiceMap.set(inv, []);
+                invoiceMap.get(inv).push(row);
+            });
+
+            let returnDataList = '';
+
+            invoiceMap.forEach((rows, invoiceNum) => {
+                const sellerTIN = String(rows[0][colSellerTIN] || '').replace(/\D/g,'').padEnd(16,'0');
+                let totalTaxBase = 0, totalVAT = 0, totalOtherTaxBase = 0;
+                let detailRows = '';
+
+                rows.forEach(row => {
+                    const namaBarang = String(row[colNamaBarang] ?? '').trim();
+                    const harga      = Number(row[colHarga]) || 0;
+                    const qty        = Number(row[colQty]) || 0;
+                    const discount   = Number(colDiscount >= 0 ? row[colDiscount] : 0) || 0;
+                    const total      = Number(row[colTotal]) || (harga * qty - discount);
+                    const ppn        = Number(row[colPPN]) || 0;
+
+                    const taxBase      = total;
+                    const otherTaxBase = Math.round(taxBase * 11 / 12);
+
+                    totalTaxBase      += taxBase;
+                    totalVAT          += ppn;
+                    totalOtherTaxBase += otherTaxBase;
+
+                    const namaBarangUnderscore = namaBarang.toUpperCase().replace(/\s+/g,'_').replace(/[^A-Z0-9_]/g,'');
+                    const invoiceClean         = invoiceNum.replace(/[^A-Z0-9]/gi,'');
+                    const nRaw                 = code + invoiceClean + namaBarangUnderscore;
+                    const nameField            = nRaw.substring(0,40).replace(/[<>&"]/g, c => c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':'&quot;');
+
+                    detailRows += `
+          <Rows>
+            <Type>A</Type>
+            <n>${nameField}</n>
+            <Code>${code}</Code>
+            <Quantity>${qty}</Quantity>
+            <Unit>${unit}</Unit>
+            <UnitPrice>${Math.round(harga)}</UnitPrice>
+            <STLGRate>0</STLGRate>
+            <ReturnQuantity>${qty}</ReturnQuantity>
+            <ReturnDiscount>${Math.round(discount)}</ReturnDiscount>
+            <ReturnTaxBase>${Math.round(taxBase)}</ReturnTaxBase>
+            <ReturnOtherTaxBase>${Math.round(otherTaxBase)}</ReturnOtherTaxBase>
+            <ReturnOtherTaxBaseCheck>${otherTaxBase > 0 ? 'true' : 'false'}</ReturnOtherTaxBaseCheck>
+            <ReturnVAT>${Math.round(ppn)}</ReturnVAT>
+            <ReturnSTLG>0</ReturnSTLG>
+          </Rows>`;
+                });
+
+                returnDataList += `
+    <InputReturnData>
+      <TransactionDocumentData>
+        <InvoiceNumber>${invoiceNum}</InvoiceNumber>
+        <SellerTIN>${sellerTIN}</SellerTIN>
+        <ReturnDate>${returnDate}</ReturnDate>
+        <ReturnTaxBase>${Math.round(totalTaxBase)}</ReturnTaxBase>
+        <ReturnOtherTaxBase>${Math.round(totalOtherTaxBase)}</ReturnOtherTaxBase>
+        <ReturnVAT>${Math.round(totalVAT)}</ReturnVAT>
+        <ReturnSTLG>0</ReturnSTLG>
+      </TransactionDocumentData>
+      <TransactionDetailsData>
+        ${detailRows.trim()}
+        <FooterRow>
+          <ReturnTaxBaseTotal>${Math.round(totalTaxBase)}</ReturnTaxBaseTotal>
+          <ReturnOtherTaxBaseTotal>${Math.round(totalOtherTaxBase)}</ReturnOtherTaxBaseTotal>
+          <ReturnVATTotal>${Math.round(totalVAT)}</ReturnVATTotal>
+          <ReturnSTLGTotal>0</ReturnSTLGTotal>
+        </FooterRow>
+      </TransactionDetailsData>
+    </InputReturnData>`;
+            });
+
+            rmXmlOutput = `<?xml version="1.0" encoding="UTF-8"?>
+<InputTaxInvoiceReturn>
+  <TIN>${tin}</TIN>
+  <InputReturnDataList>${returnDataList}
+  </InputReturnDataList>
+</InputTaxInvoiceReturn>`;
+
+            // Syntax highlight
+            const highlighted = rmXmlOutput
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/&lt;(\/?[\w]+)&gt;/g,'<span style="color:#569cd6;">&lt;$1&gt;</span>')
+                .replace(/(&lt;\?xml[^?]*\?&gt;)/g,'<span style="color:#569cd6;">$1</span>');
+
+            document.getElementById('rm_xmlContent').innerHTML = highlighted;
+            document.getElementById('rm_xmlPreview').style.display = 'block';
+            document.getElementById('rm_btnDownload').style.display = 'inline-flex';
+            document.getElementById('rm_btnCopy').style.display = 'inline-flex';
+            document.getElementById('rm_btnReset').style.display = 'inline-flex';
+            document.getElementById('rm_statStatus').textContent = '✓ Generated';
+            document.getElementById('rm_statStatus').style.color = 'var(--green)';
+            rmSetStep(3);
+            document.getElementById('rm_xmlPreview').scrollIntoView({ behavior: 'smooth' });
+
+        } catch(err) { rmShowError('Gagal generate XML: ' + err.message); console.error(err); }
+    };
+
+    window.rmDownloadXML = function() {
+        if (!rmXmlOutput) return;
+        const blob = new Blob([rmXmlOutput], { type: 'application/xml' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = `InputTaxInvoiceReturn_${new Date().toISOString().slice(0,10)}.xml`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    window.rmCopyXML = function() {
+        if (!rmXmlOutput) return;
+        navigator.clipboard.writeText(rmXmlOutput).then(() => {
+            const btn = document.getElementById('rm_btnCopy');
+            btn.textContent = '✓ Tersalin!';
+            setTimeout(() => btn.innerHTML = '📋 Copy XML', 2000);
+        });
+    };
+
+    window.rmResetAll = function() {
+        rmParsedData = []; rmHeaders = []; rmXmlOutput = '';
+        document.getElementById('rm_fileInput').value = '';
+        document.getElementById('rm_previewTable').innerHTML = '';
+        document.getElementById('rm_xmlContent').innerHTML = '';
+        document.getElementById('rm_configPanel').style.display = 'none';
+        document.getElementById('rm_previewSection').style.display = 'none';
+        document.getElementById('rm_statsBar').style.display = 'none';
+        document.getElementById('rm_xmlPreview').style.display = 'none';
+        document.getElementById('rm_btnDownload').style.display = 'none';
+        document.getElementById('rm_btnCopy').style.display = 'none';
+        document.getElementById('rm_btnReset').style.display = 'none';
+        document.getElementById('rm_btnConvert').disabled = true;
+        document.getElementById('rm_alertError').style.display = 'none';
+        document.getElementById('rm_uploadZone').classList.remove('success');
+        rmSetStep(1);
+    };
+})();
+
+
 document.addEventListener('DOMContentLoaded', () => {
     impUpdateInfo();
     // Drag & drop for import upload area
