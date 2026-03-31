@@ -3007,7 +3007,7 @@ buildFileManager('pph21', extractPPh21Data, pph21Headers);
 // ════════════════════════════════════════════════
 //  TAB 4: PDF BPPU
 // ════════════════════════════════════════════════
-const bppuHeaders = ['NOMOR','MASA PAJAK','NPWP/NIK YANG DIPOTONG','NAMA YANG DIPOTONG','KODE OBJEK PAJAK','OBJEK PAJAK','DPP','TARIF','PAJAK PENGHASILAN','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK PEMOTONG','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN'];
+const bppuHeaders = ['NOMOR','MASA PAJAK','JENIS PPh','NPWP/NIK YANG DIPOTONG','NAMA YANG DIPOTONG','KODE OBJEK PAJAK','OBJEK PAJAK','DPP','TARIF','PAJAK PENGHASILAN','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK PEMOTONG','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN'];
 
 function extractBPPUData(items) {
     const textItems = items.map(i=>({text:i.str.trim(), x:Math.round(i.transform[4]), y:Math.round(i.transform[5])})).filter(i=>i.text);
@@ -3089,13 +3089,34 @@ function extractBPPUData(items) {
     for (const p of [/C\.4\s+TANGGAL\s*:\s*(\d{1,2}\s+\w+\s+\d{4})/i]) { const m=allText.match(p); if(m) { d.tanggalPemotongan=m[1].trim(); break; } }
     for (const p of [/\b(NORMAL|DIBATALKAN|PEMBETULAN)\b/i]) { const m=allText.match(p); if(m) { d.statusBukti=m[1]; break; } }
 
+    // B.2 Jenis PPh (Pasal 23, Pasal 4 Ayat 2, dll)
+    const jenisPPhPatterns = [
+        /B\.2\s+Jenis\s+PPh\s*:\s*([^\n]+)/i,
+        /Jenis\s+PPh\s*:\s*([^\n]+)/i,
+        /B\.2[^A-Za-z]*([A-Za-z][A-Za-z0-9\s]+(?:\d+)?(?:\s+Ayat\s+\d+)?)/i
+    ];
+    for (const p of jenisPPhPatterns) {
+        const m = allText.match(p);
+        if (m) {
+            let val = m[1].trim().replace(/\s+/g,' ');
+            // Bersihkan teks trailing yang bukan bagian dari Jenis PPh
+            val = val.replace(/\s*(B\.\d|Jenis\s+Fasilitas|Tanpa\s+Fasilitas|KODE\s+OBJEK|OBJEK\s+PAJAK).*/i,'').trim();
+            if (val.length > 0 && val.length < 60) { d.jenisPPh = val; break; }
+        }
+    }
+    // Fallback: cari pola "Pasal XX" atau "Pasal X Ayat Y" di seluruh teks
+    if (!d.jenisPPh) {
+        const pasalM = allText.match(/\b(Pasal\s+\d+(?:\s+Ayat\s+\d+)?(?:\s+Huruf\s+[A-Za-z])?)\b/i);
+        if (pasalM) d.jenisPPh = pasalM[1].trim().replace(/\s+/g,' ');
+    }
+
     // A.1 NPWP/NIK dipotong
     for (const p of [/A\.1\s+NPWP\s*\/\s*NIK\s*:\s*(\d{15,16})/i, /A\.1[^0-9]*(\d{15,16})/i]) { const m=allText.match(p); if(m&&(m[1].length===15||m[1].length===16)) { d.npwpDipotong=m[1]; break; } }
     if (!d.npwpDipotong) { const all=[...allText.matchAll(/\b(\d{15,16})\b/g)]; if(all.length) d.npwpDipotong=all[0][1]; }
     // A.2 Nama dipotong
     for (const p of [/A\.2\s+NAMA\s*:\s*([A-Z][A-Z\s,\.]+?)(?=\s*A\.3|\s*NOMOR\s+IDENTITAS|\s*NITKU|$)/i]) { const m=allText.match(p); if(m) { d.namaDipotong=m[1].trim().replace(/\s+/g,' '); break; } }
 
-    const row = [d.nomor||'',d.masaPajak||'',d.npwpDipotong||'',d.namaDipotong||'',d.kodeObjekPajak||'',d.objekPajak||'',parseIDNum(d.dpp),parseIDNum(d.tarif),parseIDNum(d.pajakPenghasilan),d.jenisDokumen||'',d.tanggal||'',d.nomorDokumen||'',d.npwpNik||'',d.namaPemotong||'',d.tanggalPemotongan||'',d.statusBukti||''];
+    const row = [d.nomor||'',d.masaPajak||'',d.jenisPPh||'',d.npwpDipotong||'',d.namaDipotong||'',d.kodeObjekPajak||'',d.objekPajak||'',parseIDNum(d.dpp),parseIDNum(d.tarif),parseIDNum(d.pajakPenghasilan),d.jenisDokumen||'',d.tanggal||'',d.nomorDokumen||'',d.npwpNik||'',d.namaPemotong||'',d.tanggalPemotongan||'',d.statusBukti||''];
     return row.some(c=>(c!==null&&c!==''&&c!==undefined&&String(c).length>0)) ? [row] : [];
 }
 
