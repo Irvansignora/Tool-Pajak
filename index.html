@@ -1997,15 +1997,15 @@
             <div class="tool-card-header">
                 <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(249,115,22,0.1));border:1px solid rgba(245,158,11,0.3)">🧾</div>
                 <div>
-                    <div class="tool-card-title">Ekstrak Faktur Pajak PDF Coretax → Excel</div>
-                    <div class="tool-card-desc">Upload file PDF faktur pajak untuk mengekstrak data ke format Excel</div>
+                    <div class="tool-card-title">Ekstrak Faktur Pajak PDF → Excel</div>
+                    <div class="tool-card-desc">Upload file PDF faktur pajak untuk mengekstrak data ke format Excel · Support Coretax & e-Faktur</div>
                 </div>
             </div>
 
             <div class="upload-area" id="fpUploadBox">
                 <span class="upload-icon">📤</span>
                 <div class="upload-title">Klik atau Drop PDF di sini</div>
-                <div class="upload-sub">Mendukung multiple file PDF faktur pajak Indonesia</div>
+                <div class="upload-sub">Mendukung multiple file PDF · Format Coretax & e-Faktur (Legacy)</div>
                 <input type="file" id="fpFileInput" accept=".pdf" multiple>
             </div>
 
@@ -3178,8 +3178,8 @@ async function fpProcess() {
         let detail = '<div style="margin-top:8px;font-size:12px;">';
         results.forEach(r => {
             detail += r.success
-                ? `<div style="color:var(--green);">✅ ${r.file}: ${r.items} item</div>`
-                : `<div style="color:#f87171;">❌ ${r.file}: Gagal ekstrak${r.error?' ('+r.error+')':''}</div>`;
+                ? `<div style="color:var(--green);">✅ ${r.file}: ${r.items} item <span style="color:var(--text-muted);font-size:10px;">[${r.format||'auto'}]</span></div>`
+                : `<div style="color:#f87171;">❌ ${r.file}: Gagal ekstrak${r.error?' ('+r.error+')':''}${r.format?' ['+r.format+']':''}</div>`;
         });
         detail += '</div>';
         statusEl.innerHTML = msg + detail;
@@ -3221,16 +3221,32 @@ async function fpProcessPDF(file) {
             fullText += pageLines.join('\n') + '\n\n<<<PAGE_BREAK>>>\n\n';
         }
 
-        const chunks = fpSplitInvoices(fullText);
+        // ── Auto-detect e-Faktur vs Coretax ──
+        // e-Faktur has nomor format like "010.005-24.78090792" or "Kode dan Nomor Seri Faktur Pajak"
+        const isEfaktur = /\d{3}\.\d{3}-\d{2}\.\d{8}/.test(fullText) ||
+                          (/Kode dan Nomor Seri Faktur Pajak/.test(fullText) && /Harga Jual\/Penggantian\/Uang\s*Muka\/Termin/.test(fullText));
+
+        let chunks;
+        if (isEfaktur) {
+            // For e-Faktur: split by distinct invoice numbers, NOT by page markers
+            // "1 dari 2" = page 1 of same invoice, not separate invoices
+            chunks = fpSplitEfakturInvoices(fullText);
+        } else {
+            chunks = fpSplitInvoices(fullText);
+        }
         let totalExtracted = 0;
         chunks.forEach((chunk, idx) => {
             const before = fpExtractedData.length;
-            fpExtractFromText(chunk, `${file.name} (Invoice ${idx+1})`);
+            if (isEfaktur) {
+                fpExtractEfaktur(chunk, `${file.name} (Invoice ${idx+1})`);
+            } else {
+                fpExtractFromText(chunk, `${file.name} (Invoice ${idx+1})`);
+            }
             totalExtracted += fpExtractedData.length - before;
         });
 
-        if (totalExtracted === 0) return { file: file.name, success: false, items: 0 };
-        return { file: file.name, success: true, items: totalExtracted };
+        if (totalExtracted === 0) return { file: file.name, success: false, items: 0, format: isEfaktur ? 'e-Faktur' : 'Coretax' };
+        return { file: file.name, success: true, items: totalExtracted, format: isEfaktur ? 'e-Faktur' : 'Coretax' };
     } catch(e) {
         return { file: file.name, success: false, items: 0, error: e.message };
     }
@@ -3268,6 +3284,323 @@ function fpSplitInvoices(fullText) {
     }
     return chunks.length > 0 ? chunks : [fullText];
 }
+
+// ════════════════════════════════════════════════
+//  E-FAKTUR (LEGACY) PDF PARSER
+// ════════════════════════════════════════════════
+// Split e-Faktur PDFs by distinct invoice numbers (keeps multi-page invoices together)
+function fpSplitEfakturInvoices(fullText) {
+    // Find all unique e-Faktur invoice numbers: XXX.XXX-XX.XXXXXXXX
+    const invoiceNums = [];
+    const numRe = /(\d{3}\.\d{3}-\d{2}\.\d{8})/g;
+    let m;
+    while ((m = numRe.exec(fullText)) !== null) {
+        if (!invoiceNums.includes(m[1])) invoiceNums.push(m[1]);
+    }
+
+    // If only 1 or 0 invoice numbers, process entire text as one chunk
+    if (invoiceNums.length <= 1) return [fullText];
+
+    // Multiple invoices: split text by each invoice number occurrence
+    const chunks = [];
+    for (let i = 0; i < invoiceNums.length; i++) {
+        const startIdx = fullText.indexOf(invoiceNums[i]);
+        // Find the start of this invoice section (look backwards for "Faktur Pajak" header)
+        let chunkStart = fullText.lastIndexOf('Faktur Pajak', startIdx);
+        if (chunkStart < 0) chunkStart = startIdx;
+
+        let chunkEnd;
+        if (i < invoiceNums.length - 1) {
+            const nextStart = fullText.indexOf(invoiceNums[i + 1]);
+            chunkEnd = fullText.lastIndexOf('Faktur Pajak', nextStart);
+            if (chunkEnd < 0 || chunkEnd <= chunkStart) chunkEnd = nextStart;
+        } else {
+            chunkEnd = fullText.length;
+        }
+
+        const chunk = fullText.substring(chunkStart, chunkEnd).trim();
+        if (chunk.length > 50) chunks.push(chunk);
+    }
+
+    return chunks.length > 0 ? chunks : [fullText];
+}
+
+function fpExtractEfaktur(text, filename) {
+    text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // ── Nomor Faktur ──
+    let nomorFaktur = '';
+    const nomorEfakturPats = [
+        /Kode dan Nomor Seri Faktur Pajak\s*:?\s*(\d{3}[.\s]*\d{3}[\s-]*\d{2}[.\s]*\d{8})/i,
+        /Nomor Seri Faktur Pajak\s*:?\s*(\d{3}[.\s]*\d{3}[\s-]*\d{2}[.\s]*\d{8})/i,
+        /(\d{3}\.\d{3}-\d{2}\.\d{8})/
+    ];
+    for (const pat of nomorEfakturPats) {
+        const m = text.match(pat);
+        if (m) { nomorFaktur = m[1].replace(/\s+/g,''); break; }
+    }
+
+    // ── Penjual (Pengusaha Kena Pajak) ──
+    let namaPenjual = '', npwpPenjual = '';
+
+    // Find all NPWP occurrences in text (first = penjual, second = pembeli)
+    const allNpwpMatches = [];
+    const npwpGlobalRe = /NPWP\s*:?\s*([\d][.\d\-\s]*[\d])/gi;
+    let npwpGm;
+    while ((npwpGm = npwpGlobalRe.exec(text)) !== null) {
+        allNpwpMatches.push({ raw: npwpGm[1], clean: npwpGm[1].replace(/[.\-\s]/g,''), index: npwpGm.index });
+    }
+
+    // PKP section: between "Pengusaha Kena Pajak" and "Pembeli"
+    const pkpSection = text.match(/Pengusaha\s+Kena\s+Pajak([\s\S]*?)Pembeli\s+Barang\s+Kena\s+Pajak/i);
+    if (pkpSection) {
+        const pkpText = pkpSection[1];
+        const namaM = pkpText.match(/Nama\s*:\s*(.+)/i);
+        if (namaM) {
+            namaPenjual = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim();
+        }
+        const npwpM = pkpText.match(/NPWP\s*:?\s*([\d][.\d\-\s]*[\d])/i);
+        if (npwpM) npwpPenjual = npwpM[1].replace(/[.\-\s]/g,'');
+    }
+
+    // Fallback NPWP Penjual: first NPWP in the text = penjual
+    if (!npwpPenjual && allNpwpMatches.length >= 1) {
+        npwpPenjual = allNpwpMatches[0].clean;
+    }
+
+    // Fallback Nama Penjual
+    if (!namaPenjual) {
+        const namaM = text.match(/Nama\s*:\s*(.+)/i);
+        if (namaM) namaPenjual = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim();
+    }
+
+    // ── Pembeli ──
+    let namaPembeli = '', npwpPembeli = '';
+
+    const pembeliSection = text.match(/Pembeli\s+Barang\s+Kena\s+Pajak[\s\S]*?Penerima\s+Jasa\s+Kena\s+Pajak([\s\S]*?)(?:No\.\s*Nama\s+Barang|Nama\s+Barang\s+Kena|Harga\s+Jual|$)/i);
+    if (pembeliSection) {
+        const pblText = pembeliSection[1];
+        const namaM = pblText.match(/Nama\s*:\s*(.+)/i);
+        if (namaM) namaPembeli = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim();
+        const npwpM = pblText.match(/NPWP\s*:?\s*([\d][.\d\-\s]*[\d])/i);
+        if (npwpM) npwpPembeli = npwpM[1].replace(/[.\-\s]/g,'');
+    }
+
+    // Fallback NPWP Pembeli: second NPWP in the text = pembeli
+    if (!npwpPembeli && allNpwpMatches.length >= 2) {
+        npwpPembeli = allNpwpMatches[1].clean;
+    }
+
+    // Fallback Nama Pembeli: second "Nama :" occurrence
+    if (!namaPembeli) {
+        const namaRe = /Nama\s*:\s*(.+)/gi;
+        let m, c = 0;
+        while ((m = namaRe.exec(text)) !== null) {
+            c++;
+            if (c === 2) { namaPembeli = m[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim(); break; }
+        }
+    }
+
+    // ── Referensi ──
+    // In e-Faktur, referensi appears below the barcode/QR code as standalone text (e.g. "INV-000000377")
+    // It does NOT have a "Referensi:" label like Coretax
+    let referensi = '';
+
+    // Method 1: Try labeled referensi patterns first (same as Coretax)
+    const refPatterns = [
+        /\(Referensi\s*:?\s*([^)]+)\)/i,
+        /Referensi\s*:\s*([^\n]+)/i,
+        /Referensi\s+([A-Z0-9][\w\-\/]*)/i
+    ];
+    for (const pat of refPatterns) {
+        const m = text.match(pat);
+        if (m) { referensi = m[1].trim().replace(/[\)\s]+$/,''); if (referensi.length > 0) break; }
+    }
+
+    // Method 2: If no labeled ref found, look for standalone ref code at bottom of text
+    // e-Faktur puts the ref below barcode, after signer name, near the very end
+    if (!referensi) {
+        // Take the last ~800 chars of text (bottom of document)
+        const bottomText = text.substring(Math.max(0, text.length - 800));
+        const bottomLines = bottomText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        // Search from the very last line upwards for a reference-like code
+        for (let bi = bottomLines.length - 1; bi >= Math.max(0, bottomLines.length - 15); bi--) {
+            const bl = bottomLines[bi];
+
+            // Common ref patterns: INV-xxx, PO-xxx, SO-xxx, DO-xxx, SI-xxx, PI-xxx, DN-xxx, CN-xxx, etc.
+            const refCodeM = bl.match(/^((?:INV|PO|SO|DO|SI|PI|DN|CN|GR|PR|SR|RET|REF|ORD|BILL|QUOT|EST|JOB|WO|SPK|SJ|FP|FK|NO|DOC|TRX|TRANS)[\s\-\.\/]?[\w\-\.\/]+)$/i);
+            if (refCodeM) {
+                referensi = refCodeM[1].trim();
+                break;
+            }
+
+            // Generic pattern: short standalone code that looks like a reference (alphanumeric with dashes/dots/slashes)
+            // Must contain at least one letter and one digit, between 4-40 chars
+            if (/^[A-Za-z0-9][\w\-\.\/]{3,39}$/.test(bl) && /[A-Za-z]/.test(bl) && /\d/.test(bl)) {
+                // Make sure it's not a date, name, or other non-ref text
+                if (!/^\d{1,2}\s+(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)/i.test(bl) &&
+                    !/^(JAKARTA|BANDUNG|SURABAYA|MEDAN|SEMARANG|MAKASSAR|DENPASAR)/i.test(bl) &&
+                    !/^(Sesuai|Direktorat|Faktur|Total|Dasar|PPN|PPnBM)/i.test(bl) &&
+                    bl.length <= 35) {
+                    referensi = bl;
+                    break;
+                }
+            }
+        }
+    }
+
+    // ── Items ──
+    // Strategy: locate every "Rp price x qty" occurrence,
+    // then walk backwards to find the actual item name (between item number and "Rp")
+    const itemsFound = [];
+
+    const rpMatches = [];
+    const rpRe = /Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)/gi;
+    let rpM;
+    while ((rpM = rpRe.exec(text)) !== null) {
+        rpMatches.push({ index: rpM.index, hargaStr: rpM[1], qtyStr: rpM[2], fullMatch: rpM[0] });
+    }
+
+    for (const rp of rpMatches) {
+        const harga = parseFloat(rp.hargaStr.replace(/\./g,'').replace(',','.'));
+        const qty = parseFloat(rp.qtyStr.replace(/\./g,'').replace(',','.'));
+        if (isNaN(harga) || isNaN(qty) || harga <= 0 || qty <= 0) continue;
+
+        // ── Find item name ──
+        // Walk backwards from the Rp match in lines[] to find name lines
+        const beforeText = text.substring(Math.max(0, rp.index - 600), rp.index);
+        const beforeLines = beforeText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        const nameLines = [];
+        for (let k = beforeLines.length - 1; k >= 0; k--) {
+            let bl = beforeLines[k];
+
+            // Skip lines that are obviously NOT item names
+            if (/^Rp\s/i.test(bl)) continue;
+            if (/Nama\s+Barang\s+Kena\s+Pajak/i.test(bl)) break;
+            if (/Harga\s+Jual.*Penggantian/i.test(bl)) break;
+            if (/Pengusaha\s+Kena\s+Pajak/i.test(bl)) break;
+            if (/Pembeli\s+Barang\s+Kena\s+Pajak/i.test(bl)) break;
+            if (/Penerima\s+Jasa\s+Kena\s+Pajak/i.test(bl)) break;
+            if (/^Nama\s*:/i.test(bl)) break;
+            if (/^Alamat\s*:/i.test(bl)) break;
+            if (/^NPWP\s*:/i.test(bl)) break;
+            if (/^NIK\s*:/i.test(bl)) break;
+            if (/Kode dan Nomor/i.test(bl)) break;
+            if (/^Faktur\s+Pajak\s*$/i.test(bl)) break;
+            if (/^\d{1,2}$/.test(bl)) break;                    // bare item number
+            if (/^[\d.]+,\d{2}$/.test(bl)) break;               // pure price "3.991.200,00"
+            if (/^Potongan\s+Harga/i.test(bl)) break;
+            if (/Rp\s*[\d.,]+\s*[xX×]\s*[\d.,]+/i.test(bl)) break; // prev item Rp
+            if (/^Dasar\s+Pengenaan/i.test(bl)) break;
+            if (/^Dikurangi/i.test(bl)) break;
+            if (/^Jumlah\s+PPN/i.test(bl)) break;
+            if (/^PPN\s*=/i.test(bl)) break;
+            if (/^Sesuai\s+dengan/i.test(bl)) break;
+            if (/^No\.\s/i.test(bl)) break;
+            if (/^\d+\s+dari\s+\d+$/i.test(bl)) break;          // page marker "1 dari 2"
+
+            // Handle merged total+item: "5.259.600,0015 NIVEA EXTRA..."
+            // PDF.js can merge previous item's total with current item number on same Y
+            const mergedM = bl.match(/^[\d.]+,\d{2}(\d{1,2})\s+(.+)/);
+            if (mergedM && parseInt(mergedM[1]) >= 1 && parseInt(mergedM[1]) <= 99) {
+                nameLines.unshift(mergedM[2].trim());
+                break;
+            }
+            // Handle merged total+item number only: "5.259.600,0015"
+            const mergedNumOnly = bl.match(/^[\d.]+,\d{2}(\d{1,2})$/);
+            if (mergedNumOnly && parseInt(mergedNumOnly[1]) >= 1 && parseInt(mergedNumOnly[1]) <= 99) {
+                break;
+            }
+            // Handle pure merged total+text: "5.259.600,00NIVEA..."
+            const mergedNoNum = bl.match(/^[\d.]+,\d{2}(.{3,})/);
+            if (mergedNoNum && /^[A-Za-z]/.test(mergedNoNum[1])) {
+                nameLines.unshift(mergedNoNum[1].trim());
+                break;
+            }
+
+            // Item number line: "1 ITEM_NAME..." or "15 NIVEA EXTRA..."
+            const itemNumM = bl.match(/^(\d{1,2})\s+(.+)/);
+            if (itemNumM && parseInt(itemNumM[1]) >= 1 && parseInt(itemNumM[1]) <= 99) {
+                nameLines.unshift(itemNumM[2].trim());
+                break;
+            }
+
+            nameLines.unshift(bl);
+            if (nameLines.length >= 3) break;
+        }
+
+        let namaBarang = nameLines.join(' ')
+            .replace(/\s+/g, ' ')
+            .replace(/Potongan.*/i, '').replace(/PPnBM.*/i, '')
+            .replace(/\s+[\d.]+,\d{2}\s*$/, '')   // trailing totals
+            .replace(/^[\d.]+,\d{2}\s*/, '')        // leading totals (merged from prev item)
+            .replace(/^\d{1,2}\s+/, '')              // leading item number if still present
+            .trim();
+
+        // Skip if name looks like section info, not a product
+        if (!namaBarang || namaBarang.length <= 1) continue;
+        if (/^Nama\s*:/i.test(namaBarang)) continue;
+        if (/^Alamat\s*:/i.test(namaBarang)) continue;
+        if (/^NPWP\s*:/i.test(namaBarang)) continue;
+        if (/Pengusaha.*Pajak/i.test(namaBarang)) continue;
+        if (/Pembeli.*Pajak/i.test(namaBarang)) continue;
+
+        // ── Find discount ──
+        const afterText = text.substring(rp.index, Math.min(text.length, rp.index + 400));
+        const discM = afterText.match(/Potongan\s+Harga\s*[:=]\s*Rp\s*([\d.,]+)/i);
+        const discount = discM ? parseFloat(discM[1].replace(/\./g,'').replace(',','.')) : 0;
+
+        // ── Find total from rightmost column ──
+        let total = 0;
+        const afterLines = afterText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        for (let al = 0; al < Math.min(afterLines.length, 5); al++) {
+            const aline = afterLines[al];
+            const totalM = aline.match(/([\d.]+,\d{2})\s*$/);
+            if (totalM) {
+                const candidate = parseFloat(totalM[1].replace(/\./g,'').replace(',','.'));
+                if (candidate > 0) { total = candidate; break; }
+            }
+        }
+
+        if (total === 0) total = (harga * qty) - discount;
+        const ppn = total * 0.11;
+
+        if (total > 0) {
+            itemsFound.push({
+                nomorFaktur, namaPenjual, npwpPenjual, namaBarang,
+                harga, qty, discount, total, ppn,
+                namaPembeli, npwpPembeli, referensi
+            });
+        }
+    }
+
+    // ── Fallback: extract from Harga Jual / DPP totals if no items found ──
+    if (itemsFound.length === 0) {
+        const hargaJualM = text.match(/Harga\s+Jual[\s\S]*?([\d.]+,\d{2})/i);
+        const dppM = text.match(/Dasar\s+Pengenaan\s+Pajak[\s\S]*?([\d.]+,\d{2})/i);
+        const ppnM = text.match(/PPN\s*=[\s\S]*?([\d.]+,\d{2})/i);
+
+        const total = hargaJualM ? parseFloat(hargaJualM[1].replace(/\./g,'').replace(',','.')) : 0;
+        const dpp = dppM ? parseFloat(dppM[1].replace(/\./g,'').replace(',','.')) : total;
+        const ppn = ppnM ? parseFloat(ppnM[1].replace(/\./g,'').replace(',','.')) : dpp * 0.11;
+
+        if (total > 0) {
+            itemsFound.push({
+                nomorFaktur, namaPenjual, npwpPenjual,
+                namaBarang: 'Barang / Jasa (Summary)',
+                harga: total, qty: 1, discount: 0,
+                total, ppn,
+                namaPembeli, npwpPembeli, referensi
+            });
+        }
+    }
+
+    fpExtractedData.push(...itemsFound);
+}
+
 
 function fpExtractFromText(text, filename) {
     text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
