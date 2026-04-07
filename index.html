@@ -3341,65 +3341,68 @@ function fpExtractEfaktur(text, filename) {
         if (m) { nomorFaktur = m[1].replace(/\s+/g,''); break; }
     }
 
-    // ── Penjual (Pengusaha Kena Pajak) ──
-    let namaPenjual = '', npwpPenjual = '';
+    // ── Penjual & Pembeli ──
+    // INSIGHT dari raw text PDF e-Faktur:
+    // Header tabel (Pengusaha Kena Pajak / Pembeli Barang) dicetak DULUAN tanpa data.
+    // Lalu data aktual muncul dalam urutan:
+    //   [1] Data PEMBELI (Nama, Alamat, NPWP)
+    //   [2] "Kode dan Nomor Seri Faktur Pajak : ..."  ← ini pemisah antar bagian
+    //   [3] Data PENJUAL (Nama, Alamat, NPWP)
+    // Jadi kita pakai "Kode dan Nomor Seri" sebagai anchor separator.
 
-    // Find all NPWP occurrences in text (first = penjual, second = pembeli)
-    const allNpwpMatches = [];
-    const npwpGlobalRe = /NPWP\s*:?\s*([\d][.\d\-\s]*[\d])/gi;
-    let npwpGm;
-    while ((npwpGm = npwpGlobalRe.exec(text)) !== null) {
-        allNpwpMatches.push({ raw: npwpGm[1], clean: npwpGm[1].replace(/[.\-\s]/g,''), index: npwpGm.index });
-    }
+    let npwpPenjual = '', namaPenjual = '';
+    let npwpPembeli = '', namaPembeli = '';
 
-    // PKP section: between "Pengusaha Kena Pajak" and "Pembeli"
-    const pkpSection = text.match(/Pengusaha\s+Kena\s+Pajak([\s\S]*?)Pembeli\s+Barang\s+Kena\s+Pajak/i);
-    if (pkpSection) {
-        const pkpText = pkpSection[1];
-        const namaM = pkpText.match(/Nama\s*:\s*(.+)/i);
-        if (namaM) {
-            namaPenjual = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim();
+    const _extractNamaNpwp = (str) => {
+        let nama = '', npwp = '';
+        const namaM = /Nama\s*:\s*(.+)/i.exec(str);
+        if (namaM) nama = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i, '').trim();
+        const npwpM = /NPWP\s*:?\s*([\d][.\d\- ]*[\d])/i.exec(str);
+        if (npwpM) {
+            let raw = npwpM[1].replace(/[.\-\s]/g, '');
+            npwp = raw.substring(0, 15);
         }
-        const npwpM = pkpText.match(/NPWP\s*:?\s*([\d][.\d\-\s]*[\d])/i);
-        if (npwpM) npwpPenjual = npwpM[1].replace(/[.\-\s]/g,'');
-    }
+        return { nama, npwp };
+    };
 
-    // Fallback NPWP Penjual: first NPWP in the text = penjual
-    if (!npwpPenjual && allNpwpMatches.length >= 1) {
-        npwpPenjual = allNpwpMatches[0].clean;
-    }
+    const nomorSeriIdx = text.search(/Kode\s+dan\s+Nomor\s+Seri\s+Faktur\s+Pajak/i);
+    if (nomorSeriIdx > -1) {
+        // Sebelum "Kode dan Nomor Seri" → berisi data PEMBELI
+        const beforeNomor = text.substring(0, nomorSeriIdx);
+        // Sesudah "Kode dan Nomor Seri" → berisi data PENJUAL
+        const afterNomor  = text.substring(nomorSeriIdx);
 
-    // Fallback Nama Penjual
-    if (!namaPenjual) {
-        const namaM = text.match(/Nama\s*:\s*(.+)/i);
-        if (namaM) namaPenjual = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim();
-    }
+        const pembeliData = _extractNamaNpwp(beforeNomor);
+        const penjualData = _extractNamaNpwp(afterNomor);
 
-    // ── Pembeli ──
-    let namaPembeli = '', npwpPembeli = '';
-
-    const pembeliSection = text.match(/Pembeli\s+Barang\s+Kena\s+Pajak[\s\S]*?Penerima\s+Jasa\s+Kena\s+Pajak([\s\S]*?)(?:No\.\s*Nama\s+Barang|Nama\s+Barang\s+Kena|Harga\s+Jual|$)/i);
-    if (pembeliSection) {
-        const pblText = pembeliSection[1];
-        const namaM = pblText.match(/Nama\s*:\s*(.+)/i);
-        if (namaM) namaPembeli = namaM[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim();
-        const npwpM = pblText.match(/NPWP\s*:?\s*([\d][.\d\-\s]*[\d])/i);
-        if (npwpM) npwpPembeli = npwpM[1].replace(/[.\-\s]/g,'');
-    }
-
-    // Fallback NPWP Pembeli: second NPWP in the text = pembeli
-    if (!npwpPembeli && allNpwpMatches.length >= 2) {
-        npwpPembeli = allNpwpMatches[1].clean;
-    }
-
-    // Fallback Nama Pembeli: second "Nama :" occurrence
-    if (!namaPembeli) {
+        namaPembeli = pembeliData.nama;
+        npwpPembeli = pembeliData.npwp;
+        namaPenjual = penjualData.nama;
+        npwpPenjual = penjualData.npwp;
+    } else {
+        // Fallback jika "Kode dan Nomor Seri" tidak ditemukan
+        const allNpwp = [];
+        const npwpGlobalRe = /NPWP\s*:?\s*([\d][.\d\- ]*[\d])/gi;
+        let nGm;
+        while ((nGm = npwpGlobalRe.exec(text)) !== null) {
+            let raw = nGm[1].replace(/[.\-\s]/g, '');
+            if (raw.length >= 14 && raw.length <= 16) allNpwp.push(raw.substring(0, 15));
+        }
+        const allNama = [];
         const namaRe = /Nama\s*:\s*(.+)/gi;
-        let m, c = 0;
-        while ((m = namaRe.exec(text)) !== null) {
-            c++;
-            if (c === 2) { namaPembeli = m[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i,'').trim(); break; }
+        let nmGm;
+        while ((nmGm = namaRe.exec(text)) !== null) {
+            let rawNama = nmGm[1].trim().split(/\n/)[0].replace(/\s*Alamat\s*:.*/i, '').trim();
+            if (rawNama.length > 0 && !rawNama.toLowerCase().includes('barang kena pajak'))
+                allNama.push(rawNama);
         }
+        const uniqueNpwp = [...new Set(allNpwp)];
+        const uniqueNama = [...new Set(allNama)];
+        // Dalam fallback: urutan array pertama=Pembeli, kedua=Penjual (sesuai pola raw text)
+        if (uniqueNpwp.length >= 1) npwpPembeli = uniqueNpwp[0];
+        if (uniqueNpwp.length >= 2) npwpPenjual  = uniqueNpwp[1];
+        if (uniqueNama.length >= 1) namaPembeli  = uniqueNama[0];
+        if (uniqueNama.length >= 2) namaPenjual   = uniqueNama[1];
     }
 
     // ── Referensi ──
