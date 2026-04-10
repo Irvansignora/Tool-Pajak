@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PajakTools — Suite Lengkap Alat Pajak Indonesia</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="libs/pdf.min.js"></script>
+    <script src="libs/xlsx.full.min.js"></script>
+    <script>
+        // Set PDF.js worker ke path absolut agar bekerja di Electron (offline)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('libs/pdf.worker.min.js', document.baseURI).href;
+    </script>
     <style>
         :root {
             --bg: #080c14;
@@ -33,7 +36,7 @@
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -2037,6 +2040,8 @@
                                 <th>Nama Pembeli</th>
                                 <th>NPWP Pembeli</th>
                                 <th>Referensi</th>
+                                <th>Status</th>
+                                <th>Sumber</th>
                             </tr>
                         </thead>
                         <tbody id="fpResultBody"></tbody>
@@ -2758,7 +2763,7 @@ function guHitungPPN() {
 // ════════════════════════════════════════════════
 //  SHARED PDF UTILS
 // ════════════════════════════════════════════════
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; (Sudah diatur di awal menggunakan path lokal)
 
 function pdfReadAsArrayBuffer(file) {
     return new Promise((res, rej) => {
@@ -2830,7 +2835,7 @@ function buildFileManager(prefix, extractFn, headers) {
     if (clr) clr.addEventListener('click', () => { files=[]; updateList(); });
 
     function addFiles(newFiles) {
-        newFiles.forEach(f => { if (!files.some(x=>x.name===f.name&&x.size===f.size)) files.push(f); });
+        newFiles.forEach(f => { if (!files.some(x=>x.name===f.name)) files.push(f); });
         updateList();
     }
 
@@ -2839,7 +2844,17 @@ function buildFileManager(prefix, extractFn, headers) {
     function updateList() {
         if (!files.length) { fl.style.display='none'; cb.style.display='none'; return; }
         fl.style.display = 'block'; cb.style.display = 'inline-flex';
-        fitems.innerHTML = files.map((f,i) => `<div class="file-item"><div class="file-item-info"><div class="file-item-name">📄 ${f.name}</div><div class="file-item-size">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="file-remove-btn" onclick="${prefix}RemoveFile(${i})">✕</button></div>`).join('');
+        
+        const showLimit = 10;
+        const items = files.slice(0, showLimit);
+        let html = `<div style="padding:5px 10px;font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">Total: ${files.length} file siap diproses</div>`;
+        html += items.map((f,i) => `<div class="file-item"><div class="file-item-info"><div class="file-item-name">📄 ${f.name}</div><div class="file-item-size">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="file-remove-btn" onclick="${prefix}RemoveFile(${i})">✕</button></div>`).join('');
+        
+        if (files.length > showLimit) {
+            html += `<div style="text-align:center;padding:10px;font-size:12px;color:var(--text-dim);font-style:italic;">... dan ${files.length - showLimit} file lainnya</div>`;
+        }
+        
+        fitems.innerHTML = html;
         errBox.style.display='none';
     }
 
@@ -2858,6 +2873,7 @@ function buildFileManager(prefix, extractFn, headers) {
             if (taxMode) allData.push(headers);
 
             for (let idx=0; idx<files.length; idx++) {
+                if (idx > 0 && idx % 50 === 0) await new Promise(r => setTimeout(r, 100));
                 progFill.style.width = (idx/files.length*90)+'%';
                 progText.textContent = `Memproses ${idx+1}/${files.length}: ${files[idx].name}`;
                 const ab = await pdfReadAsArrayBuffer(files[idx]);
@@ -2866,9 +2882,10 @@ function buildFileManager(prefix, extractFn, headers) {
                 for (let pg=1; pg<=pdf.numPages; pg++) {
                     const page = await pdf.getPage(pg);
                     const tc = await page.getTextContent();
-                    const pd = pdfExtractPage(tc, detect, true, taxMode, smart, extractFn);
-                    if (pd.length) fileData = fileData.concat(pd);
+                    const pd = pdfExtractPage(tc, detect, true, taxMode, smart, extractFn, files[idx].name);
+                    if (pd.length) fileData.push(...pd);
                 }
+                await pdf.destroy();
                 if (separate && fileData.length) {
                     let sd = taxMode ? [headers, ...fileData] : fileData;
                     const wsS = XLSX.utils.aoa_to_sheet(sd);
@@ -2894,10 +2911,13 @@ function buildFileManager(prefix, extractFn, headers) {
     };
 }
 
-function pdfExtractPage(tc, detect, preserve, taxMode, smart, extractFn) {
+function pdfExtractPage(tc, detect, preserve, taxMode, smart, extractFn, filename) {
     if (taxMode && detect) {
         const r = extractFn(tc.items);
-        if (r.length) return r;
+        if (r.length) {
+            if (filename) r.forEach(row => row.push(filename));
+            return r;
+        }
     }
     const items = tc.items;
     if (!detect) return items.filter(i=>i.str.trim()).map(i=>[i.str.trim()]);
@@ -2941,7 +2961,7 @@ function renderPreview(container, data) {
 // ════════════════════════════════════════════════
 //  TAB 3: PDF PPh21
 // ════════════════════════════════════════════════
-const pph21Headers = ['NOMOR','MASA PAJAK','NIK/NPWP','NAMA','KODE OBJEK PAJAK','OBJEK PAJAK','PENGHASILAN BRUTO','DPP (%)','TARIF (%)','PPh DIPOTONG','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN'];
+const pph21Headers = ['NOMOR','MASA PAJAK','NIK/NPWP','NAMA','KODE OBJEK PAJAK','OBJEK PAJAK','PENGHASILAN BRUTO','DPP (%)','TARIF (%)','PPh DIPOTONG','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN','SUMBER'];
 
 function extractPPh21Data(items) {
     const textItems = items.map(i=>({text:i.str.trim(), x:Math.round(i.transform[4]), y:Math.round(i.transform[5])})).filter(i=>i.text);
@@ -3007,7 +3027,7 @@ buildFileManager('pph21', extractPPh21Data, pph21Headers);
 // ════════════════════════════════════════════════
 //  TAB 4: PDF BPPU
 // ════════════════════════════════════════════════
-const bppuHeaders = ['NOMOR','MASA PAJAK','JENIS PPh','NPWP/NIK YANG DIPOTONG','NAMA YANG DIPOTONG','KODE OBJEK PAJAK','OBJEK PAJAK','DPP','TARIF','PAJAK PENGHASILAN','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK PEMOTONG','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN'];
+const bppuHeaders = ['NOMOR','MASA PAJAK','JENIS PPh','NPWP/NIK YANG DIPOTONG','NAMA YANG DIPOTONG','KODE OBJEK PAJAK','OBJEK PAJAK','DPP','TARIF','PAJAK PENGHASILAN','JENIS DOKUMEN','TANGGAL','NOMOR DOKUMEN','NPWP/NIK PEMOTONG','NAMA PEMOTONG','TANGGAL PEMOTONGAN','STATUS BUKTI PEMOTONGAN/PEMUNGUTAN','SUMBER'];
 
 function extractBPPUData(items) {
     const textItems = items.map(i=>({text:i.str.trim(), x:Math.round(i.transform[4]), y:Math.round(i.transform[5])})).filter(i=>i.text);
@@ -3138,7 +3158,7 @@ let fpUploadedFiles = [], fpExtractedData = [];
 })();
 
 function fpAddFiles(files) {
-    files.forEach(f => { if (!fpUploadedFiles.some(x=>x.name===f.name&&x.size===f.size)) fpUploadedFiles.push(f); });
+    files.forEach(f => { if (!fpUploadedFiles.some(x=>x.name===f.name)) fpUploadedFiles.push(f); });
     fpUpdateFileInfo();
 }
 
@@ -3148,7 +3168,17 @@ function fpUpdateFileInfo() {
     const fi = document.getElementById('fpFileInfo');
     if (!fpUploadedFiles.length) { status.textContent='Belum ada file yang dipilih'; processBtn.disabled=true; fi.innerHTML=''; return; }
     processBtn.disabled=false;
-    fi.innerHTML = fpUploadedFiles.map((f,i) => `<div class="file-item"><div class="file-item-info"><div class="file-item-name">📄 ${f.name}</div><div class="file-item-size">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="file-remove-btn" onclick="fpRemove(${i})">✕</button></div>`).join('');
+    
+    const showLimit = 10;
+    const itemsToShow = fpUploadedFiles.slice(0, showLimit);
+    let html = `<div style="padding:5px 10px;font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">List File (${fpUploadedFiles.length} total):</div>`;
+    html += itemsToShow.map((f,i) => `<div class="file-item"><div class="file-item-info"><div class="file-item-name">📄 ${f.name}</div><div class="file-item-size">${(f.size/1024/1024).toFixed(2)} MB</div></div><button class="file-remove-btn" onclick="fpRemove(${i})">✕</button></div>`).join('');
+    
+    if (fpUploadedFiles.length > showLimit) {
+        html += `<div style="text-align:center;padding:10px;font-size:12px;color:var(--text-dim);font-style:italic;">... dan ${fpUploadedFiles.length - showLimit} file lainnya</div>`;
+    }
+    
+    fi.innerHTML = html;
     status.textContent = `${fpUploadedFiles.length} file siap diproses`;
 }
 
@@ -3162,6 +3192,7 @@ async function fpProcess() {
     const results = [];
     try {
         for (let idx=0; idx<fpUploadedFiles.length; idx++) {
+            if (idx > 0 && idx % 50 === 0) await new Promise(r => setTimeout(r, 100));
             const file = fpUploadedFiles[idx];
             statusEl.textContent = `Memproses ${idx+1}/${fpUploadedFiles.length}: ${file.name}`;
             const result = await fpProcessPDF(file);
@@ -3235,15 +3266,18 @@ async function fpProcessPDF(file) {
             chunks = fpSplitInvoices(fullText);
         }
         let totalExtracted = 0;
-        chunks.forEach((chunk, idx) => {
+        for (let idx = 0; idx < chunks.length; idx++) {
+            const chunk = chunks[idx];
             const before = fpExtractedData.length;
             if (isEfaktur) {
-                fpExtractEfaktur(chunk, `${file.name} (Invoice ${idx+1})`);
+                await fpExtractEfaktur(chunk, file.name, pdf);
             } else {
-                fpExtractFromText(chunk, `${file.name} (Invoice ${idx+1})`);
+                await fpExtractFromText(chunk, file.name, pdf);
             }
             totalExtracted += fpExtractedData.length - before;
-        });
+        }
+
+        await pdf.destroy();
 
         if (totalExtracted === 0) return { file: file.name, success: false, items: 0, format: isEfaktur ? 'e-Faktur' : 'Coretax' };
         return { file: file.name, success: true, items: totalExtracted, format: isEfaktur ? 'e-Faktur' : 'Coretax' };
@@ -3325,7 +3359,42 @@ function fpSplitEfakturInvoices(fullText) {
     return chunks.length > 0 ? chunks : [fullText];
 }
 
-function fpExtractEfaktur(text, filename) {
+// ════════════════════════════════════════════════
+//  STATUS DETERMINATION FOR FAKTUR PAJAK
+// ════════════════════════════════════════════════
+// Determines status: NORMAL, PEMBETULAN, or BATAL/CANCELED
+// Rules:
+//   e-Faktur:  Normal = 010,040,070,etc (last digit 0); Pembetulan = 011,041,etc (last digit non-0)
+//   Coretax:   Normal = 0400,0100,0700,etc (last digit 0); Pembetulan = 0401,0101,etc (last digit non-0)
+//   Batal:     watermark/background text containing CANCELED, BATAL, DIBATALKAN, VOID, CANCELLED, C A N C E L E D
+function fpDetermineStatus(nomorFaktur, text, isEfaktur) {
+    // 1. Cek text biasa dulu (paling cepat) - Opsional, tapi kita prioritaskan nomor faktur
+    const cancelPat = /\b(CANCELED|CANCELLED|BATAL|DIBATALKAN|VOID|INVALID|TIDAK BERLAKU)\b/i;
+    if (cancelPat.test(text)) return 'BATAL';
+
+    // 2. Logika Nomor Faktur (Normal / Pembetulan)
+    if (!nomorFaktur) return 'NORMAL';
+    
+    const cleanNomor = nomorFaktur.replace(/\s/g, '').replace(/[.\-]/g, '');
+    
+    if (isEfaktur) {
+        // e-Faktur: Digit ke-3 dari depan (misal 010.xxx -> 0, 011.xxx -> 1)
+        if (cleanNomor.length >= 3) {
+            const digit = parseInt(cleanNomor[2], 10);
+            return digit === 0 ? 'NORMAL' : 'PEMBETULAN';
+        }
+    } else {
+        // Coretax: Digit ke-4 dari depan (misal 0400... -> 0, 0401... -> 1)
+        if (cleanNomor.length >= 4) {
+            const digit = parseInt(cleanNomor[3], 10);
+            return digit === 0 ? 'NORMAL' : 'PEMBETULAN';
+        }
+    }
+    
+    return 'NORMAL';
+}
+
+async function fpExtractEfaktur(text, filename, pdfDocument) {
     text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
@@ -3575,7 +3644,8 @@ function fpExtractEfaktur(text, filename) {
             itemsFound.push({
                 nomorFaktur, namaPenjual, npwpPenjual, namaBarang,
                 harga, qty, discount, total, ppn,
-                namaPembeli, npwpPembeli, referensi
+                namaPembeli, npwpPembeli, referensi,
+                sumber: filename
             });
         }
     }
@@ -3596,16 +3666,21 @@ function fpExtractEfaktur(text, filename) {
                 namaBarang: 'Barang / Jasa (Summary)',
                 harga: total, qty: 1, discount: 0,
                 total, ppn,
-                namaPembeli, npwpPembeli, referensi
+                namaPembeli, npwpPembeli, referensi,
+                sumber: filename
             });
         }
     }
+
+    // ── Determine status for all items (e-Faktur) ──
+    const statusEfaktur = await fpDetermineStatus(itemsFound[0]?.nomorFaktur || '', text, true, pdfDocument);
+    itemsFound.forEach(item => { item.status = statusEfaktur; });
 
     fpExtractedData.push(...itemsFound);
 }
 
 
-function fpExtractFromText(text, filename) {
+async function fpExtractFromText(text, filename, pdfDocument) {
     text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
 
     // ── Nomor Faktur ──
@@ -3748,7 +3823,7 @@ function fpExtractFromText(text, filename) {
         if (namaBarang && namaBarang.length > 2 && !isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
             const total = (harga * qty) - discount;
             const ppn   = total * 0.11;
-            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi});
+            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
         }
     }
 
@@ -3784,7 +3859,7 @@ function fpExtractFromText(text, filename) {
                     if (!isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
                         const total = (harga * qty) - discount;
                         const ppn   = total * 0.11;
-                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi});
+                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
                     }
                 }
             }
@@ -3827,7 +3902,7 @@ function fpExtractFromText(text, filename) {
                     const disc  = parseFloat(discM[1].replace(/\./g,'').replace(',','.'));
                     if (!isNaN(harga)&&!isNaN(qty)&&!isNaN(disc)&&harga>0&&qty>0) {
                         const total = harga*qty-disc;
-                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount:disc,total,ppn:total*0.11,namaPembeli,npwpPembeli,referensi});
+                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount:disc,total,ppn:total*0.11,namaPembeli,npwpPembeli,referensi,sumber:filename});
                     }
                 }
             }
@@ -3856,30 +3931,64 @@ function fpExtractFromText(text, filename) {
             const total = harga * qty;
             const dpp   = dppM ? parseFloat(dppM[1].replace(/\./g,'').replace(',','.')) : total*11/12;
             const ppn   = dpp * 0.12;
-            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang:namaBarangFallback||'Jasa / Barang (Single Item)',harga,qty,discount:0,total,ppn,namaPembeli,npwpPembeli,referensi});
+            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang:namaBarangFallback||'Jasa / Barang (Single Item)',harga,qty,discount:0,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
         }
     }
+
+    // ── Determine status for all items (Coretax) ──
+    const statusCoretax = await fpDetermineStatus(nomorFaktur, text, false, pdfDocument);
+    itemsFound.forEach(item => { item.status = statusCoretax; });
 
     fpExtractedData.push(...itemsFound);
 }
 
 function fpDisplayResults() {
     const tbody = document.getElementById('fpResultBody');
-    tbody.innerHTML = fpExtractedData.map(r => `<tr>
+    const displayLimit = 20;
+    const itemsToShow = fpExtractedData.slice(0, displayLimit);
+    
+    tbody.innerHTML = itemsToShow.map(r => {
+        const st = r.status || 'NORMAL';
+        const stColor = st === 'BATAL' ? 'color:#ef4444;font-weight:700;' : st === 'PEMBETULAN' ? 'color:#f59e0b;font-weight:700;' : 'color:#22c55e;font-weight:600;';
+        return `<tr>
         <td>${r.nomorFaktur}</td><td>${r.namaPenjual}</td><td>${r.npwpPenjual}</td>
         <td>${r.namaBarang}</td><td>Rp ${r.harga.toLocaleString('id-ID')}</td>
         <td>${r.qty}</td><td>Rp ${r.discount.toLocaleString('id-ID')}</td>
         <td>Rp ${r.total.toLocaleString('id-ID')}</td><td>Rp ${r.ppn.toLocaleString('id-ID')}</td>
         <td>${r.namaPembeli}</td><td>${r.npwpPembeli}</td><td>${r.referensi}</td>
-    </tr>`).join('');
+        <td style="${stColor}">${st}</td>
+        <td>${r.sumber || ''}</td>
+    </tr>`;
+    }).join('');
+
+    if (fpExtractedData.length > displayLimit) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="14" style="text-align:center;padding:15px;color:var(--text-dim);background:rgba(255,255,255,0.03);font-style:italic;">
+            Menampilkan ${displayLimit} data pertama saja untuk menjaga performa. 
+            Semua ${fpExtractedData.length} data akan tetap ada di hasil download Excel.
+        </td>`;
+        tbody.appendChild(tr);
+    }
 }
 
 function fpDownload() {
-    const ws_data = [['No. Faktur Pajak','Nama Penjual','NPWP Penjual','Nama Barang','Harga','Qty','Discount','Total','PPN','Nama Pembeli','NPWP Pembeli','Referensi']];
-    fpExtractedData.forEach(r => ws_data.push([r.nomorFaktur,r.namaPenjual,r.npwpPenjual,r.namaBarang,r.harga,r.qty,r.discount,r.total,r.ppn,r.namaPembeli,r.npwpPembeli,r.referensi]));
+    const ws_data = [['No. Faktur Pajak','Nama Penjual','NPWP Penjual','Nama Barang','Harga','Qty','Discount','Total','PPN','Nama Pembeli','NPWP Pembeli','Referensi','Status','Sumber']];
+    fpExtractedData.forEach(r => ws_data.push([r.nomorFaktur,r.namaPenjual,r.npwpPenjual,r.namaBarang,r.harga,r.qty,r.discount,r.total,r.ppn,r.namaPembeli,r.npwpPembeli,r.referensi,r.status||'NORMAL',r.sumber||'']));
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:40},{wch:15},{wch:10},{wch:15},{wch:15},{wch:15},{wch:30},{wch:20},{wch:20}];
+    ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:40},{wch:15},{wch:10},{wch:15},{wch:15},{wch:15},{wch:30},{wch:20},{wch:20},{wch:14},{wch:25}];
+    // Color-code Status column (col index 12 = M)
+    const rowCount = ws_data.length;
+    for (let ri = 1; ri < rowCount; ri++) {
+        const cellRef = XLSX.utils.encode_cell({r: ri, c: 12});
+        if (ws[cellRef]) {
+            const st = ws[cellRef].v;
+            let fgColor = 'FF22C55E'; // green = NORMAL
+            if (st === 'BATAL') fgColor = 'FFEF4444';
+            else if (st === 'PEMBETULAN') fgColor = 'FFF59E0B';
+            ws[cellRef].s = { font: { bold: true, color: { rgb: fgColor.substring(2) } } };
+        }
+    }
     applyNumFmt(ws);
     XLSX.utils.book_append_sheet(wb, ws, 'Faktur Pajak');
     XLSX.writeFile(wb, 'Faktur_Pajak_Export.xlsx');
