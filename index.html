@@ -967,7 +967,7 @@
     <p>Platform lengkap untuk kebutuhan perpajakan Indonesia — konversi PDF, generate XML Coretax, kalkulator Pajak, dan lebih banyak lagi.</p>
     <div class="hero-stats">
         <div class="hero-stat">
-            <div class="hero-stat-num">7</div>
+            <div class="hero-stat-num">6</div>
             <div class="hero-stat-label">Fitur Tools</div>
         </div>
         <div class="hero-stat">
@@ -5004,7 +5004,7 @@ async function rnProcessFile(file, format, enabledFields) {
     newName = newName.replace(/__+/g, '_').replace(/^_/, '').replace(/_$/, '');
     if (newName === '.pdf') newName = 'Dokumen_Tak_Dikenal.pdf';
     
-    return { file, newName, blob: new Blob([ab], { type: 'application/pdf' }) };
+    return { file, newName, blob: file };
 }
 
 function rnExtractFakturData(text) {
