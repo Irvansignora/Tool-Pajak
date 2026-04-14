@@ -1221,7 +1221,6 @@
                                 <option value="UM.0010">UM.0010 (Meter)</option>
                                 <option value="UM.0018">UM.0018 (Karton)</option>
                                 <option value="UM.0019">UM.0019 (Dos/Box)</option>
-                                <option value="UM.0033">UM.0033 (Pcs)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2355,6 +2354,11 @@
             <div id="rnOptionArea" style="display:none; margin-bottom:20px;">
                 <div style="font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom:10px; text-transform: uppercase; letter-spacing: 0.5px;">📋 Komponen Nama File</div>
                 <div id="rnOptionsContainer" class="rn-option-group"></div>
+                <div style="margin-top: 15px;">
+                    <label class="form-label">Teks Kustom (Opsional)</label>
+                    <input type="text" class="form-input" id="rnCustomText" placeholder="Masukkan teks tambahan (cth: Laporan_Bulan_Ini)...">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Teks kustom akan diletakkan di akhir nama file.</div>
+                </div>
             </div>
 
             <div class="upload-area" id="rnUploadBox">
@@ -5222,12 +5226,13 @@ async function rnStartProcessing() {
     const status = document.getElementById('rnStatus');
     const fmt = document.getElementById('rnFormat').value;
     const tbody = document.getElementById('rnResultBody');
+    const customText = document.getElementById('rnCustomText') ? document.getElementById('rnCustomText').value.trim() : '';
     
     // Get enabled fields
     const enabledFields = Array.from(document.querySelectorAll('#rnOptionsContainer input:checked')).map(i => i.dataset.key);
     
-    if (enabledFields.length === 0) {
-        alert('Pilih minimal satu komponen nama file!');
+    if (enabledFields.length === 0 && !customText) {
+        alert('Pilih minimal satu komponen nama file atau masukkan teks kustom!');
         return;
     }
 
@@ -5241,7 +5246,7 @@ async function rnStartProcessing() {
         const file = rnSelectedFiles[i];
         status.textContent = `Memproses (${i+1}/${rnSelectedFiles.length}): ${file.name}`;
         try {
-            const result = await rnProcessFile(file, fmt, enabledFields);
+            const result = await rnProcessFile(file, fmt, enabledFields, customText);
             rnResults.push(result);
             
             const tr = document.createElement('tr');
@@ -5266,7 +5271,7 @@ async function rnStartProcessing() {
     status.textContent = `Selesai! Berhasil memproses ${rnResults.filter(r=>!r.error).length} file.`;
 }
 
-async function rnProcessFile(file, format, enabledFields) {
+async function rnProcessFile(file, format, enabledFields, customText = '') {
     const ab = await pdfReadAsArrayBuffer(file);
     const pdf = await pdfjsLib.getDocument({data: new Uint8Array(ab)}).promise;
     
@@ -5291,6 +5296,10 @@ async function rnProcessFile(file, format, enabledFields) {
     enabledFields.forEach(key => {
         if (data[key]) nameParts.push(clean(data[key]));
     });
+    
+    if (customText) {
+        nameParts.push(clean(customText));
+    }
     
     let newName = nameParts.join('_') + '.pdf';
     newName = newName.replace(/__+/g, '_').replace(/^_/, '').replace(/_$/, '');
