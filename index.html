@@ -4693,7 +4693,7 @@ function impDownloadResult() {
 
                     const namaBarangUnderscore = namaBarang.toUpperCase().replace(/\s+/g,'_').replace(/[^A-Z0-9_]/g,'');
                     const invoiceClean         = invoiceNum.replace(/[^A-Z0-9]/gi,'');
-                    const nRaw                 = code + invoiceClean + namaBarangUnderscore;
+                    const nRaw                 = namaBarangUnderscore;
                     const nameField            = nRaw.substring(0,100).replace(/[<>&"]/g, c => c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':'&quot;');
 
                     detailRows += `
