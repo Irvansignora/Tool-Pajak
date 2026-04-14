@@ -503,6 +503,30 @@
 
         .company-card.active .company-npwp { color: var(--accent2); }
 
+        /* ── Sub-Tab Navigation ── */
+        .ctx-sub-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border2);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .ctx-sub-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--border); color: var(--text); }
+        .ctx-sub-btn.active { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: var(--accent2); }
+        .ctx-sub-panel { display: none; margin-top: 10px; }
+        .ctx-sub-panel.active { display: block; animation: fadeUp 0.3s ease-out; }
+
         .active-badge {
             display: none;
             margin-top: 12px;
@@ -967,7 +991,7 @@
     <p>Platform lengkap untuk kebutuhan perpajakan Indonesia — konversi PDF, generate XML Coretax, kalkulator Pajak, dan lebih banyak lagi.</p>
     <div class="hero-stats">
         <div class="hero-stat">
-            <div class="hero-stat-num">6</div>
+            <div class="hero-stat-num">8</div>
             <div class="hero-stat-label">Fitur Tools</div>
         </div>
         <div class="hero-stat">
@@ -986,7 +1010,7 @@
     <div class="tabs-container">
         <button class="tab-btn active" onclick="switchTab('xml')">
             <span class="tab-icon">🔄</span>
-            <span class="tab-label">Pajak Keluaran</span>
+            <span class="tab-label">Converter Coretax</span>
             <span class="tab-tag">Excel → XML</span>
         </button>
         <button class="tab-btn" onclick="switchTab('grossup')">
@@ -1009,11 +1033,6 @@
             <span class="tab-label">Faktur Pajak</span>
             <span class="tab-tag">PDF→EXCEL</span>
         </button>
-        <button class="tab-btn" onclick="switchTab('return-masukan')">
-            <span class="tab-icon">↩️</span>
-            <span class="tab-label">Return Masukan</span>
-            <span class="tab-tag">EXCEL→XML</span>
-        </button>
         <button class="tab-btn" onclick="switchTab('rename')">
             <span class="tab-icon">📝</span>
             <span class="tab-label">Rename PDF</span>
@@ -1021,78 +1040,33 @@
         </button>
     </div>
 
-    <!-- ────────── TAB 7: Rename PDF ────────── -->
-    <div id="tab-rename" class="tool-panel">
-        <div class="tool-card">
-            <div class="tool-card-header">
-                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(6,182,212,0.15));border:1px solid rgba(139,92,246,0.3)">📝</div>
-                <div>
-                    <div class="tool-card-title">Rename & Download PDF</div>
-                    <div class="tool-card-desc">Ganti nama file PDF sesuai format dokumen pajak secara otomatis tanpa mengubah file asli</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Pilih Format Dokumen</label>
-                <select class="form-select" id="rnFormat" onchange="rnUpdateInfo()">
-                    <option value="faktur">🧾 Faktur Pajak (Coretax/e-Faktur)</option>
-                    <option value="ebupot">📊 Ebupot PPh 21 / Unifikasi</option>
-                    <option value="nrp">↩️ NRP (Nota Retur Pajak)</option>
-                </select>
-            </div>
-
-            <div id="rnFormatInfo" class="mode-desc" style="margin-bottom:15px; text-align: left;">
-                💡 <strong>Format Default:</strong> Masa Pajak_No Faktur_Penjual_Pembeli_Ref
-            </div>
-
-            <div id="rnOptionArea" style="display:none; margin-bottom:20px;">
-                <div style="font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom:10px; text-transform: uppercase; letter-spacing: 0.5px;">📋 Komponen Nama File</div>
-                <div id="rnOptionsContainer" class="rn-option-group"></div>
-            </div>
-
-            <div class="upload-area" id="rnUploadBox">
-                <span class="upload-icon">📤</span>
-                <div class="upload-title">Klik atau Drop PDF di sini</div>
-                <div class="upload-sub">Mendukung multiple file PDF sesuai format yang dipilih</div>
-                <input type="file" id="rnFileInput" accept=".pdf" multiple>
-            </div>
-
-            <div id="rnFileInfo" style="margin-top:10px;"></div>
-
-            <div class="btn-row" style="margin-top:14px;">
-                <button class="btn btn-primary" id="rnProcessBtn" disabled onclick="rnStartProcessing()">⚡ Generate Nama Baru</button>
-                <button class="btn btn-green" id="rnDownloadAllBtn" style="display:none;" onclick="rnDownloadAll()">📥 Download Semua (.zip)</button>
-                <button class="btn btn-red" id="rnClearBtn" style="display:none;" onclick="rnClear()">🗑️ Clear</button>
-            </div>
-
-            <div id="rnStatus" style="margin-top:12px;font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;min-height:20px;">Belum ada file yang dipilih</div>
-
-            <div id="rnResultSection" style="display:none;margin-top:20px;">
-                <div class="section-label" style="margin-bottom:10px;">Preview Perubahan Nama</div>
-                <div class="rn-table-wrap">
-                    <table class="rn-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;">#</th>
-                                <th>Nama Asli</th>
-                                <th>Nama Baru</th>
-                                <th style="width: 100px; text-align: center;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rnResultBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </div>
 
 <!-- Main Content -->
 <div class="main">
 
-    <!-- ────────── TAB 1: Excel → XML Coretax ────────── -->
+    <!-- ────────── TAB 1: Converter Coretax (All Excel → XML) ────────── -->
     <div id="tab-xml" class="tool-panel active">
+
+        <!-- Sub-Tab Navigation -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+            <button class="ctx-sub-btn active" onclick="switchCoretaxSub('keluaran')">
+                <span>🔄</span> Pajak Keluaran
+            </button>
+            <button class="ctx-sub-btn" onclick="switchCoretaxSub('return')">
+                <span>↩️</span> Return Masukan
+            </button>
+            <button class="ctx-sub-btn" onclick="switchCoretaxSub('bpu')">
+                <span>📑</span> BPU Unifikasi
+            </button>
+            <button class="ctx-sub-btn" onclick="switchCoretaxSub('bp21')">
+                <span>📊</span> BP21 PPh 21
+            </button>
+        </div>
+
+        <!-- ═══ Sub-Panel: Pajak Keluaran ═══ -->
+        <div id="ctx-keluaran" class="ctx-sub-panel active">
         <div class="tool-card">
             <div class="tool-card-header">
                 <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.15));border:1px solid rgba(59,130,246,0.3)">🔄</div>
@@ -1177,6 +1151,360 @@
                 <div class="result-box" id="xmlPreviewBox"></div>
             </div>
         </div>
+        </div>
+
+        <!-- ═══ Sub-Panel: Return Masukan ═══ -->
+        <div id="ctx-return" class="ctx-sub-panel">
+            <div class="tool-card">
+                <div class="tool-card-header">
+                    <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(0,212,170,0.15),rgba(45,110,245,0.1));border:1px solid rgba(0,212,170,0.3)">↩️</div>
+                    <div>
+                        <div class="tool-card-title">Return Pajak Masukan — Excel to XML</div>
+                        <div class="tool-card-desc">Konversi Faktur Pajak Masukan Excel ke format XML InputTaxInvoiceReturn Coretax</div>
+                    </div>
+                </div>
+
+                <!-- Steps indicator -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px;">
+                    <div style="background:var(--bg);border:1px solid var(--border);padding:14px;border-radius:12px;text-align:center;">
+                        <div style="font-size:24px;margin-bottom:8px;">1️⃣</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Download Template</div>
+                        <div style="font-size:11px;color:var(--text-dim);line-height:1.4;">Unduh format Excel Return Masukan</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border);padding:14px;border-radius:12px;text-align:center;">
+                        <div style="font-size:24px;margin-bottom:8px;">2️⃣</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Isi Data & Upload</div>
+                        <div style="font-size:11px;color:var(--text-dim);line-height:1.4;">Isi data retur lalu upload file Excel</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border);padding:14px;border-radius:12px;text-align:center;">
+                        <div style="font-size:24px;margin-bottom:8px;">3️⃣</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Generate XML</div>
+                        <div style="font-size:11px;color:var(--text-dim);line-height:1.4;">Dapatkan XML yang siap di-import</div>
+                    </div>
+                </div>
+
+                <!-- Template & Upload -->
+                <div class="btn-row" style="margin-bottom:16px;">
+                    <button class="btn btn-yellow" onclick="rmDownloadTemplate()">📥 Download Template Excel (<span style="font-weight:700;">Update v2</span>)</button>
+                </div>
+
+                <div class="upload-area" id="rm_uploadZone" onclick="document.getElementById('rm_fileInput').click()">
+                    <span class="upload-icon">📊</span>
+                    <div class="upload-title">Drop file Excel di sini atau klik untuk pilih</div>
+                    <div class="upload-sub">Format: .xlsx / .xls sesuai template</div>
+                    <input type="file" id="rm_fileInput" accept=".xlsx,.xls" onchange="rmHandleFile(event)">
+                </div>
+
+                <!-- Config Panel -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:20px;display:none;margin-top:20px;" id="rm_configPanel">
+                    <div style="font-weight:600;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;"></span>
+                        Konfigurasi Return
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">NPWP Pembeli (TIN)</label>
+                            <input type="text" class="form-input" id="rm_cfgTIN" placeholder="0991183559012000" maxlength="16">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Return</label>
+                            <input type="date" class="form-input" id="rm_cfgDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Unit Satuan Default</label>
+                            <select class="form-select" id="rm_cfgUnit">
+                                <option value="UM.0021">UM.0021 (Unit)</option>
+                                <option value="UM.0001">UM.0001 (Buah)</option>
+                                <option value="UM.0002">UM.0002 (Kg)</option>
+                                <option value="UM.0003">UM.0003 (Gram)</option>
+                                <option value="UM.0005">UM.0005 (Liter)</option>
+                                <option value="UM.0010">UM.0010 (Meter)</option>
+                                <option value="UM.0018">UM.0018 (Karton)</option>
+                                <option value="UM.0019">UM.0019 (Dos/Box)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Type (Barang/Jasa)</label>
+                            <select class="form-select" id="rm_cfgType">
+                                <option value="A">A (Barang)</option>
+                                <option value="B">B (Jasa)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kolom No. Faktur</label>
+                            <input type="text" class="form-input" id="rm_cfgColInvoice" placeholder="No. Faktur Pajak" value="No. Faktur Pajak">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kolom NPWP Penjual</label>
+                            <input type="text" class="form-input" id="rm_cfgColSellerTIN" placeholder="NPWP Penjual" value="NPWP Penjual">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Bar -->
+                <div style="display:none;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;" id="rm_statsBar">
+                    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                        <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total Faktur</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statCount">0</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                        <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total DPP</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statDPP">0</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                        <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total PPN</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statPPN">0</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
+                        <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Status</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--yellow);" id="rm_statStatus">Menunggu</div>
+                    </div>
+                </div>
+
+                <!-- Preview Table -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;display:none;" id="rm_previewSection">
+                    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
+                        <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">📋 Preview Data Return</div>
+                        <span style="background:rgba(0,212,170,0.12);color:var(--teal);border:1px solid rgba(0,212,170,0.25);padding:2px 10px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;" id="rm_rowCountBadge">0 rows</span>
+                    </div>
+                    <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;" id="rm_previewTable"></table>
+                    </div>
+                </div>
+
+                <!-- Error Box -->
+                <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);color:#fda4af;align-items:center;gap:10px;" id="rm_alertError">
+                    <span>⚠</span><span id="rm_alertErrorMsg">Error occurred</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="btn-row" style="margin-bottom:20px;">
+                    <button class="btn btn-primary" id="rm_btnConvert" onclick="rmConvertToXML()" disabled>⚡ Generate XML</button>
+                    <button class="btn btn-green" id="rm_btnDownload" onclick="rmDownloadXML()" style="display:none;">⬇ Download XML</button>
+                    <button class="btn btn-teal" id="rm_btnCopy" onclick="rmCopyXML()" style="display:none;">📋 Copy XML</button>
+                    <button class="btn btn-red" onclick="rmResetAll()" style="display:none;" id="rm_btnReset">↺ Reset</button>
+                </div>
+
+                <!-- XML Output -->
+                <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;" id="rm_xmlPreview">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                        <div style="font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;">🗂 XML Output Preview</div>
+                    </div>
+                    <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="rm_xmlContent"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Sub-Panel: BPU Unifikasi ═══ -->
+        <div id="ctx-bpu" class="ctx-sub-panel">
+            <div class="tool-card">
+                <div class="tool-card-header">
+                    <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(236,72,153,0.15),rgba(139,92,246,0.1));border:1px solid rgba(236,72,153,0.3)">📑</div>
+                    <div>
+                        <div class="tool-card-title">BPU Unifikasi — Excel to XML</div>
+                        <div class="tool-card-desc">Konversi data Excel ke format XML Bukti Potong/Pungut Unifikasi Coretax</div>
+                    </div>
+                </div>
+
+                <!-- Config Panel -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:20px;">
+                    <div style="font-weight:600;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="display:inline-block;width:3px;height:14px;background:var(--pink);border-radius:2px;"></span>
+                        Konfigurasi BPU
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">NPWP Pemotong (TIN)</label>
+                            <input type="text" class="form-input" id="bpu_cfgTIN" placeholder="16 digit NPWP" maxlength="16">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Masa Pajak (Bulan)</label>
+                            <select class="form-select" id="bpu_cfgMonth">
+                                <option value="1">Januari (1)</option><option value="2">Februari (2)</option><option value="3">Maret (3)</option>
+                                <option value="4">April (4)</option><option value="5">Mei (5)</option><option value="6">Juni (6)</option>
+                                <option value="7">Juli (7)</option><option value="8">Agustus (8)</option><option value="9">September (9)</option>
+                                <option value="10">Oktober (10)</option><option value="11">November (11)</option><option value="12">Desember (12)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tahun Pajak</label>
+                            <input type="number" class="form-input" id="bpu_cfgYear" value="2025" min="2020" max="2030">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Surat Keterangan</label>
+                            <select class="form-select" id="bpu_cfgCert">
+                                <option value="N/A">N/A</option>
+                                <option value="SKB">SKB (Surat Keterangan Bebas)</option>
+                                <option value="DTP">DTP (Ditanggung Pemerintah)</option>
+                                <option value="SKD">SKD (Surat Keterangan Domisili)</option>
+                                <option value="Fasilitas">Fasilitas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Dokumen</label>
+                            <select class="form-select" id="bpu_cfgDoc">
+                                <option value="CommercialInvoice">Commercial Invoice</option>
+                                <option value="TaxInvoice">Tax Invoice / Faktur Pajak</option>
+                                <option value="StatementLetter">Statement Letter</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bendahara Pemerintah</label>
+                            <select class="form-select" id="bpu_cfgGov">
+                                <option value="N/A">N/A</option>
+                                <option value="GOV">GOV (Bendahara Pemerintah)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template & Upload -->
+                <div class="btn-row" style="margin-bottom:16px;">
+                    <button class="btn btn-yellow" onclick="bpuDownloadTemplate()">📥 Download Template Excel</button>
+                </div>
+
+                <div class="upload-area" id="bpu_uploadZone" onclick="document.getElementById('bpu_fileInput').click()">
+                    <span class="upload-icon">📊</span>
+                    <div class="upload-title">Drop file Excel di sini atau klik untuk pilih</div>
+                    <div class="upload-sub">Kolom: CustomerName, CounterpartTin, TaxObjectCode, TaxBase, DocumentType, DocumentNumber...</div>
+                    <input type="file" id="bpu_fileInput" accept=".xlsx,.xls" onchange="bpuHandleFile(event)">
+                </div>
+
+                <!-- Preview Table -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;display:none;" id="bpu_previewSection">
+                    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
+                        <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">📋 Preview Data</div>
+                        <span style="background:rgba(236,72,153,0.12);color:var(--pink);border:1px solid rgba(236,72,153,0.25);padding:2px 10px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;" id="bpu_rowBadge">0 rows</span>
+                    </div>
+                    <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;" id="bpu_previewTable"></table>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="btn-row" style="margin-bottom:20px;">
+                    <button class="btn btn-primary" id="bpu_btnConvert" onclick="bpuConvertXML()" disabled>⚡ Generate XML</button>
+                    <button class="btn btn-green" id="bpu_btnDownload" onclick="bpuDownloadXML()" style="display:none;">⬇ Download XML</button>
+                    <button class="btn btn-teal" id="bpu_btnCopy" onclick="bpuCopyXML()" style="display:none;">📋 Copy XML</button>
+                    <button class="btn btn-red" id="bpu_btnReset" onclick="bpuResetAll()" style="display:none;">↺ Reset</button>
+                </div>
+
+                <!-- Error -->
+                <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);color:#fda4af;align-items:center;gap:10px;" id="bpu_alert">
+                    <span>⚠</span><span id="bpu_alertMsg">Error</span>
+                </div>
+
+                <!-- XML Output -->
+                <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;" id="bpu_xmlPreview">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;margin-bottom:10px;">🗂 XML Output Preview</div>
+                    <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="bpu_xmlContent"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Sub-Panel: BP21 PPh 21 ═══ -->
+        <div id="ctx-bp21" class="ctx-sub-panel">
+            <div class="tool-card">
+                <div class="tool-card-header">
+                    <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(6,182,212,0.15),rgba(59,130,246,0.1));border:1px solid rgba(6,182,212,0.3)">📊</div>
+                    <div>
+                        <div class="tool-card-title">BP21 PPh 21 — Excel to XML</div>
+                        <div class="tool-card-desc">Konversi data Excel ke format XML Bukti Potong PPh 21 Final & Tidak Final Coretax</div>
+                    </div>
+                </div>
+
+                <!-- Config Panel -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:20px;">
+                    <div style="font-weight:600;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="display:inline-block;width:3px;height:14px;background:var(--cyan);border-radius:2px;"></span>
+                        Konfigurasi BP21
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">NPWP Pemotong (TIN)</label>
+                            <input type="text" class="form-input" id="bp21_cfgTIN" placeholder="16 digit NPWP" maxlength="16">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Masa Pajak (Bulan)</label>
+                            <select class="form-select" id="bp21_cfgMonth">
+                                <option value="1">Januari (1)</option><option value="2">Februari (2)</option><option value="3">Maret (3)</option>
+                                <option value="4">April (4)</option><option value="5">Mei (5)</option><option value="6">Juni (6)</option>
+                                <option value="7">Juli (7)</option><option value="8">Agustus (8)</option><option value="9">September (9)</option>
+                                <option value="10">Oktober (10)</option><option value="11">November (11)</option><option value="12">Desember (12)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tahun Pajak</label>
+                            <input type="number" class="form-input" id="bp21_cfgYear" value="2025" min="2020" max="2030">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Surat Keterangan</label>
+                            <select class="form-select" id="bp21_cfgCert">
+                                <option value="N/A">N/A</option>
+                                <option value="TaxExAr21">TaxExAr21 (SKB PPh 21)</option>
+                                <option value="DTP">DTP (Ditanggung Pemerintah)</option>
+                                <option value="ETC">ETC (Lainnya)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jenis Dokumen</label>
+                            <select class="form-select" id="bp21_cfgDoc">
+                                <option value="CommercialInvoice">Commercial Invoice</option>
+                                <option value="TaxInvoice">Tax Invoice / Faktur Pajak</option>
+                                <option value="StatementLetter">Statement Letter</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Deemed Default (%)</label>
+                            <input type="number" class="form-input" id="bp21_cfgDeemed" value="100" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template & Upload -->
+                <div class="btn-row" style="margin-bottom:16px;">
+                    <button class="btn btn-yellow" onclick="bp21DownloadTemplate()">📥 Download Template Excel</button>
+                </div>
+
+                <div class="upload-area" id="bp21_uploadZone" onclick="document.getElementById('bp21_fileInput').click()">
+                    <span class="upload-icon">📊</span>
+                    <div class="upload-title">Drop file Excel di sini atau klik untuk pilih</div>
+                    <div class="upload-sub">Kolom: CustomerName, CounterpartTin, StatusTaxExemption, TaxObjectCode, Gross, Rate, DocumentType...</div>
+                    <input type="file" id="bp21_fileInput" accept=".xlsx,.xls" onchange="bp21HandleFile(event)">
+                </div>
+
+                <!-- Preview Table -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;display:none;" id="bp21_previewSection">
+                    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
+                        <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">📋 Preview Data</div>
+                        <span style="background:rgba(6,182,212,0.12);color:var(--cyan);border:1px solid rgba(6,182,212,0.25);padding:2px 10px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;" id="bp21_rowBadge">0 rows</span>
+                    </div>
+                    <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;" id="bp21_previewTable"></table>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="btn-row" style="margin-bottom:20px;">
+                    <button class="btn btn-primary" id="bp21_btnConvert" onclick="bp21ConvertXML()" disabled>⚡ Generate XML</button>
+                    <button class="btn btn-green" id="bp21_btnDownload" onclick="bp21DownloadXML()" style="display:none;">⬇ Download XML</button>
+                    <button class="btn btn-teal" id="bp21_btnCopy" onclick="bp21CopyXML()" style="display:none;">📋 Copy XML</button>
+                    <button class="btn btn-red" id="bp21_btnReset" onclick="bp21ResetAll()" style="display:none;">↺ Reset</button>
+                </div>
+
+                <!-- Error -->
+                <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);color:#fda4af;align-items:center;gap:10px;" id="bp21_alert">
+                    <span>⚠</span><span id="bp21_alertMsg">Error</span>
+                </div>
+
+                <!-- XML Output -->
+                <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;" id="bp21_xmlPreview">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;margin-bottom:10px;">🗂 XML Output Preview</div>
+                    <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="bp21_xmlContent"></pre>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ────────── TAB 2: Kalkulator Pajak ────────── -->
@@ -1941,143 +2269,6 @@
         </div>
     </div>
 
-    <!-- ────────── TAB 6: Return Pajak Masukan (Excel → XML) ────────── -->
-    <div id="tab-return-masukan" class="tool-panel">
-        <div class="tool-card">
-            <div class="tool-card-header">
-                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(0,212,170,0.15),rgba(45,110,245,0.1));border:1px solid rgba(0,212,170,0.3)">↩️</div>
-                <div>
-                    <div class="tool-card-title">Return Pajak Masukan — Excel to XML</div>
-                    <div class="tool-card-desc">Konversi Faktur Pajak Masukan Excel ke format XML InputTaxInvoiceReturn Coretax</div>
-                </div>
-            </div>
-
-            <!-- Steps indicator -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px;">
-                <div style="background:var(--bg);border:1px solid var(--accent);border-radius:12px;padding:16px;box-shadow:0 0 20px rgba(59,130,246,0.12);" id="rm_step1">
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Step 01</div>
-                    <div style="font-weight:600;font-size:13px;">Upload Excel</div>
-                    <div style="color:var(--text-dim);font-size:11px;margin-top:3px;">Faktur pajak masukan (.xlsx)</div>
-                </div>
-                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:16px;" id="rm_step2">
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Step 02</div>
-                    <div style="font-weight:600;font-size:13px;">Konfigurasi</div>
-                    <div style="color:var(--text-dim);font-size:11px;margin-top:3px;">Tanggal return & NPWP pembeli</div>
-                </div>
-                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:16px;" id="rm_step3">
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Step 03</div>
-                    <div style="font-weight:600;font-size:13px;">Download XML</div>
-                    <div style="color:var(--text-dim);font-size:11px;margin-top:3px;">Siap upload ke Coretax</div>
-                </div>
-            </div>
-
-            <!-- Alerts -->
-            <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);color:#fda4af;align-items:center;gap:10px;" id="rm_alertError">
-                <span>⚠</span><span id="rm_alertErrorMsg">Error</span>
-            </div>
-            <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;align-items:center;gap:10px;" id="rm_alertWarn">
-                <span>ℹ</span><span id="rm_alertWarnMsg"></span>
-            </div>
-
-            <!-- Upload Zone -->
-            <div class="upload-area" id="rm_uploadZone" onclick="document.getElementById('rm_fileInput').click()">
-                <span class="upload-icon">📊</span>
-                <div class="upload-title">Drop file Excel di sini atau klik untuk pilih</div>
-                <div class="upload-sub">Kolom yang dibutuhkan: No. Faktur Pajak, NPWP Penjual, Nama Barang, Harga, Qty, Discount, Total, PPN</div>
-                <input type="file" id="rm_fileInput" accept=".xlsx,.xls" onchange="rmHandleFile(event)">
-            </div>
-
-            <!-- Config Panel -->
-            <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:20px;display:none;" id="rm_configPanel">
-                <div style="font-weight:600;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-                    <span style="display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;"></span>
-                    Konfigurasi Return
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-                    <div class="form-group">
-                        <label class="form-label">NPWP Pembeli (TIN)</label>
-                        <input type="text" class="form-input" id="rm_cfgTIN" placeholder="0991183559012000" maxlength="16">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tanggal Return</label>
-                        <input type="date" class="form-input" id="rm_cfgDate">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Unit Satuan Default</label>
-                        <select class="form-select" id="rm_cfgUnit">
-                            <option value="UM.0021">UM.0021 (Unit)</option>
-                            <option value="UM.0001">UM.0001 (Buah)</option>
-                            <option value="UM.0002">UM.0002 (Kg)</option>
-                            <option value="UM.0003">UM.0003 (Gram)</option>
-                            <option value="UM.0005">UM.0005 (Liter)</option>
-                            <option value="UM.0010">UM.0010 (Meter)</option>
-                            <option value="UM.0018">UM.0018 (Karton)</option>
-                            <option value="UM.0019">UM.0019 (Dos/Box)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kode Barang Default</label>
-                        <input type="text" class="form-input" id="rm_cfgCode" placeholder="000000" value="000000">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kolom No. Faktur</label>
-                        <input type="text" class="form-input" id="rm_cfgColInvoice" placeholder="No. Faktur Pajak" value="No. Faktur Pajak">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kolom NPWP Penjual</label>
-                        <input type="text" class="form-input" id="rm_cfgColSellerTIN" placeholder="NPWP Penjual" value="NPWP Penjual">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Bar -->
-            <div style="display:none;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;" id="rm_statsBar">
-                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
-                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total Faktur</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statCount">0</div>
-                </div>
-                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
-                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total DPP</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statDPP">0</div>
-                </div>
-                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
-                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Total PPN</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--cyan);" id="rm_statPPN">0</div>
-                </div>
-                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">
-                    <div style="font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;">Status</div>
-                    <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--yellow);" id="rm_statStatus">Menunggu</div>
-                </div>
-            </div>
-
-            <!-- Preview Table -->
-            <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:20px;display:none;" id="rm_previewSection">
-                <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
-                    <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">📋 Preview Data Excel</div>
-                    <span style="background:rgba(59,130,246,0.12);color:var(--accent2);border:1px solid rgba(59,130,246,0.25);padding:2px 10px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;" id="rm_rowCountBadge">0 rows</span>
-                </div>
-                <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:12px;" id="rm_previewTable"></table>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="btn-row" style="margin-bottom:20px;">
-                <button class="btn btn-primary" id="rm_btnConvert" onclick="rmConvertToXML()" disabled>⚡ Generate XML</button>
-                <button class="btn btn-green" id="rm_btnDownload" onclick="rmDownloadXML()" style="display:none;">⬇ Download XML</button>
-                <button class="btn btn-teal" id="rm_btnCopy" onclick="rmCopyXML()" style="display:none;">📋 Copy XML</button>
-                <button class="btn btn-red" onclick="rmResetAll()" style="display:none;" id="rm_btnReset">↺ Reset</button>
-            </div>
-
-            <!-- XML Output -->
-            <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;" id="rm_xmlPreview">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;">🗂 XML Output Preview</div>
-                </div>
-                <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="rm_xmlContent"></pre>
-            </div>
-        </div>
-    </div>
 
     <!-- ────────── TAB 5: Faktur Pajak Coretax ────────── -->
     <div id="tab-faktur" class="tool-panel">
@@ -2136,6 +2327,71 @@
         </div>
     </div>
 
+    <!-- ────────── TAB 7: Rename PDF ────────── -->
+    <div id="tab-rename" class="tool-panel">
+        <div class="tool-card">
+            <div class="tool-card-header">
+                <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(6,182,212,0.15));border:1px solid rgba(139,92,246,0.3)">📝</div>
+                <div>
+                    <div class="tool-card-title">Rename & Download PDF</div>
+                    <div class="tool-card-desc">Ganti nama file PDF sesuai format dokumen pajak secara otomatis tanpa mengubah file asli</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Pilih Format Dokumen</label>
+                <select class="form-select" id="rnFormat" onchange="rnUpdateInfo()">
+                    <option value="faktur">🧾 Faktur Pajak (Coretax/e-Faktur)</option>
+                    <option value="ebupot">📊 Ebupot PPh 21 / Unifikasi</option>
+                    <option value="nrp">↩️ NRP (Nota Retur Pajak)</option>
+                </select>
+            </div>
+
+            <div id="rnFormatInfo" class="mode-desc" style="margin-bottom:15px; text-align: left;">
+                💡 <strong>Format Default:</strong> Masa Pajak_No Faktur_Penjual_Pembeli_Ref
+            </div>
+
+            <div id="rnOptionArea" style="display:none; margin-bottom:20px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom:10px; text-transform: uppercase; letter-spacing: 0.5px;">📋 Komponen Nama File</div>
+                <div id="rnOptionsContainer" class="rn-option-group"></div>
+            </div>
+
+            <div class="upload-area" id="rnUploadBox">
+                <span class="upload-icon">📤</span>
+                <div class="upload-title">Klik atau Drop PDF di sini</div>
+                <div class="upload-sub">Mendukung multiple file PDF sesuai format yang dipilih</div>
+                <input type="file" id="rnFileInput" accept=".pdf" multiple>
+            </div>
+
+            <div id="rnFileInfo" style="margin-top:10px;"></div>
+
+            <div class="btn-row" style="margin-top:14px;">
+                <button class="btn btn-primary" id="rnProcessBtn" disabled onclick="rnStartProcessing()">⚡ Generate Nama Baru</button>
+                <button class="btn btn-green" id="rnDownloadAllBtn" style="display:none;" onclick="rnDownloadAll()">📥 Download Semua (.zip)</button>
+                <button class="btn btn-red" id="rnClearBtn" style="display:none;" onclick="rnClear()">🗑️ Clear</button>
+            </div>
+
+            <div id="rnStatus" style="margin-top:12px;font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;min-height:20px;">Belum ada file yang dipilih</div>
+
+            <div id="rnResultSection" style="display:none;margin-top:20px;">
+                <div class="section-label" style="margin-bottom:10px;">Preview Perubahan Nama</div>
+                <div class="rn-table-wrap">
+                    <table class="rn-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Nama Asli</th>
+                                <th>Nama Baru</th>
+                                <th style="width: 100px; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rnResultBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <footer class="footer">
@@ -2162,11 +2418,24 @@
 // ════════════════════════════════════════════════
 function switchTab(id) {
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const tabs = ['xml','grossup','pph21','bppu','faktur','return-masukan','rename'];
+        const tabs = ['xml','grossup','pph21','bppu','faktur','rename'];
         b.classList.toggle('active', tabs[i] === id);
     });
     document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('tab-' + id).classList.add('active');
+}
+
+function switchCoretaxSub(id) {
+    const btns = document.querySelectorAll('.ctx-sub-btn');
+    const panels = document.querySelectorAll('.ctx-sub-panel');
+    const IDs = ['keluaran', 'return', 'bpu', 'bp21'];
+    
+    btns.forEach((btn, idx) => {
+        btn.classList.toggle('active', IDs[idx] === id);
+    });
+    
+    panels.forEach(p => p.classList.remove('active'));
+    document.getElementById('ctx-' + id).classList.add('active');
 }
 
 // ════════════════════════════════════════════════
@@ -2174,6 +2443,13 @@ function switchTab(id) {
 // ════════════════════════════════════════════════
 let xmlSelectedTIN = null, xmlSelectedIDTKU = null, xmlSelectedCompany = null;
 let xmlExcelData = null, xmlContent = '';
+
+function xmlSyncTIN() {
+    const _tin = xmlSelectedTIN || '';
+    if(document.getElementById('bpu_cfgTIN')) document.getElementById('bpu_cfgTIN').value = _tin;
+    if(document.getElementById('bp21_cfgTIN')) document.getElementById('bp21_cfgTIN').value = _tin;
+    if(document.getElementById('rm_cfgTIN')) document.getElementById('rm_cfgTIN').value = _tin;
+}
 
 function xmlSelectCompany(el) {
     document.querySelectorAll('.company-card').forEach(c => c.classList.remove('active'));
@@ -2200,6 +2476,7 @@ function xmlSelectCompany(el) {
     badge.classList.add('show');
     document.getElementById('xmlActiveBadgeText').textContent = `Perusahaan aktif: ${xmlSelectedCompany} · NPWP: ${xmlSelectedTIN}`;
     if (xmlExcelData) document.getElementById('xmlConvertBtn').disabled = false;
+    xmlSyncTIN();
 }
 
 function xmlUpdateCustom() {
@@ -2217,6 +2494,7 @@ function xmlUpdateCustom() {
         xmlSelectedTIN = null; xmlSelectedIDTKU = null;
         document.getElementById('xmlConvertBtn').disabled = true;
         document.getElementById('xmlActiveBadge').classList.remove('show');
+        xmlSyncTIN();
         return;
     }
 
@@ -2227,6 +2505,7 @@ function xmlUpdateCustom() {
         document.getElementById('xmlConvertBtn').disabled = true;
         document.getElementById('xmlActiveBadge').classList.remove('show');
         cardNpwp.textContent = npwpRaw || 'Klik untuk isi NPWP';
+        xmlSyncTIN();
         return;
     }
 
@@ -2248,6 +2527,7 @@ function xmlUpdateCustom() {
     document.getElementById('xmlActiveBadgeText').textContent = `Perusahaan aktif: ${displayName} · NPWP: ${npwpRaw}`;
 
     if (xmlExcelData) document.getElementById('xmlConvertBtn').disabled = false;
+    xmlSyncTIN();
 }
 
 (function() {
@@ -4556,6 +4836,17 @@ function impDownloadResult() {
         return n.toLocaleString('id-ID');
     }
 
+    window.rmDownloadTemplate = function() {
+        const data = [
+            { 'No. Faktur Pajak':'010.000-24.12345678', 'NPWP Penjual':'0991183559012000', 'Nama Barang':'Monitor LED 24"', 'Harga':1500000, 'Qty':2, 'Discount':0, 'Total':3000000, 'PPN':330000 },
+            { 'No. Faktur Pajak':'010.000-24.87654321', 'NPWP Penjual':'0123456789012000', 'Nama Barang':'Keyboard Mechanical', 'Harga':800000, 'Qty':5, 'Discount':50000, 'Total':3950000, 'PPN':434500 }
+        ];
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Template_Return');
+        XLSX.writeFile(wb, 'Template_Return_Masukan.xlsx');
+    };
+
     window.rmHandleFile = function(e) {
         const f = e.target.files[0];
         if (f) rmProcessFile(f);
@@ -4658,7 +4949,7 @@ function impDownloadResult() {
             const [y,mo,d] = dateRaw.split('-');
             const returnDate = `${d}-${mo}-${y}`; // dd-mm-yyyy
             const unit = document.getElementById('rm_cfgUnit').value;
-            const code = document.getElementById('rm_cfgCode').value || '000000';
+            const type = document.getElementById('rm_cfgType').value;
 
             // Group by invoice number
             const invoiceMap = new Map();
@@ -4691,16 +4982,16 @@ function impDownloadResult() {
                     totalVAT          += ppn;
                     totalOtherTaxBase += otherTaxBase;
 
-                    const namaBarangUnderscore = namaBarang.toUpperCase().replace(/\s+/g,'_').replace(/[^A-Z0-9_]/g,'');
+                    const namaBarangUnderscore = namaBarang.toUpperCase().replace(/\s+/g,' ').replace(/[^A-Z0-9 ]/g,'');
                     const invoiceClean         = invoiceNum.replace(/[^A-Z0-9]/gi,'');
                     const nRaw                 = namaBarangUnderscore;
                     const nameField            = nRaw.substring(0,100).replace(/[<>&"]/g, c => c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':'&quot;');
 
                     detailRows += `
           <Rows>
-            <Type>A</Type>
+            <Type>${type}</Type>
             <Name>${nameField}</Name>
-            <Code>${code}</Code>
+            <Code>000000</Code>
             <Quantity>${qty}</Quantity>
             <Unit>${unit}</Unit>
             <UnitPrice>${Math.round(harga)}</UnitPrice>
@@ -5160,6 +5451,509 @@ async function rnDownloadAll() {
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
     status.textContent = 'ZIP berhasil diunduh!';
 }
+
+// ── XML Escape Utility ──
+function xmlEscape(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+// ════════════════════════════════════════════════
+//  TAB 8: BPU UNIFIKASI (Excel → XML)
+// ════════════════════════════════════════════════
+const BPU_CODES = [
+    { code:'24-100-01', desc:'Dividen', rate:15 },
+    { code:'24-100-02', desc:'Bunga', rate:15 },
+    { code:'24-100-03', desc:'Royalti', rate:15 },
+    { code:'24-100-04', desc:'Bunga Deposito/Tabungan (Final)', rate:20 },
+    { code:'24-100-05', desc:'Bunga Obligasi (Final)', rate:15 },
+    { code:'24-100-06', desc:'Bunga Simpanan Koperasi (Final)', rate:10 },
+    { code:'24-100-07', desc:'Hadiah Undian (Final)', rate:25 },
+    { code:'24-102-01', desc:'Sewa Harta Selain Tanah/Bangunan', rate:2 },
+    { code:'24-104-01', desc:'Jasa Teknik', rate:2 },
+    { code:'24-104-02', desc:'Jasa Manajemen', rate:2 },
+    { code:'24-104-03', desc:'Jasa Konsultan', rate:2 },
+    { code:'24-104-04', desc:'Jasa Penilai', rate:2 },
+    { code:'24-104-05', desc:'Jasa Aktuaris', rate:2 },
+    { code:'24-104-06', desc:'Jasa Akuntan/Pembukuan', rate:2 },
+    { code:'24-104-07', desc:'Jasa Perancang', rate:2 },
+    { code:'24-104-08', desc:'Jasa Pengeboran Migas', rate:2 },
+    { code:'24-104-09', desc:'Jasa Penunjang Migas', rate:2 },
+    { code:'24-104-10', desc:'Jasa Penambangan', rate:2 },
+    { code:'24-104-11', desc:'Jasa Penunjang Penerbangan', rate:2 },
+    { code:'24-104-12', desc:'Jasa Penebangan Hutan', rate:2 },
+    { code:'24-104-13', desc:'Jasa Pengolahan Limbah', rate:2 },
+    { code:'24-104-14', desc:'Jasa Penyedia Tenaga Kerja', rate:2 },
+    { code:'24-104-15', desc:'Jasa Perantara/Keagenan', rate:2 },
+    { code:'24-104-16', desc:'Jasa Perdagangan Surat Berharga', rate:2 },
+    { code:'24-104-17', desc:'Jasa Kustodian/Penitipan', rate:2 },
+    { code:'24-104-18', desc:'Jasa Freight Forwarding', rate:2 },
+    { code:'24-104-19', desc:'Jasa Maklon', rate:2 },
+    { code:'24-104-20', desc:'Jasa Penyelidikan/Keamanan', rate:2 },
+    { code:'24-104-21', desc:'Jasa Event Organizer', rate:2 },
+    { code:'24-104-22', desc:'Jasa Pengepakan', rate:2 },
+    { code:'24-104-23', desc:'Jasa Penyediaan Tempat/Waktu Media', rate:2 },
+    { code:'24-104-24', desc:'Jasa Pembasmian Hama', rate:2 },
+    { code:'24-104-25', desc:'Jasa Kebersihan/Cleaning Service', rate:2 },
+    { code:'24-104-26', desc:'Jasa Katering', rate:2 },
+    { code:'24-401-01', desc:'Sewa Tanah/Bangunan (Final)', rate:10 },
+    { code:'24-401-02', desc:'Konstruksi Pelaksanaan Kecil (Final)', rate:1.75 },
+    { code:'24-401-03', desc:'Konstruksi Pelaksanaan Menengah/Besar (Final)', rate:2.65 },
+    { code:'24-401-04', desc:'Konstruksi Pelaksanaan Tanpa SBU (Final)', rate:4 },
+    { code:'24-401-05', desc:'Konstruksi Perencanaan/Pengawasan SBU (Final)', rate:3.5 },
+    { code:'24-401-06', desc:'Konstruksi Perencanaan/Pengawasan Non-SBU (Final)', rate:6 },
+    { code:'24-401-07', desc:'Konstruksi Terintegrasi SBU (Final)', rate:2.65 },
+    { code:'24-401-08', desc:'Konstruksi Terintegrasi Non-SBU (Final)', rate:4 },
+];
+const BPU_RATE_MAP = {};
+BPU_CODES.forEach(c => BPU_RATE_MAP[c.code] = c.rate);
+
+let bpuParsedData = [], bpuHeaders = [], bpuXmlOutput = '';
+
+function bpuDownloadTemplate() {
+    const wb = XLSX.utils.book_new();
+    const mainData = [
+        ['CustomerName', 'CounterpartTin','TaxObjectCode','TaxBase','DocumentType','DocumentNumber','DocumentDate','WithholdingDate'],
+        ['PT Contoh Nama', '0991183559012000','24-104-06','10000000','1','INV-001','2025-01-28','2025-03-18'],
+        ['Client B', '1234567890123000','24-401-01','50000000','1','INV-002','2025-02-15','2025-02-28'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(mainData);
+    ws['!cols'] = [{wch:25},{wch:20},{wch:20},{wch:15},{wch:15},{wch:18},{wch:15},{wch:15}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Data_BPU');
+
+    // Reference sheet with codes
+    const refData = [['Kode Objek Pajak','Deskripsi','Tarif (%)']];
+    BPU_CODES.forEach(c => refData.push([c.code, c.desc, c.rate]));
+    const wsRef = XLSX.utils.aoa_to_sheet(refData);
+    wsRef['!cols'] = [{wch:18},{wch:50},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, wsRef, 'Referensi_Kode');
+
+    // Add data validation for TaxObjectCode column (C)
+    const codeList = BPU_CODES.map(c => c.code).join(',');
+    if (!ws['!dataValidations']) ws['!dataValidations'] = [];
+    ws['!dataValidations'].push({ sqref:'C2:C9999', type:'list', formula1:'"'+codeList+'"', showDropDown:false });
+
+    XLSX.writeFile(wb, 'Template_BPU_Unifikasi.xlsx');
+}
+
+function bpuHandleFile(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const wb = XLSX.read(ev.target.result, {type:'binary', cellText:false, cellDates:false});
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+            if (data.length < 2) { bpuShowErr('File kosong atau hanya header.'); return; }
+            bpuHeaders = data[0].map(h => String(h).trim());
+            bpuParsedData = data.slice(1).filter(r => r.some(c => c !== ''));
+            incrementUploads(1);
+            bpuRenderPreview();
+            document.getElementById('bpu_previewSection').style.display = 'block';
+            document.getElementById('bpu_btnConvert').disabled = false;
+            document.getElementById('bpu_uploadZone').classList.add('success');
+        } catch(err) { bpuShowErr('Gagal baca file: ' + err.message); }
+    };
+    reader.readAsBinaryString(f);
+}
+
+function bpuShowErr(msg) {
+    const el = document.getElementById('bpu_alert');
+    document.getElementById('bpu_alertMsg').textContent = msg;
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 6000);
+}
+
+function bpuRenderPreview() {
+    const tbl = document.getElementById('bpu_previewTable');
+    let html = `<thead><tr style="background:rgba(236,72,153,0.08);">${bpuHeaders.map(h => `<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pink);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border);">${h}</th>`).join('')}<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);border-bottom:1px solid var(--border);">TARIF AUTO</th></tr></thead><tbody>`;
+    bpuParsedData.slice(0,50).forEach((row, ri) => {
+        const codeIdx = bpuHeaders.findIndex(h => h.toLowerCase().includes('taxobjectcode') || h.toLowerCase().includes('kode'));
+        const code = codeIdx >= 0 ? String(row[codeIdx]).trim() : '';
+        const rate = BPU_RATE_MAP[code] ?? '?';
+        html += `<tr style="${ri%2===1?'background:rgba(255,255,255,0.02)':''}">` + bpuHeaders.map((h,i) => {
+            return `<td style="padding:8px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04);">${row[i] ?? ''}</td>`;
+        }).join('') + `<td style="padding:8px 12px;color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.04);">${rate}%</td></tr>`;
+    });
+    html += '</tbody>';
+    tbl.innerHTML = html;
+    document.getElementById('bpu_rowBadge').textContent = bpuParsedData.length + ' rows';
+}
+
+function bpuConvertXML() {
+    try {
+        const tin = document.getElementById('bpu_cfgTIN').value.replace(/\D/g,'');
+        if (tin.length !== 16) { bpuShowErr('NPWP Pemotong harus 16 digit!'); return; }
+        const month = document.getElementById('bpu_cfgMonth').value;
+        const year = document.getElementById('bpu_cfgYear').value;
+        const cert = document.getElementById('bpu_cfgCert').value;
+        const doc = document.getElementById('bpu_cfgDoc').value;
+        const gov = document.getElementById('bpu_cfgGov').value;
+        const idtku = tin + '000000';
+
+        const ci = idx => bpuHeaders.findIndex(h => h.toLowerCase().replace(/[\s_]+/g,'').includes(idx));
+        const colCpTin = ci('counterparttin');
+        const colCode = ci('taxobjectcode');
+        const colBase = ci('taxbase');
+        const colDocNum = ci('documentnumber');
+        const colDocType = ci('documenttype');
+        const colDocDate = ci('documentdate');
+        const colWDate = ci('withholdingdate');
+
+        if (colCpTin < 0) { bpuShowErr('Kolom CounterpartTin tidak ditemukan!'); return; }
+        if (colCode < 0) { bpuShowErr('Kolom TaxObjectCode tidak ditemukan!'); return; }
+        if (colBase < 0) { bpuShowErr('Kolom TaxBase tidak ditemukan!'); return; }
+
+        let bpuList = '';
+        bpuParsedData.forEach(row => {
+            const cpTin = String(row[colCpTin] || '').replace(/\D/g,'').padEnd(16,'0');
+            const code = String(row[colCode] || '').trim();
+            const taxBase = Number(row[colBase]) || 0;
+            const rate = BPU_RATE_MAP[code] ?? 2;
+            const docNum = String(row[colDocNum] ?? '').trim() || 'N/A';
+            const rowDoc = colDocType >= 0 && row[colDocType] ? String(row[colDocType]).trim() : doc;
+            const docDate = bpuFormatDate(row[colDocDate]);
+            const wDate = bpuFormatDate(row[colWDate]);
+            const cpIdtku = cpTin + '000000';
+
+            bpuList += `
+    <Bpu>
+      <TaxPeriodMonth>${month}</TaxPeriodMonth>
+      <TaxPeriodYear>${year}</TaxPeriodYear>
+      <CounterpartTin>${cpTin}</CounterpartTin>
+      <IDPlaceOfBusinessActivityOfIncomeRecipient>${cpIdtku}</IDPlaceOfBusinessActivityOfIncomeRecipient>
+      <TaxCertificate>${cert}</TaxCertificate>
+      <TaxObjectCode>${code}</TaxObjectCode>
+      <TaxBase>${Math.round(taxBase)}</TaxBase>
+      <Rate>${rate}</Rate>
+      <Document>${rowDoc}</Document>
+      <DocumentNumber>${xmlEscape(docNum)}</DocumentNumber>
+      <DocumentDate>${docDate}</DocumentDate>
+      <IDPlaceOfBusinessActivity>${idtku}</IDPlaceOfBusinessActivity>
+      <GovTreasurerOpt>${gov}</GovTreasurerOpt>
+      <SP2DNumber />
+      <WithholdingDate>${wDate}</WithholdingDate>
+    </Bpu>`;
+        });
+
+        bpuXmlOutput = `<?xml version="1.0" encoding="utf-8"?>
+<BpuBulk xsi:noNamespaceSchemaLocation="schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <TIN>${tin}</TIN>
+  <ListOfBpu>${bpuList}
+  </ListOfBpu>
+</BpuBulk>`;
+
+        const hl = bpuXmlOutput.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/&lt;(\/?[\w]+)&gt;/g,'<span style="color:#569cd6;">&lt;$1&gt;</span>')
+            .replace(/(&lt;\?xml[^?]*\?&gt;)/g,'<span style="color:#569cd6;">$1</span>');
+        document.getElementById('bpu_xmlContent').innerHTML = hl;
+        document.getElementById('bpu_xmlPreview').style.display = 'block';
+        document.getElementById('bpu_btnDownload').style.display = 'inline-flex';
+        document.getElementById('bpu_btnCopy').style.display = 'inline-flex';
+        document.getElementById('bpu_btnReset').style.display = 'inline-flex';
+        document.getElementById('bpu_xmlPreview').scrollIntoView({behavior:'smooth'});
+    } catch(err) { bpuShowErr('Gagal generate XML: ' + err.message); console.error(err); }
+}
+
+function bpuFormatDate(v) {
+    if (!v) return '';
+    if (typeof v === 'number') {
+        const epoch = new Date(Date.UTC(1899,11,30));
+        const r = new Date(epoch.getTime() + v * 86400000);
+        return `${r.getUTCFullYear()}-${String(r.getUTCMonth()+1).padStart(2,'0')}-${String(r.getUTCDate()).padStart(2,'0')}`;
+    }
+    const d = new Date(v);
+    if (!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return String(v).trim();
+}
+
+function bpuDownloadXML() {
+    if (!bpuXmlOutput) return;
+    const blob = new Blob([bpuXmlOutput], {type:'application/xml'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `BPU_Unifikasi_${new Date().toISOString().slice(0,10)}.xml`;
+    a.click(); URL.revokeObjectURL(url);
+}
+
+function bpuCopyXML() {
+    if (!bpuXmlOutput) return;
+    navigator.clipboard.writeText(bpuXmlOutput).then(() => {
+        const btn = document.getElementById('bpu_btnCopy');
+        btn.textContent = '✓ Tersalin!';
+        setTimeout(() => btn.innerHTML = '📋 Copy XML', 2000);
+    });
+}
+
+function bpuResetAll() {
+    bpuParsedData = []; bpuHeaders = []; bpuXmlOutput = '';
+    document.getElementById('bpu_fileInput').value = '';
+    document.getElementById('bpu_previewTable').innerHTML = '';
+    document.getElementById('bpu_xmlContent').innerHTML = '';
+    document.getElementById('bpu_previewSection').style.display = 'none';
+    document.getElementById('bpu_xmlPreview').style.display = 'none';
+    document.getElementById('bpu_btnDownload').style.display = 'none';
+    document.getElementById('bpu_btnCopy').style.display = 'none';
+    document.getElementById('bpu_btnReset').style.display = 'none';
+    document.getElementById('bpu_btnConvert').disabled = true;
+    document.getElementById('bpu_alert').style.display = 'none';
+    document.getElementById('bpu_uploadZone').classList.remove('success');
+}
+
+// Drag & drop BPU
+document.addEventListener('DOMContentLoaded', () => {
+    const uz = document.getElementById('bpu_uploadZone');
+    if (uz) {
+        uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
+        uz.addEventListener('dragleave', () => uz.classList.remove('dragover'));
+        uz.addEventListener('drop', e => {
+            e.preventDefault(); uz.classList.remove('dragover');
+            const f = e.dataTransfer.files[0];
+            if (f) { const dt = new DataTransfer(); dt.items.add(f); document.getElementById('bpu_fileInput').files = dt.files; bpuHandleFile({target:{files:[f]}}); }
+        });
+    }
+});
+
+
+// ════════════════════════════════════════════════
+//  TAB 9: BP21 PPh 21 (Excel → XML)
+// ════════════════════════════════════════════════
+const BP21_CODES = [
+    { code:'21-100-01', desc:'Pegawai Tetap - Gaji Bulanan', rate:null },
+    { code:'21-100-02', desc:'Pegawai Tidak Tetap - Upah Harian', rate:null },
+    { code:'21-100-03', desc:'Pensiun Berkala', rate:null },
+    { code:'21-100-04', desc:'Dewan Komisaris/Pengawas Non Pegawai Tetap', rate:null },
+    { code:'21-100-05', desc:'Mantan Pegawai', rate:null },
+    { code:'21-100-06', desc:'Peserta Kegiatan', rate:null },
+    { code:'21-100-07', desc:'Bukan Pegawai - Berkesinambungan', rate:null },
+    { code:'21-100-08', desc:'Bukan Pegawai - Tidak Berkesinambungan', rate:null },
+    { code:'21-100-09', desc:'Imbalan Peserta Kegiatan Lainnya', rate:null },
+    { code:'21-100-10', desc:'Natura/Kenikmatan', rate:null },
+    { code:'21-100-34', desc:'TER - Tidak Final (Masa Desember/Keluar)', rate:null },
+    { code:'21-100-35', desc:'TER - Bulanan (Jan-Nov)', rate:null },
+    { code:'21-401-01', desc:'Final - Pesangon Sekaligus', rate:null },
+    { code:'21-401-02', desc:'Final - JHT/JKP Sekaligus', rate:null },
+    { code:'21-402-01', desc:'Final - Honorarium PNS/TNI/Polri', rate:null },
+    { code:'21-402-02', desc:'Final - Uang Manfaat Pensiun', rate:null },
+    { code:'21-402-03', desc:'Final - Uang Pensiun TMT', rate:null },
+];
+
+let bp21ParsedData = [], bp21Headers = [], bp21XmlOutput = '';
+
+function bp21DownloadTemplate() {
+    const wb = XLSX.utils.book_new();
+    const mainData = [
+        ['CustomerName','CounterpartTin','StatusTaxExemption','TaxObjectCode','Gross','Rate','DocumentType','DocumentNumber','DocumentDate','WithholdingDate'],
+        ['Budi Santoso','1403011006750026','K/3','21-100-35','40000000','16','1','ABC123','2025-01-13','2025-01-21'],
+        ['Siti Aminah','3173062510770011','TK/0','21-100-34','100000000','0','1','INV-002','2025-02-26','2025-02-28'],
+        ['Andi Gunawan','3374142512700001','K/1','21-402-03','5000000','15','1','DOC-003','2025-01-13','2025-01-21'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(mainData);
+    ws['!cols'] = [{wch:25},{wch:20},{wch:20},{wch:16},{wch:15},{wch:8},{wch:15},{wch:18},{wch:15},{wch:15}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Data_BP21');
+
+    // Reference sheet
+    const refData = [['Kode Objek Pajak','Deskripsi','Catatan Tarif']];
+    BP21_CODES.forEach(c => refData.push([c.code, c.desc, c.rate !== null ? c.rate + '%' : 'Isi manual (TER/progresif)']));
+    const wsRef = XLSX.utils.aoa_to_sheet(refData);
+    wsRef['!cols'] = [{wch:18},{wch:50},{wch:30}];
+    XLSX.utils.book_append_sheet(wb, wsRef, 'Referensi_Kode');
+
+    // Reference PTKP
+    const ptkpData = [
+        ['Status PTKP','Keterangan'],
+        ['TK/0','Tidak Kawin, 0 Tanggungan'],
+        ['TK/1','Tidak Kawin, 1 Tanggungan'],
+        ['TK/2','Tidak Kawin, 2 Tanggungan'],
+        ['TK/3','Tidak Kawin, 3 Tanggungan'],
+        ['K/0','Kawin, 0 Tanggungan'],
+        ['K/1','Kawin, 1 Tanggungan'],
+        ['K/2','Kawin, 2 Tanggungan'],
+        ['K/3','Kawin, 3 Tanggungan'],
+    ];
+    const wsPtkp = XLSX.utils.aoa_to_sheet(ptkpData);
+    wsPtkp['!cols'] = [{wch:12},{wch:35}];
+    XLSX.utils.book_append_sheet(wb, wsPtkp, 'Referensi_PTKP');
+
+    // Data validation for TaxObjectCode (D)
+    const codeList = BP21_CODES.map(c => c.code).join(',');
+    if (!ws['!dataValidations']) ws['!dataValidations'] = [];
+    ws['!dataValidations'].push({ sqref:'D2:D9999', type:'list', formula1:'"'+codeList+'"', showDropDown:false });
+    // Data validation for StatusTaxExemption (C)
+    ws['!dataValidations'].push({ sqref:'C2:C9999', type:'list', formula1:'"TK/0,TK/1,TK/2,TK/3,K/0,K/1,K/2,K/3"', showDropDown:false });
+
+    XLSX.writeFile(wb, 'Template_BP21_PPh21.xlsx');
+}
+
+function bp21HandleFile(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const wb = XLSX.read(ev.target.result, {type:'binary', cellText:false, cellDates:false});
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+            if (data.length < 2) { bp21ShowErr('File kosong atau hanya header.'); return; }
+            bp21Headers = data[0].map(h => String(h).trim());
+            bp21ParsedData = data.slice(1).filter(r => r.some(c => c !== ''));
+            incrementUploads(1);
+            bp21RenderPreview();
+            document.getElementById('bp21_previewSection').style.display = 'block';
+            document.getElementById('bp21_btnConvert').disabled = false;
+            document.getElementById('bp21_uploadZone').classList.add('success');
+        } catch(err) { bp21ShowErr('Gagal baca file: ' + err.message); }
+    };
+    reader.readAsBinaryString(f);
+}
+
+function bp21ShowErr(msg) {
+    const el = document.getElementById('bp21_alert');
+    document.getElementById('bp21_alertMsg').textContent = msg;
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 6000);
+}
+
+function bp21RenderPreview() {
+    const tbl = document.getElementById('bp21_previewTable');
+    let html = `<thead><tr style="background:rgba(6,182,212,0.08);">${bp21Headers.map(h => `<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cyan);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border);">${h}</th>`).join('')}</tr></thead><tbody>`;
+    bp21ParsedData.slice(0,50).forEach((row, ri) => {
+        html += `<tr style="${ri%2===1?'background:rgba(255,255,255,0.02)':''}">` + bp21Headers.map((h,i) => {
+            return `<td style="padding:8px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04);">${row[i] ?? ''}</td>`;
+        }).join('') + '</tr>';
+    });
+    html += '</tbody>';
+    tbl.innerHTML = html;
+    document.getElementById('bp21_rowBadge').textContent = bp21ParsedData.length + ' rows';
+}
+
+function bp21ConvertXML() {
+    try {
+        const tin = document.getElementById('bp21_cfgTIN').value.replace(/\D/g,'');
+        if (tin.length !== 16) { bp21ShowErr('NPWP Pemotong harus 16 digit!'); return; }
+        const month = document.getElementById('bp21_cfgMonth').value;
+        const year = document.getElementById('bp21_cfgYear').value;
+        const cert = document.getElementById('bp21_cfgCert').value;
+        const doc = document.getElementById('bp21_cfgDoc').value;
+        const deemedDefault = Number(document.getElementById('bp21_cfgDeemed').value) || 100;
+        const idtku = tin + '000000';
+
+        const ci = idx => bp21Headers.findIndex(h => h.toLowerCase().replace(/[\s_]+/g,'').includes(idx));
+        const colCpTin = ci('counterparttin');
+        const colPtkp = ci('statustaxexemption');
+        const colCode = ci('taxobjectcode');
+        const colGross = ci('gross');
+        const colRate = ci('rate');
+        const colDocNum = ci('documentnumber');
+        const colDocType = ci('documenttype');
+        const colDocDate = ci('documentdate');
+        const colWDate = ci('withholdingdate');
+        const colDeemed = ci('deemed');
+
+        if (colCpTin < 0) { bp21ShowErr('Kolom CounterpartTin tidak ditemukan!'); return; }
+        if (colCode < 0) { bp21ShowErr('Kolom TaxObjectCode tidak ditemukan!'); return; }
+        if (colGross < 0) { bp21ShowErr('Kolom Gross tidak ditemukan!'); return; }
+
+        let bp21List = '';
+        bp21ParsedData.forEach(row => {
+            const cpTin = String(row[colCpTin] || '').replace(/\D/g,'').padEnd(16,'0');
+            const ptkp = colPtkp >= 0 ? String(row[colPtkp] || 'TK/0').trim() : 'TK/0';
+            const code = String(row[colCode] || '').trim();
+            const gross = Number(row[colGross]) || 0;
+            const rate = colRate >= 0 ? (Number(row[colRate]) || 0) : 0;
+            const deemed = colDeemed >= 0 && row[colDeemed] !== '' ? Number(row[colDeemed]) : deemedDefault;
+            const docNum = colDocNum >= 0 ? String(row[colDocNum] ?? '').trim() || 'N/A' : 'N/A';
+            const rowDoc = colDocType >= 0 && row[colDocType] ? String(row[colDocType]).trim() : doc;
+            const docDate = colDocDate >= 0 ? bpuFormatDate(row[colDocDate]) : '';
+            const wDate = colWDate >= 0 ? bpuFormatDate(row[colWDate]) : '';
+            const cpIdtku = cpTin + '000000';
+
+            bp21List += `
+    <Bp21>
+      <TaxPeriodMonth>${month}</TaxPeriodMonth>
+      <TaxPeriodYear>${year}</TaxPeriodYear>
+      <CounterpartTin>${cpTin}</CounterpartTin>
+      <IDPlaceOfBusinessActivityOfIncomeRecipient>${cpIdtku}</IDPlaceOfBusinessActivityOfIncomeRecipient>
+      <StatusTaxExemption>${ptkp}</StatusTaxExemption>
+      <TaxCertificate>${cert}</TaxCertificate>
+      <TaxObjectCode>${code}</TaxObjectCode>
+      <Gross>${Math.round(gross)}</Gross>
+      <Deemed>${deemed}</Deemed>
+      <Rate>${rate}</Rate>
+      <Document>${rowDoc}</Document>
+      <DocumentNumber>${xmlEscape(docNum)}</DocumentNumber>
+      <DocumentDate>${docDate}</DocumentDate>
+      <IDPlaceOfBusinessActivity>${idtku}</IDPlaceOfBusinessActivity>
+      <WithholdingDate>${wDate}</WithholdingDate>
+    </Bp21>`;
+        });
+
+        bp21XmlOutput = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Bp21Bulk xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <TIN>${tin}</TIN>
+  <ListOfBp21>${bp21List}
+  </ListOfBp21>
+</Bp21Bulk>`;
+
+        const hl = bp21XmlOutput.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/&lt;(\/?[\w]+)&gt;/g,'<span style="color:#569cd6;">&lt;$1&gt;</span>')
+            .replace(/(&lt;\?xml[^?]*\?&gt;)/g,'<span style="color:#569cd6;">$1</span>');
+        document.getElementById('bp21_xmlContent').innerHTML = hl;
+        document.getElementById('bp21_xmlPreview').style.display = 'block';
+        document.getElementById('bp21_btnDownload').style.display = 'inline-flex';
+        document.getElementById('bp21_btnCopy').style.display = 'inline-flex';
+        document.getElementById('bp21_btnReset').style.display = 'inline-flex';
+        document.getElementById('bp21_xmlPreview').scrollIntoView({behavior:'smooth'});
+    } catch(err) { bp21ShowErr('Gagal generate XML: ' + err.message); console.error(err); }
+}
+
+function bp21DownloadXML() {
+    if (!bp21XmlOutput) return;
+    const blob = new Blob([bp21XmlOutput], {type:'application/xml'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `BP21_PPh21_${new Date().toISOString().slice(0,10)}.xml`;
+    a.click(); URL.revokeObjectURL(url);
+}
+
+function bp21CopyXML() {
+    if (!bp21XmlOutput) return;
+    navigator.clipboard.writeText(bp21XmlOutput).then(() => {
+        const btn = document.getElementById('bp21_btnCopy');
+        btn.textContent = '✓ Tersalin!';
+        setTimeout(() => btn.innerHTML = '📋 Copy XML', 2000);
+    });
+}
+
+function bp21ResetAll() {
+    bp21ParsedData = []; bp21Headers = []; bp21XmlOutput = '';
+    document.getElementById('bp21_fileInput').value = '';
+    document.getElementById('bp21_previewTable').innerHTML = '';
+    document.getElementById('bp21_xmlContent').innerHTML = '';
+    document.getElementById('bp21_previewSection').style.display = 'none';
+    document.getElementById('bp21_xmlPreview').style.display = 'none';
+    document.getElementById('bp21_btnDownload').style.display = 'none';
+    document.getElementById('bp21_btnCopy').style.display = 'none';
+    document.getElementById('bp21_btnReset').style.display = 'none';
+    document.getElementById('bp21_btnConvert').disabled = true;
+    document.getElementById('bp21_alert').style.display = 'none';
+    document.getElementById('bp21_uploadZone').classList.remove('success');
+}
+
+// Drag & drop BP21
+document.addEventListener('DOMContentLoaded', () => {
+    const uz = document.getElementById('bp21_uploadZone');
+    if (uz) {
+        uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
+        uz.addEventListener('dragleave', () => uz.classList.remove('dragover'));
+        uz.addEventListener('drop', e => {
+            e.preventDefault(); uz.classList.remove('dragover');
+            const f = e.dataTransfer.files[0];
+            if (f) { const dt = new DataTransfer(); dt.items.add(f); document.getElementById('bp21_fileInput').files = dt.files; bp21HandleFile({target:{files:[f]}}); }
+        });
+    }
+});
+
 </script>
 </body>
 </html>
