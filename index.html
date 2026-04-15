@@ -2546,8 +2546,8 @@ function xmlReset() {
 
 function xmlDownloadTemplate() {
     const data = [
-        { TaxInvoiceDate:'2025-02-02', RefDesc:'Referensi 001', BuyerDocument:'TIN', BuyerDocumentNumber:'1091031210912281', BuyerName:'PT CONTOH PEMBELI', BuyerAdress:'Jl. Contoh No. 123', BuyerEmail:'buyer@example.com', Name:'Barang Contoh', Price:15000, Qty:200, TotalDiscount:100000, TaxBase:2900000, Type:'Jasa' },
-        { TaxInvoiceDate:'2025-02-03', RefDesc:'Referensi 002', BuyerDocument:'National ID', BuyerDocumentNumber:'3201234567890123', BuyerName:'John Doe', BuyerAdress:'Jl. Merdeka No. 45', BuyerEmail:'john@example.com', Name:'Produk Sample', Price:25000, Qty:100, TotalDiscount:50000, TaxBase:2450000, Type:'Barang' }
+        { TaxInvoiceDate:'2025-02-02', RefDesc:'Referensi 001', BuyerIDTKU:'1', BuyerDocument:'TIN', BuyerDocumentNumber:'1091031210912281', BuyerName:'PT CONTOH PEMBELI', BuyerAdress:'Jl. Contoh No. 123', BuyerEmail:'buyer@example.com', Name:'Barang Contoh', Price:15000, Qty:200, TotalDiscount:100000, TaxBase:2900000, Type:'Jasa' },
+        { TaxInvoiceDate:'2025-02-03', RefDesc:'Referensi 002', BuyerIDTKU:'0', BuyerDocument:'National ID', BuyerDocumentNumber:'3201234567890123', BuyerName:'John Doe', BuyerAdress:'Jl. Merdeka No. 45', BuyerEmail:'john@example.com', Name:'Produk Sample', Price:25000, Qty:100, TotalDiscount:50000, TaxBase:2450000, Type:'Barang' }
     ];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -2562,14 +2562,36 @@ function xmlEscape(v) {
 
 function xmlFormatDate(v) {
     if (!v) return '';
-    if (isNaN(v)) {
-        const d = new Date(v);
-        if (!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        return '';
+    if (typeof v === 'number') {
+        const epoch = new Date(Date.UTC(1899,11,30));
+        const r = new Date(epoch.getTime() + v * 86400000);
+        return `${r.getUTCFullYear()}-${String(r.getUTCMonth()+1).padStart(2,'0')}-${String(r.getUTCDate()).padStart(2,'0')}`;
     }
-    const epoch = new Date(Date.UTC(1899,11,30));
-    const r = new Date(epoch.getTime() + v * 86400000);
-    return `${r.getUTCFullYear()}-${String(r.getUTCMonth()+1).padStart(2,'0')}-${String(r.getUTCDate()).padStart(2,'0')}`;
+    
+    let s = String(v).trim();
+    if (!s) return '';
+
+    const parts = s.split(/[-/.]/);
+    if (parts.length === 3) {
+        let y, m, d;
+        if (parts[0].length === 4) {
+            y = parseInt(parts[0]); m = parseInt(parts[1]); d = parseInt(parts[2]);
+        } else if (parts[2].length === 4) {
+            y = parseInt(parts[2]);
+            const p1 = parseInt(parts[0]), p2 = parseInt(parts[1]);
+            if (p1 > 12) { d = p1; m = p2; }
+            else if (p2 > 12) { m = p1; d = p2; }
+            else { d = p1; m = p2; }
+        }
+        if (y && m && d && !isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+                return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            }
+        }
+    }
+    const dObj = new Date(s);
+    if (!isNaN(dObj)) return `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+    return s;
 }
 
 function xmlNum(v) {
@@ -2595,7 +2617,21 @@ function xmlConvert() {
         let buyerTin = '', buyerDocNum = '';
         if (first.BuyerDocument === 'National ID') { buyerTin = '0000000000000000'; buyerDocNum = first.BuyerDocumentNumber || ''; }
         else if (first.BuyerDocument === 'TIN') { buyerTin = first.BuyerDocumentNumber || ''; buyerDocNum = ''; }
-        let buyerIDTKU = first.BuyerDocument === 'National ID' ? '000000' : `${buyerTin}000000`.padEnd(22,'0');
+        
+        // Handle IDTKU suffix (e.g. 1, 2, 3) from Excel column
+        const nk = k => String(k).replace(/\s+/g,'').toLowerCase();
+        let idtkuSuffix = '000000';
+        for (const k in first) {
+            if (nk(k) === 'buyeridtku') {
+                const val = String(first[k] || '').trim();
+                if (val) {
+                    idtkuSuffix = val.padStart(6, '0');
+                }
+                break;
+            }
+        }
+        
+        let buyerIDTKU = (first.BuyerDocument === 'National ID') ? '000000' : `${buyerTin}${idtkuSuffix}`.padEnd(22,'0');
         xml += `\t<TaxInvoice>\n\t\t<TaxInvoiceDate>${xmlFormatDate(first.TaxInvoiceDate)}</TaxInvoiceDate>\n\t\t<TaxInvoiceOpt>${fixed.TaxInvoiceOpt}</TaxInvoiceOpt>\n\t\t<TrxCode>${fixed.TrxCode}</TrxCode>\n\t\t<AddInfo/>\n\t\t<CustomDoc/>\n\t\t<CustomDocMonthYear/>\n\t\t<RefDesc>${xmlEscape(refDesc)}</RefDesc>\n\t\t<FacilityStamp/>\n\t\t<SellerIDTKU>${fixed.SellerIDTKU}</SellerIDTKU>\n\t\t<BuyerTin>${buyerTin}</BuyerTin>\n\t\t<BuyerDocument>${first.BuyerDocument||''}</BuyerDocument>\n\t\t<BuyerCountry>${fixed.BuyerCountry}</BuyerCountry>\n\t\t<BuyerDocumentNumber>${buyerDocNum}</BuyerDocumentNumber>\n\t\t<BuyerName>${xmlEscape(first.BuyerName)}</BuyerName>\n\t\t<BuyerAdress>${xmlEscape(first.BuyerAdress)}</BuyerAdress>\n\t\t<BuyerEmail>${xmlEscape(first.BuyerEmail)}</BuyerEmail>\n\t\t<BuyerIDTKU>${buyerIDTKU}</BuyerIDTKU>\n\t\t<ListOfGoodService>\n`;
         items.forEach(row => {
             const nk = k => k.replace(/\s+/g,'').toLowerCase();
@@ -2617,7 +2653,7 @@ function xmlConvert() {
             let opt = fixed.Opt;
             if (fr.Type) { const t = String(fr.Type).toLowerCase().trim(); if (t==='barang'||t==='a') opt='A'; else if (t==='jasa'||t==='b') opt='B'; }
             const unit = opt==='A' ? 'UM.0021' : 'UM.0033';
-            xml += `\t\t\t<GoodService>\n\t\t\t\t<Opt>${opt}</Opt>\n\t\t\t\t<Code>${codeObj}</Code>\n\t\t\t\t<Name>${xmlEscape(fr.Name)}</Name>\n\t\t\t\t<Unit>${unit}</Unit>\n\t\t\t\t<Price>${price}</Price>\n\t\t\t\t<Qty>${qty}</Qty>\n\t\t\t\t<TotalDiscount>${discount}</TotalDiscount>\n\t\t\t\t<TaxBase>${taxBase.toFixed(2)}</TaxBase>\n\t\t\t\t<OtherTaxBase>${otherTaxBase.toFixed(2)}</OtherTaxBase>\n\t\t\t\t<VATRate>${vatRate.toFixed(2)}</VATRate>\n\t\t\t\t<VAT>${vat.toFixed(2)}</VAT>\n\t\t\t\t<STLGRate>${fixed.STLGRate}</STLGRate>\n\t\t\t\t<STLG>${fixed.STLG}</STLG>\n\t\t\t</GoodService>\n`;
+            xml += `\t\t\t<GoodService>\n\t\t\t\t<Opt>${opt}</Opt>\n\t\t\t\t<Code>${codeObj}</Code>\n\t\t\t\t<Name>${xmlEscape(fr.Name)}</Name>\n\t\t\t\t<Unit>${unit}</Unit>\n\t\t\t\t<Price>${price.toFixed(2)}</Price>\n\t\t\t\t<Qty>${qty.toFixed(2)}</Qty>\n\t\t\t\t<TotalDiscount>${discount.toFixed(2)}</TotalDiscount>\n\t\t\t\t<TaxBase>${taxBase.toFixed(2)}</TaxBase>\n\t\t\t\t<OtherTaxBase>${otherTaxBase.toFixed(2)}</OtherTaxBase>\n\t\t\t\t<VATRate>${vatRate.toFixed(2)}</VATRate>\n\t\t\t\t<VAT>${vat.toFixed(2)}</VAT>\n\t\t\t\t<STLGRate>${fixed.STLGRate}</STLGRate>\n\t\t\t\t<STLG>${fixed.STLG}</STLG>\n\t\t\t</GoodService>\n`;
         });
         xml += `\t\t</ListOfGoodService>\n\t</TaxInvoice>\n`;
     });
@@ -4945,7 +4981,7 @@ function impDownloadResult() {
                     const ppn        = Number(row[colPPN]) || 0;
 
                     const taxBase      = total;
-                    const otherTaxBase = Math.round(taxBase * 11 / 12);
+                    const otherTaxBase = taxBase * 11 / 12;
 
                     totalTaxBase      += taxBase;
                     totalVAT          += ppn;
@@ -4961,16 +4997,16 @@ function impDownloadResult() {
             <Type>${type}</Type>
             <Name>${nameField}</Name>
             <Code>000000</Code>
-            <Quantity>${qty}</Quantity>
+            <Quantity>${qty.toFixed(2)}</Quantity>
             <Unit>${unit}</Unit>
-            <UnitPrice>${Math.round(harga)}</UnitPrice>
+            <UnitPrice>${harga.toFixed(2)}</UnitPrice>
             <STLGRate>0</STLGRate>
-            <ReturnQuantity>${qty}</ReturnQuantity>
-            <ReturnDiscount>${Math.round(discount)}</ReturnDiscount>
-            <ReturnTaxBase>${Math.round(taxBase)}</ReturnTaxBase>
-            <ReturnOtherTaxBase>${Math.round(otherTaxBase)}</ReturnOtherTaxBase>
+            <ReturnQuantity>${qty.toFixed(2)}</ReturnQuantity>
+            <ReturnDiscount>${discount.toFixed(2)}</ReturnDiscount>
+            <ReturnTaxBase>${taxBase.toFixed(2)}</ReturnTaxBase>
+            <ReturnOtherTaxBase>${otherTaxBase.toFixed(2)}</ReturnOtherTaxBase>
             <ReturnOtherTaxBaseCheck>${otherTaxBase > 0 ? 'true' : 'false'}</ReturnOtherTaxBaseCheck>
-            <ReturnVAT>${Math.round(ppn)}</ReturnVAT>
+            <ReturnVAT>${ppn.toFixed(2)}</ReturnVAT>
             <ReturnSTLG>0</ReturnSTLG>
           </Rows>`;
                 });
@@ -4981,17 +5017,17 @@ function impDownloadResult() {
         <InvoiceNumber>${invoiceNum}</InvoiceNumber>
         <SellerTIN>${sellerTIN}</SellerTIN>
         <ReturnDate>${finalReturnDate}</ReturnDate>
-        <ReturnTaxBase>${Math.round(totalTaxBase)}</ReturnTaxBase>
-        <ReturnOtherTaxBase>${Math.round(totalOtherTaxBase)}</ReturnOtherTaxBase>
-        <ReturnVAT>${Math.round(totalVAT)}</ReturnVAT>
+        <ReturnTaxBase>${totalTaxBase.toFixed(2)}</ReturnTaxBase>
+        <ReturnOtherTaxBase>${totalOtherTaxBase.toFixed(2)}</ReturnOtherTaxBase>
+        <ReturnVAT>${totalVAT.toFixed(2)}</ReturnVAT>
         <ReturnSTLG>0</ReturnSTLG>
       </TransactionDocumentData>
       <TransactionDetailsData>
         ${detailRows.trim()}
         <FooterRow>
-          <ReturnTaxBaseTotal>${Math.round(totalTaxBase)}</ReturnTaxBaseTotal>
-          <ReturnOtherTaxBaseTotal>${Math.round(totalOtherTaxBase)}</ReturnOtherTaxBaseTotal>
-          <ReturnVATTotal>${Math.round(totalVAT)}</ReturnVATTotal>
+          <ReturnTaxBaseTotal>${totalTaxBase.toFixed(2)}</ReturnTaxBaseTotal>
+          <ReturnOtherTaxBaseTotal>${totalOtherTaxBase.toFixed(2)}</ReturnOtherTaxBaseTotal>
+          <ReturnVATTotal>${totalVAT.toFixed(2)}</ReturnVATTotal>
           <ReturnSTLGTotal>0</ReturnSTLGTotal>
         </FooterRow>
       </TransactionDetailsData>
@@ -5856,8 +5892,8 @@ function bpuConvertXML() {
       <IDPlaceOfBusinessActivityOfIncomeRecipient>${cpIdtku}</IDPlaceOfBusinessActivityOfIncomeRecipient>
       <TaxCertificate>${rowCert}</TaxCertificate>
       <TaxObjectCode>${code}</TaxObjectCode>
-      <TaxBase>${Math.round(taxBase)}</TaxBase>
-      <Rate>${rate}</Rate>
+      <TaxBase>${taxBase.toFixed(2)}</TaxBase>
+      <Rate>${Number(rate).toFixed(2)}</Rate>
       <Document>${rowDoc}</Document>
       <DocumentNumber>${xmlEscape(docNum)}</DocumentNumber>
       <DocumentDate>${docDate}</DocumentDate>
@@ -6196,9 +6232,9 @@ function bp21ConvertXML() {
       <StatusTaxExemption>${ptkp}</StatusTaxExemption>
       <TaxCertificate>${rowCert}</TaxCertificate>
       <TaxObjectCode>${code}</TaxObjectCode>
-      <Gross>${Math.round(gross)}</Gross>
-      <Deemed>${deemed}</Deemed>
-      <Rate>${rate}</Rate>
+      <Gross>${gross.toFixed(2)}</Gross>
+      <Deemed>${Number(deemed).toFixed(2)}</Deemed>
+      <Rate>${Number(rate).toFixed(2)}</Rate>
       <Document>${rowDoc}</Document>
       <DocumentNumber>${xmlEscape(docNum)}</DocumentNumber>
       <DocumentDate>${docDate}</DocumentDate>
