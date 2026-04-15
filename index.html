@@ -1207,7 +1207,7 @@
                             <input type="text" class="form-input" id="rm_cfgTIN" placeholder="0991183559012000" maxlength="16">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Tanggal Return</label>
+                            <label class="form-label">Tanggal Return (Default)</label>
                             <input type="date" class="form-input" id="rm_cfgDate">
                         </div>
                         <div class="form-group">
@@ -1237,6 +1237,10 @@
                         <div class="form-group">
                             <label class="form-label">Kolom NPWP Penjual</label>
                             <input type="text" class="form-input" id="rm_cfgColSellerTIN" placeholder="NPWP Penjual" value="NPWP Penjual">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kolom Tanggal Return</label>
+                            <input type="text" class="form-input" id="rm_cfgColReturnDate" placeholder="Tanggal Return" value="Tanggal Return">
                         </div>
                     </div>
                 </div>
@@ -1312,41 +1316,10 @@
                         <span style="display:inline-block;width:3px;height:14px;background:var(--pink);border-radius:2px;"></span>
                         Konfigurasi BPU
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">NPWP Pemotong (TIN)</label>
                             <input type="text" class="form-input" id="bpu_cfgTIN" placeholder="16 digit NPWP" maxlength="16">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Masa Pajak (Bulan)</label>
-                            <select class="form-select" id="bpu_cfgMonth">
-                                <option value="1">Januari (1)</option><option value="2">Februari (2)</option><option value="3">Maret (3)</option>
-                                <option value="4">April (4)</option><option value="5">Mei (5)</option><option value="6">Juni (6)</option>
-                                <option value="7">Juli (7)</option><option value="8">Agustus (8)</option><option value="9">September (9)</option>
-                                <option value="10">Oktober (10)</option><option value="11">November (11)</option><option value="12">Desember (12)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Tahun Pajak</label>
-                            <input type="number" class="form-input" id="bpu_cfgYear" value="2025" min="2020" max="2030">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Surat Keterangan</label>
-                            <select class="form-select" id="bpu_cfgCert">
-                                <option value="N/A">N/A</option>
-                                <option value="SKB">SKB (Surat Keterangan Bebas)</option>
-                                <option value="DTP">DTP (Ditanggung Pemerintah)</option>
-                                <option value="SKD">SKD (Surat Keterangan Domisili)</option>
-                                <option value="Fasilitas">Fasilitas</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Jenis Dokumen</label>
-                            <select class="form-select" id="bpu_cfgDoc">
-                                <option value="CommercialInvoice">Commercial Invoice</option>
-                                <option value="TaxInvoice">Tax Invoice / Faktur Pajak</option>
-                                <option value="StatementLetter">Statement Letter</option>
-                            </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Bendahara Pemerintah</label>
@@ -1419,40 +1392,10 @@
                         <span style="display:inline-block;width:3px;height:14px;background:var(--cyan);border-radius:2px;"></span>
                         Konfigurasi BP21
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">NPWP Pemotong (TIN)</label>
                             <input type="text" class="form-input" id="bp21_cfgTIN" placeholder="16 digit NPWP" maxlength="16">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Masa Pajak (Bulan)</label>
-                            <select class="form-select" id="bp21_cfgMonth">
-                                <option value="1">Januari (1)</option><option value="2">Februari (2)</option><option value="3">Maret (3)</option>
-                                <option value="4">April (4)</option><option value="5">Mei (5)</option><option value="6">Juni (6)</option>
-                                <option value="7">Juli (7)</option><option value="8">Agustus (8)</option><option value="9">September (9)</option>
-                                <option value="10">Oktober (10)</option><option value="11">November (11)</option><option value="12">Desember (12)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Tahun Pajak</label>
-                            <input type="number" class="form-input" id="bp21_cfgYear" value="2025" min="2020" max="2030">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Surat Keterangan</label>
-                            <select class="form-select" id="bp21_cfgCert">
-                                <option value="N/A">N/A</option>
-                                <option value="TaxExAr21">TaxExAr21 (SKB PPh 21)</option>
-                                <option value="DTP">DTP (Ditanggung Pemerintah)</option>
-                                <option value="ETC">ETC (Lainnya)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Jenis Dokumen</label>
-                            <select class="form-select" id="bp21_cfgDoc">
-                                <option value="CommercialInvoice">Commercial Invoice</option>
-                                <option value="TaxInvoice">Tax Invoice / Faktur Pajak</option>
-                                <option value="StatementLetter">Statement Letter</option>
-                            </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Deemed Default (%)</label>
@@ -4843,8 +4786,8 @@ function impDownloadResult() {
 
     window.rmDownloadTemplate = function() {
         const data = [
-            { 'No. Faktur Pajak':'010.000-24.12345678', 'NPWP Penjual':'0991183559012000', 'Nama Barang':'Monitor LED 24"', 'Harga':1500000, 'Qty':2, 'Discount':0, 'Total':3000000, 'PPN':330000 },
-            { 'No. Faktur Pajak':'010.000-24.87654321', 'NPWP Penjual':'0123456789012000', 'Nama Barang':'Keyboard Mechanical', 'Harga':800000, 'Qty':5, 'Discount':50000, 'Total':3950000, 'PPN':434500 }
+            { 'No. Faktur Pajak':'010.000-24.12345678', 'NPWP Penjual':'0991183559012000', 'Nama Barang':'Monitor LED 24"', 'Harga':1500000, 'Qty':2, 'Discount':0, 'Total':3000000, 'PPN':330000, 'Tanggal Return':'2025-03-25' },
+            { 'No. Faktur Pajak':'010.000-24.87654321', 'NPWP Penjual':'0123456789012000', 'Nama Barang':'Keyboard Mechanical', 'Harga':800000, 'Qty':5, 'Discount':50000, 'Total':3950000, 'PPN':434500, 'Tanggal Return':'2025-03-26' }
         ];
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
@@ -4939,6 +4882,8 @@ function impDownloadResult() {
         try {
             const colInvoice   = rmGetColIdx('rm_cfgColInvoice', 'No. Faktur Pajak');
             const colSellerTIN = rmGetColIdx('rm_cfgColSellerTIN', 'NPWP Penjual');
+            const colReturnDate = rmGetColIdx('rm_cfgColReturnDate', 'Tanggal Return');
+            
             const colNamaBarang = rmHeaders.findIndex(h => h.toLowerCase().includes('nama barang') || h.toLowerCase().includes('barang'));
             const colHarga     = rmHeaders.findIndex(h => h.toLowerCase() === 'harga');
             const colQty       = rmHeaders.findIndex(h => h.toLowerCase() === 'qty' || h.toLowerCase() === 'quantity');
@@ -4950,9 +4895,7 @@ function impDownloadResult() {
             if (colSellerTIN < 0) { rmShowError('Kolom "NPWP Penjual" tidak ditemukan. Cek nama kolom di konfigurasi.'); return; }
 
             const tin = document.getElementById('rm_cfgTIN').value.replace(/\D/g,'').padEnd(16,'0');
-            const dateRaw = document.getElementById('rm_cfgDate').value; // yyyy-mm-dd
-            const [y,mo,d] = dateRaw.split('-');
-            const returnDate = `${d}-${mo}-${y}`; // dd-mm-yyyy
+            const defaultDateRaw = document.getElementById('rm_cfgDate').value; // yyyy-mm-dd
             const unit = document.getElementById('rm_cfgUnit').value;
             const type = document.getElementById('rm_cfgType').value;
 
@@ -4969,6 +4912,22 @@ function impDownloadResult() {
 
             invoiceMap.forEach((rows, invoiceNum) => {
                 const sellerTIN = String(rows[0][colSellerTIN] || '').replace(/\D/g,'').padEnd(16,'0');
+                
+                // Determine Return Date for this invoice
+                let finalReturnDate = '';
+                const rowDateRaw = colReturnDate >= 0 ? rows[0][colReturnDate] : null;
+                const formattedRowDate = bpuFormatDate(rowDateRaw); // returns YYYY-MM-DD
+                
+                if (formattedRowDate && formattedRowDate.includes('-')) {
+                    const [ry, rmo, rd] = formattedRowDate.split('-');
+                    finalReturnDate = `${rd}-${rmo}-${ry}`;
+                } else if (defaultDateRaw && defaultDateRaw.includes('-')) {
+                    const [dy, dmo, dd] = defaultDateRaw.split('-');
+                    finalReturnDate = `${dd}-${dmo}-${dy}`;
+                } else {
+                    finalReturnDate = '01-01-2025'; // Absolute fallback
+                }
+
                 let totalTaxBase = 0, totalVAT = 0, totalOtherTaxBase = 0;
                 let detailRows = '';
 
@@ -5016,7 +4975,7 @@ function impDownloadResult() {
       <TransactionDocumentData>
         <InvoiceNumber>${invoiceNum}</InvoiceNumber>
         <SellerTIN>${sellerTIN}</SellerTIN>
-        <ReturnDate>${returnDate}</ReturnDate>
+        <ReturnDate>${finalReturnDate}</ReturnDate>
         <ReturnTaxBase>${Math.round(totalTaxBase)}</ReturnTaxBase>
         <ReturnOtherTaxBase>${Math.round(totalOtherTaxBase)}</ReturnOtherTaxBase>
         <ReturnVAT>${Math.round(totalVAT)}</ReturnVAT>
@@ -5377,12 +5336,15 @@ function rnExtractEbupotData(text) {
     const numM = text.match(/([0-9]{6,8}[A-Z]{1,2})\b/) || text.match(/\b([0-9]{2,5}[A-Z0-9]{4,8})\b/);
     if (numM) d.nomor = numM[1];
     
-    const pemotongM = text.match(/NAMA\s+PEMOTONG[^:]*:\s*(.*?)(?=\s+[A-Z]\.\d|\s+ALAMAT|\s+NPWP|\s+NIK|\s+TANGGAL|$)/i) ||
-                      text.match(/C\.\d\s+NAMA\s*:\s*(.*?)(?=\s+[A-Z]\.\d|\s+ALAMAT|\s+NPWP|\s+NIK|$)/i);
+    const stopPattern = '(?=[\\s\\n]+[A-Z]\\.\\d|[\\s\\n]+ALAMAT|[\\s\\n]+NPWP|[\\s\\n]+NIK|[\\s\\n]+NITKU|[\\s\\n]+TANGGAL|[\\s\\n]+KALI|[\\s\\n]+JUMLAH|$)';
+    
+    const pemotongM = text.match(new RegExp(`NAMA\\s+PEMOTONG[^:]*:\\s*(.*?)${stopPattern}`, 'i')) ||
+                      text.match(new RegExp(`C\\.1\\s+NAMA\\s*:\\s*(.*?)${stopPattern}`, 'i')) ||
+                      text.match(new RegExp(`C\\.2\\s+NAMA\\s*:\\s*(.*?)${stopPattern}`, 'i'));
     if (pemotongM) d.namaPemotong = pemotongM[1].trim();
     
-    const dipotongM = text.match(/A\.2\s+NAMA\s*:\s*(.*?)(?=\s+[A-Z]\.\d|\s+ALAMAT|\s+NPWP|\s+NIK|\s+NITKU|$)/i) || 
-                      text.match(/NAMA\s*:\s*(.*?)(?=\s+[A-Z]\.\d|\s+ALAMAT|\s+NPWP|\s+NIK|\s+NITKU|$)/i);
+    const dipotongM = text.match(new RegExp(`A\\.2\\s+NAMA\\s*:\\s*(.*?)${stopPattern}`, 'i')) || 
+                      text.match(new RegExp(`NAMA\\s*:\\s*(.*?)${stopPattern}`, 'i'));
     if (dipotongM) d.namaDipotong = dipotongM[1].trim();
     
     const refM = text.match(/Nomor\s+Dokumen\s*:\s*([A-Z0-9\.\-/]+)/i);
@@ -5470,50 +5432,253 @@ function xmlEscape(str) {
 // ════════════════════════════════════════════════
 //  TAB 8: BPU UNIFIKASI (Excel → XML)
 // ════════════════════════════════════════════════
-const BPU_CODES = [
-    { code:'24-100-01', desc:'Dividen', rate:15 },
-    { code:'24-100-02', desc:'Bunga', rate:15 },
-    { code:'24-100-03', desc:'Royalti', rate:15 },
-    { code:'24-100-04', desc:'Bunga Deposito/Tabungan (Final)', rate:20 },
-    { code:'24-100-05', desc:'Bunga Obligasi (Final)', rate:15 },
-    { code:'24-100-06', desc:'Bunga Simpanan Koperasi (Final)', rate:10 },
-    { code:'24-100-07', desc:'Hadiah Undian (Final)', rate:25 },
-    { code:'24-102-01', desc:'Sewa Harta Selain Tanah/Bangunan', rate:2 },
-    { code:'24-104-01', desc:'Jasa Teknik', rate:2 },
-    { code:'24-104-02', desc:'Jasa Manajemen', rate:2 },
-    { code:'24-104-03', desc:'Jasa Konsultan', rate:2 },
-    { code:'24-104-04', desc:'Jasa Penilai', rate:2 },
-    { code:'24-104-05', desc:'Jasa Aktuaris', rate:2 },
-    { code:'24-104-06', desc:'Jasa Akuntan/Pembukuan', rate:2 },
-    { code:'24-104-07', desc:'Jasa Perancang', rate:2 },
-    { code:'24-104-08', desc:'Jasa Pengeboran Migas', rate:2 },
-    { code:'24-104-09', desc:'Jasa Penunjang Migas', rate:2 },
-    { code:'24-104-10', desc:'Jasa Penambangan', rate:2 },
-    { code:'24-104-11', desc:'Jasa Penunjang Penerbangan', rate:2 },
-    { code:'24-104-12', desc:'Jasa Penebangan Hutan', rate:2 },
-    { code:'24-104-13', desc:'Jasa Pengolahan Limbah', rate:2 },
-    { code:'24-104-14', desc:'Jasa Penyedia Tenaga Kerja', rate:2 },
-    { code:'24-104-15', desc:'Jasa Perantara/Keagenan', rate:2 },
-    { code:'24-104-16', desc:'Jasa Perdagangan Surat Berharga', rate:2 },
-    { code:'24-104-17', desc:'Jasa Kustodian/Penitipan', rate:2 },
-    { code:'24-104-18', desc:'Jasa Freight Forwarding', rate:2 },
-    { code:'24-104-19', desc:'Jasa Maklon', rate:2 },
-    { code:'24-104-20', desc:'Jasa Penyelidikan/Keamanan', rate:2 },
-    { code:'24-104-21', desc:'Jasa Event Organizer', rate:2 },
-    { code:'24-104-22', desc:'Jasa Pengepakan', rate:2 },
-    { code:'24-104-23', desc:'Jasa Penyediaan Tempat/Waktu Media', rate:2 },
-    { code:'24-104-24', desc:'Jasa Pembasmian Hama', rate:2 },
-    { code:'24-104-25', desc:'Jasa Kebersihan/Cleaning Service', rate:2 },
-    { code:'24-104-26', desc:'Jasa Katering', rate:2 },
-    { code:'24-401-01', desc:'Sewa Tanah/Bangunan (Final)', rate:10 },
-    { code:'24-401-02', desc:'Konstruksi Pelaksanaan Kecil (Final)', rate:1.75 },
-    { code:'24-401-03', desc:'Konstruksi Pelaksanaan Menengah/Besar (Final)', rate:2.65 },
-    { code:'24-401-04', desc:'Konstruksi Pelaksanaan Tanpa SBU (Final)', rate:4 },
-    { code:'24-401-05', desc:'Konstruksi Perencanaan/Pengawasan SBU (Final)', rate:3.5 },
-    { code:'24-401-06', desc:'Konstruksi Perencanaan/Pengawasan Non-SBU (Final)', rate:6 },
-    { code:'24-401-07', desc:'Konstruksi Terintegrasi SBU (Final)', rate:2.65 },
-    { code:'24-401-08', desc:'Konstruksi Terintegrasi Non-SBU (Final)', rate:4 },
+const CORETAX_DOC_MAPPING = {
+    'Pengumuman': 'Announcement',
+    'Surat Tagihan': 'CommercialInvoice',
+    'Kontrak': 'Contract',
+    'Jasa Giro': 'CurrentAccount',
+    'Decree': 'Decree',
+    'Akta Perjanjian': 'DeedOfEngagement',
+    'Akta RUPS': 'DeedOfGeneral',
+    'Lainnya': 'Other',
+    'Dokumen Fasilitas Lainnya': 'OtherFacilityDoc',
+    'Bukti Pembayaran': 'PaymentProof',
+    'Surat Pernyataan': 'StatementLetter',
+    'Faktur Pajak': 'TaxInvoice',
+    'Dokumen Perpajakan': 'TaxRegulationDoc',
+    'Trade Confirmation': 'TradeConfirmation'
+};
+
+const CORETAX_FACILITY_MAPPING = {
+    'Tanpa Fasilitas': 'N/A',
+    'SKB PPh 22': 'TaxExAr22',
+    'SKB PPh 23': 'TaxExAr23',
+    'SKB Deposito': 'TaxExIntDep',
+    'SKB Pengalihan Hak': 'TaxExIntPhtb',
+    'DTP': 'DTP',
+    'PP 23/2018': 'PP23',
+    'Fasilitas Lainnya': 'ETC',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh Pasal 22': 'TaxExAr22',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh Pasal 23': 'TaxExAr23',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh atas Bunga atas Deposito Berjangka dan tabungan': 'TaxExIntDep',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh atas Pengalihan Hak atas Tanah dan Bangunan': 'TaxExIntPhtb',
+    'PPh Ditanggung Pemerintah (DTP)': 'DTP',
+    'Surat Keterangan PP 23/2018': 'PP23'
+};
+
+const CORETAX_DOC_TYPES = Object.keys(CORETAX_DOC_MAPPING);
+const CORETAX_FACILITY_TYPES = [
+    'Tanpa Fasilitas',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh Pasal 22',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh Pasal 23',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh atas Bunga atas Deposito Berjangka dan tabungan',
+    'Surat Keterangan Bebas (SKB) Pemotongan PPh atas Pengalihan Hak atas Tanah dan Bangunan',
+    'PPh Ditanggung Pemerintah (DTP)',
+    'Surat Keterangan PP 23/2018',
+    'Fasilitas Lainnya'
 ];
+
+const BPU_CODES = [
+    { code: '24-101-01', desc: 'Dividen', rate: 15 },
+    { code: '24-104-05', desc: 'Jasa Aktuaris', rate: 2 },
+    { code: '28-409-25', desc: 'Pekerjaan Konstruksi Terintegrasi (Memiliki SBU)', rate: 2.65 },
+    { code: '28-409-26', desc: 'Pekerjaan Konstruksi Terintegrasi (Tidak Memiliki SBU)', rate: 4 },
+    { code: '28-409-27', desc: 'Jasa Konsultansi Konstruksi (Memiliki SBU/SKK)', rate: 3.5 },
+    { code: '28-409-28', desc: 'Jasa Konsultansi Konstruksi (Tidak Memiliki SBU/SKK)', rate: 6 },
+    { code: '24-104-06', desc: 'Jasa Akuntansi, Pembukuan, dan Atestasi Laporan Keuangan', rate: 2 },
+    { code: '28-417-01', desc: 'Bunga Simpanan Koperasi (s.d Rp240.000)', rate: 0 },
+    { code: '28-417-02', desc: 'Bunga Simpanan Koperasi (> Rp240.000)', rate: 10 },
+    { code: '28-419-01', desc: 'Dividen WPOP Dalam Negeri', rate: 10 },
+    { code: '28-423-01', desc: 'PPh Final PP 23/2018 atau PP 55/2022 (Penjualan)', rate: 0.5 },
+    { code: '28-423-02', desc: 'PPh Final PP 55/2022 (Pembelian)', rate: 0.5 },
+    { code: '28-410-02', desc: 'Imbalan Perusahaan Pelayaran Dalam Negeri', rate: 1.2 },
+    { code: '28-411-02', desc: 'Imbalan Charter Kapal Laut/Pesawat Udara (BUT)', rate: 2.64 },
+    { code: '29-101-01', desc: 'Imbalan Charter Pesawat Udara Perusahaan Penerbangan Dalam Negeri', rate: 1.8 },
+    { code: '28-421-01', desc: 'Uplift Hulu Migas', rate: 20 },
+    { code: '24-104-07', desc: 'Jasa Hukum', rate: 2 },
+    { code: '28-421-02', desc: 'Participating Interest Eksplorasi Hulu Migas', rate: 5 },
+    { code: '28-421-03', desc: 'Participating Interest Eksploitasi Hulu Migas', rate: 7 },
+    { code: '22-900-01', desc: 'Pembelian Barang/Bahan oleh BUMN/Badan Usaha Tertentu', rate: 1.5 },
+    { code: '22-100-07', desc: 'Penjualan Hasil Produksi Industri Semen', rate: 0.25 },
+    { code: '22-100-08', desc: 'Penjualan Hasil Produksi Industri Baja', rate: 0.3 },
+    { code: '24-104-08', desc: 'Jasa Arsitektur', rate: 2 },
+    { code: '22-100-09', desc: 'Penjualan Hasil Produksi Industri Otomotif', rate: 0.45 },
+    { code: '22-100-10', desc: 'Penjualan Hasil Produksi Industri Farmasi', rate: 0.3 },
+    { code: '22-100-11', desc: 'Penjualan Hasil Produksi industri Kertas', rate: 0.1 },
+    { code: '22-100-12', desc: 'Penjualan Kendaraan Bermotor oleh ATPM/APM/Importir', rate: 0.45 },
+    { code: '22-100-13', desc: 'Pembelian Komoditas Tambang Batubara/Mineral Metal/Non-Metal', rate: 1.5 },
+    { code: '22-100-14', desc: 'Penjualan Emas Batangan oleh Badan Usaha', rate: 0.45 },
+    { code: '22-100-15', desc: 'Pembelian Bahan Hasil Kehutanan', rate: 0.25 },
+    { code: '22-100-16', desc: 'Pembelian Bahan Hasil Perkebunan', rate: 0.25 },
+    { code: '22-100-17', desc: 'Pembelian Bahan Hasil Pertanian', rate: 0.25 },
+    { code: '22-100-18', desc: 'Pembelian Bahan Hasil Peternakan', rate: 0.25 },
+    { code: '24-104-09', desc: 'Jasa Perencanaan Kota dan Arsitektur Landscape', rate: 2 },
+    { code: '22-100-19', desc: 'Pembelian Bahan Hasil Perikanan', rate: 0.25 },
+    { code: '22-401-01', desc: 'Penjualan BBM oleh Pertamina ke SPBU (Final)', rate: 0.25 },
+    { code: '22-100-20', desc: 'Penjualan BBM oleh Pertamina ke Selain SPBU (Tidak Final)', rate: 0.3 },
+    { code: '22-401-02', desc: 'Penjualan BBM oleh BU Selain Pertamina ke SPBU (Final)', rate: 0.3 },
+    { code: '22-100-21', desc: 'Penjualan BBM oleh BU Selain Pertamina ke Selain SPBU (Tidak Final)', rate: 0.3 },
+    { code: '22-100-22', desc: 'Penjualan Pelumas oleh Importir/Produsen', rate: 0.3 },
+    { code: '22-100-23', desc: 'Penjualan Pulsa/Kartu Perdana oleh Penyelenggara Distribusi', rate: 0.5 },
+    { code: '22-100-24', desc: 'Penjualan BBG oleh Produsen/Importir ke Selain SPBU (Tidak Final)', rate: 0.3 },
+    { code: '22-401-03', desc: 'Penjualan BBG oleh produsen/importir ke SPBU (Final)', rate: 0.3 },
+    { code: '22-401-04', desc: 'Penjualan BBM oleh Pertamina ke Agen selain SPBU (Final)', rate: 0.3 },
+    { code: '24-104-10', desc: 'Jasa Perancang (Design)', rate: 2 },
+    { code: '22-403-01', desc: 'Penjualan Barang Sangat Mewah (Selain Properti)', rate: 5 },
+    { code: '22-403-02', desc: 'Penjualan Barang Sangat Mewah (Properti)', rate: 1 },
+    { code: '22-404-01', desc: 'Ekspor Komoditas Tambang Batubara/Mineral', rate: 1.5 },
+    { code: '22-405-01', desc: 'Penghasilan Aset Kripto (Pedagang Fisik)', rate: 0.1 },
+    { code: '22-405-02', desc: 'Penghasilan Aset Kripto (Bukan Pedagang Fisik)', rate: 0.2 },
+    { code: '22-101-01', desc: 'Penjualan Barang/Jasa Melalui SIP Pemerintah (Tidak Final)', rate: 0.5 },
+    { code: '22-101-02', desc: 'Penjualan Barang/Jasa Melalui SIP Pemerintah (Final)', rate: 0.5 },
+    { code: '22-102-01', desc: 'Penjualan Barang/Jasa Melalui PMSE (Tidak Final)', rate: 0.5 },
+    { code: '22-102-02', desc: 'Penjualan Barang/Jasa Melalui PMSE (Final)', rate: 0.5 },
+    { code: '22-100-25', desc: 'Penjualan Emas Batangan oleh Pengusaha Perhiasan', rate: 0.25 },
+    { code: '24-104-11', desc: 'Jasa Pengeboran (Drilling) Migas Selain BUT', rate: 2 },
+    { code: '22-100-26', desc: 'Penjualan Emas Perhiasan oleh Pengusaha Perhiasan', rate: 0.25 },
+    { code: '22-100-27', desc: 'Penjualan Perhiasan Selain Emas/Batu Permata', rate: 0.25 },
+    { code: '28-499-02', desc: 'Penghasilan Sehubungan dengan LPI', rate: 7.5 },
+    { code: '28-402-01', desc: 'Pengalihan Hak atas Tanah and/atau Bangunan', rate: 2.5 },
+    { code: '28-402-02', desc: 'Pengalihan RS/RSS oleh WP Usaha Pokok Real Estate', rate: 1 },
+    { code: '28-402-03', desc: 'Pengalihan Tanah/Bangunan kepada Pemerintah/BUMN/BUMD', rate: 0 },
+    { code: '28-410-01', desc: 'Imbalan Pengangkutan Orang/Barang Perusahaan Pelayaran DN', rate: 1.2 },
+    { code: '28-411-01', desc: 'Imbalan Pengangkutan Orang/Barang Perusahaan Pelayaran/Penerbangan LN', rate: 2.64 },
+    { code: '28-413-01', desc: 'Penghasilan Kantor Perwakilan Dagang Luar Negeri di Indonesia', rate: 0.44 },
+    { code: '28-499-01', desc: 'Jasa Maklon Internasional Produksi Mainan Anak-Anak', rate: 2.1 },
+    { code: '24-104-12', desc: 'Jasa Penunjang Usaha Panas Bumi dan Penambangan Migas', rate: 2 },
+    { code: '22-910-01', desc: 'Pemungutan oleh Bendaharawan', rate: 1.5 },
+    { code: '28-423-03', desc: 'PPh Final UMKM PP 55/2022 (Peredaran Bruto s.d 500jt)', rate: 0.5 },
+    { code: '28-423-12', desc: 'PPh Final 0% di IKN (PPh UMKM IKN)', rate: 0 },
+    { code: '28-423-13', desc: 'PPh Final 0% di IKN (Pembelian UMKM IKN)', rate: 0 },
+    { code: '28-404-12', desc: 'VALAS DHE SDA Tenor > 6 Bulan', rate: 0 },
+    { code: '28-404-13', desc: 'VALAS DHE SDA Tenor 6 Bulan', rate: 2.5 },
+    { code: '28-404-14', desc: 'VALAS DHE SDA Tenor 3-6 Bulan', rate: 7.5 },
+    { code: '28-404-15', desc: 'VALAS DHE SDA Tenor 1-3 Bulan', rate: 10 },
+    { code: '28-404-16', desc: 'IDR DHE SDA Tenor >= 6 Bulan', rate: 0 },
+    { code: '28-404-17', desc: 'VALAS DHE SDA Tenor 3-6 Bulan', rate: 2.5 },
+    { code: '24-104-13', desc: 'Jasa Penambangan Penunjang Selain Panas Bumi/Migas', rate: 2 },
+    { code: '22-406-01', desc: 'Kontraktor Utama Proyek Pemerintah Hibah/Pinjaman LN (PPh 22)', rate: 0 },
+    { code: '24-106-01', desc: 'Kontraktor Utama Proyek Pemerintah Hibah/Pinjaman LN (PPh 23)', rate: 0 },
+    { code: '28-403-04', desc: 'Sewa Tanah/Bangunan Proyek Pemerintah Hibah/Pinjaman LN', rate: 10 },
+    { code: '28-409-43', desc: 'Kontruksi Kualifikasi Kecil Proyek Pemerintah Hibah/Pinjaman LN', rate: 1.75 },
+    { code: '28-409-44', desc: 'Kontruksi Tanpa Kualifikasi Proyek Pemerintah Hibah/Pinjaman LN', rate: 4 },
+    { code: '28-409-45', desc: 'Kontruksi Selain Kecil/Tanpa Kualifikasi Proyek Pemerintah Hibah/Pinjaman LN', rate: 2.65 },
+    { code: '28-409-46', desc: 'Konstruksi Terintegrasi Proyek Pemerintah Hibah/Pinjaman LN', rate: 2.65 },
+    { code: '28-409-47', desc: 'Konstruksi Terintegrasi (Tanpa SBU) Proyek Pemerintah Hibah/Pinjaman LN', rate: 4 },
+    { code: '28-409-48', desc: 'Konsultansi Konstruksi Proyek Pemerintah Hibah/Pinjaman LN', rate: 3.5 },
+    { code: '28-409-49', desc: 'Konsultansi Konstruksi (Tanpa SBU) Proyek Pemerintah Hibah/Pinjaman LN', rate: 6 },
+    { code: '24-104-14', desc: 'Jasa Penunjang Bidang Penerbangan dan Bandar Udara', rate: 2 },
+    { code: '28-409-50', desc: 'Perencanaan Konstruksi (Dengan Kualifikasi) Proyek Hibah/Pinjaman LN', rate: 4 },
+    { code: '28-409-51', desc: 'Perencanaan Konstruksi (Tanpa Kualifikasi) Proyek Hibah/Pinjaman LN', rate: 6 },
+    { code: '28-409-52', desc: 'Pelaksanaan Konstruksi (Kualifikasi Kecil) Proyek Hibah/Pinjaman LN', rate: 2 },
+    { code: '28-409-53', desc: 'Pelaksanaan Konstruksi (Menengah/Besar) Proyek Hibah/Pinjaman LN', rate: 3 },
+    { code: '28-409-54', desc: 'Pelaksanaan Konstruksi (Tanpa Kualifikasi) Proyek Hibah/Pinjaman LN', rate: 4 },
+    { code: '28-409-55', desc: 'Pengawasan Konstruksi (Dengan Kualifikasi) Proyek Hibah/Pinjaman LN', rate: 4 },
+    { code: '28-409-56', desc: 'Pengawasan Konstruksi (Tanpa Kualifikasi) Proyek Hibah/Pinjaman LN', rate: 6 },
+    { code: '28-402-04', desc: 'Pengalihan Tanah/Bangunan Proyek Pemerintah Hibah/Pinjaman LN', rate: 2.5 },
+    { code: '28-410-06', desc: 'Imbalan Pelayaran Dalam Negeri Proyek Pemerintah Hibah/Pinjaman LN', rate: 1.2 },
+    { code: '28-411-05', desc: 'Imbalan Charter Kapal/Pesawat LN (BUT) Proyek Hibah/Pinjaman LN', rate: 2.64 },
+    { code: '24-102-01', desc: 'Bunga Selain yang Dikenakan PPh Pasal 4 ayat (2)', rate: 15 },
+    { code: '24-104-15', desc: 'Jasa Penebangan Hutan', rate: 2 },
+    { code: '29-101-02', desc: 'Imbalan Charter Pesawat DN Proyek Pemerintah Hibah/Pinjaman LN', rate: 1.8 },
+    { code: '28-410-05', desc: 'Pengangkutan Orang/Barang Pelayaran DN Proyek Hibah/Pinjaman LN', rate: 1.2 },
+    { code: '28-411-04', desc: 'Pengangkutan Orang/Barang Pelayaran/Penerbangan LN Proyek Hibah/Pinjaman LN', rate: 2.64 },
+    { code: '22-401-05', desc: 'Penjualan BBM selain Pertamina ke SPBU (Final) Proyek Hibah/Pinjaman LN', rate: 0.3 },
+    { code: '28-423-14', desc: 'PPh Final UMKM Proyek Pemerintah Hibah/Pinjaman LN', rate: 0.5 },
+    { code: '28-423-15', desc: 'PPh Final 0% di IKN Proyek Pemerintah Hibah/Pinjaman LN', rate: 0 },
+    { code: '24-103-02', desc: 'Royalti WPOP Dalam Negeri dengan NPPN', rate: 6 },
+    { code: '28-404-18', desc: 'IDR DHE SDA Tenor 1-3 Bulan', rate: 5 },
+    { code: '22-405-04', desc: 'Aset Kripto PMSE Dalam Negeri (Pedagang Aset Digital)', rate: 0.21 },
+    { code: '22-405-05', desc: 'Aset Kripto PMSE Luar Negeri', rate: 1 },
+    { code: '24-104-16', desc: 'Jasa Pengolahan Limbah', rate: 2 },
+    { code: '22-100-28', desc: 'Pembelian Emas Batangan oleh LJS Bulion', rate: 0.25 },
+    { code: '24-104-17', desc: 'Jasa Penyedia Tenaga Kerja/Ahli (Outsourcing)', rate: 2 },
+    { code: '24-104-18', desc: 'Jasa Perantara/Keagenan', rate: 2 },
+    { code: '24-104-19', desc: 'Jasa Perdagangan Surat Berharga Selain Bursa/KSEI/KPEI', rate: 2 },
+    { code: '24-104-20', desc: 'Jasa Kustodian/Penyimpanan Selain KSEI', rate: 2 },
+    { code: '24-104-21', desc: 'Jasa Pengisian Suara (Dubbing)', rate: 2 },
+    { code: '24-104-22', desc: 'Jasa Mixing Film', rate: 2 },
+    { code: '24-104-23', desc: 'Jasa Sarana Promosi Film/Iklan/Banner/dll', rate: 2 },
+    { code: '24-104-24', desc: 'Jasa Software/Hardware/Sistem Komputer', rate: 2 },
+    { code: '24-103-01', desc: 'Royalti', rate: 15 },
+    { code: '24-104-25', desc: 'Jasa Website (Pembuatan/Pengelolaan)', rate: 2 },
+    { code: '24-104-26', desc: 'Jasa Internet Termasuk Sambungannya', rate: 2 },
+    { code: '24-104-27', desc: 'Jasa Penyimpanan/Pengolahan/Penyaluran Data', rate: 2 },
+    { code: '24-104-28', desc: 'Jasa Instalasi/Pemasangan Mesin/Listrik/Telepon/dll Non-Konstruksi', rate: 2 },
+    { code: '24-104-29', desc: 'Jasa Perawatan/Perbaikan/Pemeliharaan Mesin/Listrik/dll Non-Konstruksi', rate: 2 },
+    { code: '24-104-30', desc: 'Jasa Perawatan Kendaraan/Alat Transportasi', rate: 2 },
+    { code: '24-104-31', desc: 'Jasa Maklon', rate: 2 },
+    { code: '24-104-32', desc: 'Jasa Penyelidikan dan Keamanan', rate: 2 },
+    { code: '24-104-33', desc: 'Jasa Event Organizer', rate: 2 },
+    { code: '24-104-34', desc: 'Jasa Periklanan/Media Massa/Luar Ruang', rate: 2 },
+    { code: '24-100-01', desc: 'Hadiah/Penghargaan/Bonus Selain PPh 21', rate: 15 },
+    { code: '24-104-35', desc: 'Jasa Pembasmian Hama', rate: 2 },
+    { code: '24-104-36', desc: 'Jasa Kebersihan (Cleaning Service)', rate: 2 },
+    { code: '24-104-37', desc: 'Jasa Sedot Septic Tank', rate: 2 },
+    { code: '24-104-38', desc: 'Jasa Pemeliharaan Kolam', rate: 2 },
+    { code: '24-104-39', desc: 'Jasa Katering/Tata Boga', rate: 2 },
+    { code: '24-104-40', desc: 'Jasa Freight Forwarding', rate: 2 },
+    { code: '24-104-41', desc: 'Jasa Logistik', rate: 2 },
+    { code: '24-104-42', desc: 'Jasa Pengurusan Dokumen', rate: 2 },
+    { code: '24-104-43', desc: 'Jasa Pengepakan', rate: 2 },
+    { code: '24-104-44', desc: 'Jasa Loading dan Unloading', rate: 2 },
+    { code: '24-100-02', desc: 'Sewa/Penghasilan Harta Selain Tanah/Bangunan Non-Pasal 4(2)', rate: 2 },
+    { code: '24-104-45', desc: 'Jasa Laboratorium/Pengujian Non-Akademis', rate: 2 },
+    { code: '24-104-46', desc: 'Jasa Pengelolaan Parkir', rate: 2 },
+    { code: '24-104-47', desc: 'Jasa Penyondiran Tanah', rate: 2 },
+    { code: '24-104-48', desc: 'Jasa Penyiapan/Pengolahan Lahan', rate: 2 },
+    { code: '24-104-49', desc: 'Jasa Pembibitan/Penanaman Bibit', rate: 2 },
+    { code: '24-104-50', desc: 'Jasa Pemeliharaan Tanaman', rate: 2 },
+    { code: '24-104-51', desc: 'Jasa Pemanenan', rate: 2 },
+    { code: '24-104-52', desc: 'Jasa Pengolahan Hasil Pertanian/Perkebunan/dll', rate: 2 },
+    { code: '24-104-53', desc: 'Jasa Dekorasi', rate: 2 },
+    { code: '24-104-54', desc: 'Jasa Pencetakan/Penerbitan', rate: 2 },
+    { code: '24-104-01', desc: 'Jasa Teknik', rate: 2 },
+    { code: '24-104-55', desc: 'Jasa Penerjemahan', rate: 2 },
+    { code: '24-104-56', desc: 'Jasa Pengangkutan/Ekspedisi Non-Pasal 15', rate: 2 },
+    { code: '24-104-57', desc: 'Jasa Pelayanan Pelabuhan', rate: 2 },
+    { code: '24-104-58', desc: 'Jasa Pengangkutan Jalur Pipa', rate: 2 },
+    { code: '24-104-59', desc: 'Jasa Pengelolaan Penitipan Anak', rate: 2 },
+    { code: '24-104-60', desc: 'Jasa Pelatihan/Kursus', rate: 2 },
+    { code: '24-104-61', desc: 'Jasa Pengiriman/Pengisian Uang ATM', rate: 2 },
+    { code: '24-104-62', desc: 'Jasa Sertifikasi', rate: 2 },
+    { code: '24-104-63', desc: 'Jasa Survey', rate: 2 },
+    { code: '24-104-64', desc: 'Jasa Tester', rate: 2 },
+    { code: '24-104-02', desc: 'Jasa Manajemen', rate: 2 },
+    { code: '24-104-65', desc: 'Jasa Lainnya Anggaran APBN/APBD', rate: 2 },
+    { code: '24-104-66', desc: 'Jasa Penyelenggaraan Transaksi Distribusi Token', rate: 2 },
+    { code: '24-104-67', desc: 'Jasa Pemasaran Media Voucer', rate: 2 },
+    { code: '24-104-68', desc: 'Jasa Penyelenggaraan Transaksi Distribusi Voucer', rate: 2 },
+    { code: '24-104-69', desc: 'Jasa Program Loyalitas/Reward Pelanggan', rate: 2 },
+    { code: '24-105-01', desc: 'Bunga Pinjaman Melalui Fintech P2P Lending', rate: 15 },
+    { code: '28-404-01', desc: 'Bunga Tabungan/Deposito DN Non-DHE', rate: 20 },
+    { code: '28-404-02', desc: 'Bunga Deposito IDR DHE SDA Tenor 1 Bulan', rate: 7.5 },
+    { code: '28-404-03', desc: 'Bunga Deposito IDR DHE SDA Tenor 3 Bulan', rate: 5 },
+    { code: '28-404-04', desc: 'Bunga Deposito IDR DHE SDA Tenor >= 6 Bulan', rate: 0 },
+    { code: '24-104-03', desc: 'Jasa Konsultan', rate: 2 },
+    { code: '28-404-05', desc: 'Bunga Deposito USD DHE SDA Tenor 1 Bulan', rate: 10 },
+    { code: '28-404-06', desc: 'Bunga Deposito USD DHE SDA Tenor 3 Bulan', rate: 7.5 },
+    { code: '28-404-07', desc: 'Bunga Deposito USD DHE SDA Tenor 6 Bulan', rate: 2.5 },
+    { code: '28-404-08', desc: 'Bunga Deposito USD DHE SDA Tenor > 6 Bulan', rate: 0 },
+    { code: '28-404-09', desc: 'Bunga Deposito/Tabungan LN Melalui Bank DN/Cabang LN di Indonesia', rate: 20 },
+    { code: '28-404-10', desc: 'Diskonto SBI', rate: 20 },
+    { code: '28-404-11', desc: 'Jasa Giro', rate: 20 },
+    { code: '28-401-01', desc: 'Bunga Obligasi/SUN/Obligasi Daerah', rate: 15 },
+    { code: '28-401-06', desc: 'Bunga Obligasi Wajid Pajak DN/BUT', rate: 10 },
+    { code: '28-401-03', desc: 'Bunga Obligasi Diadministrasikan BI', rate: 10 },
+    { code: '24-104-04', desc: 'Jasa Penilai (Appraisal)', rate: 2 },
+    { code: '28-401-04', desc: 'Diskonto SPN (Wajib Pajak DN/BUT)', rate: 20 },
+    { code: '28-401-05', desc: 'Diskonto SPN (Wajib Pajak LN)', rate: 20 },
+    { code: '28-407-01', desc: 'Penjualan Saham Bursa Efek (Saham Pendiri)', rate: 0.5 },
+    { code: '28-406-01', desc: 'Penjualan Saham Bursa Efek (Bukan Saham Pendiri)', rate: 0.1 },
+    { code: '28-408-01', desc: 'Penjualan Saham Modal Ventura Non-Bursa', rate: 0.1 },
+    { code: '28-403-02', desc: 'Persewaan Tanah and/atau Bangunan', rate: 10 },
+    { code: '28-405-01', desc: 'Hadiah Undian', rate: 25 },
+    { code: '28-409-22', desc: 'Konstruksi Kualifikasi Kecil/Orang Perseorangan (SBU/SKK)', rate: 1.75 },
+    { code: '28-409-23', desc: 'Konstruksi Tanpa SBU/SKK', rate: 4 },
+    { code: '28-409-24', desc: 'Konstruksi Selain Kecil/Orang Perseorangan (Memiliki SBU)', rate: 2.65 }
+];
+
 const BPU_RATE_MAP = {};
 BPU_CODES.forEach(c => BPU_RATE_MAP[c.code] = c.rate);
 
@@ -5522,12 +5687,12 @@ let bpuParsedData = [], bpuHeaders = [], bpuXmlOutput = '';
 function bpuDownloadTemplate() {
     const wb = XLSX.utils.book_new();
     const mainData = [
-        ['CustomerName', 'CounterpartTin','TaxObjectCode','TaxBase','DocumentType','DocumentNumber','DocumentDate','WithholdingDate'],
-        ['PT Contoh Nama', '0991183559012000','24-104-06','10000000','1','INV-001','2025-01-28','2025-03-18'],
-        ['Client B', '1234567890123000','24-401-01','50000000','1','INV-002','2025-02-15','2025-02-28'],
+        ['CustomerName', 'CounterpartTin','TaxObjectCode','TaxBase','DocumentType','DocumentNumber','DocumentDate','WithholdingDate','Facility'],
+        ['PT Contoh Nama', '0991183559012000','24-104-06','10000000','Invoice','INV-001','2025-01-28','2025-03-18','Tanpa Fasilitas'],
+        ['Client B', '1234567890123000','24-401-01','50000000','Faktur Pajak','INV-002','2025-02-15','2025-02-28','PPh Ditanggung Pemerintah (DTP)'],
     ];
     const ws = XLSX.utils.aoa_to_sheet(mainData);
-    ws['!cols'] = [{wch:25},{wch:20},{wch:20},{wch:15},{wch:15},{wch:18},{wch:15},{wch:15}];
+    ws['!cols'] = [{wch:25},{wch:20},{wch:20},{wch:15},{wch:18},{wch:18},{wch:15},{wch:15},{wch:25}];
     XLSX.utils.book_append_sheet(wb, ws, 'Data_BPU');
 
     // Reference sheet with codes
@@ -5537,10 +5702,41 @@ function bpuDownloadTemplate() {
     wsRef['!cols'] = [{wch:18},{wch:50},{wch:10}];
     XLSX.utils.book_append_sheet(wb, wsRef, 'Referensi_Kode');
 
-    // Add data validation for TaxObjectCode column (C)
-    const codeList = BPU_CODES.map(c => c.code).join(',');
+    // Add Reference Document sheet
+    const docData = [['Jenis Dokumen (Coretax)']];
+    CORETAX_DOC_TYPES.forEach(d => docData.push([d]));
+    const wsDoc = XLSX.utils.aoa_to_sheet(docData);
+    wsDoc['!cols'] = [{wch:25}];
+    XLSX.utils.book_append_sheet(wb, wsDoc, 'Referensi_Dokumen');
+
+    // Add Reference Facility sheet
+    const facData = [['Fasilitas / Surat Keterangan']];
+    CORETAX_FACILITY_TYPES.forEach(f => facData.push([f]));
+    const wsFac = XLSX.utils.aoa_to_sheet(facData);
+    wsFac['!cols'] = [{wch:60}];
+    XLSX.utils.book_append_sheet(wb, wsFac, 'Referensi_Fasilitas');
+
+    // Add data validation
     if (!ws['!dataValidations']) ws['!dataValidations'] = [];
-    ws['!dataValidations'].push({ sqref:'C2:C9999', type:'list', formula1:'"'+codeList+'"', showDropDown:false });
+    
+    // TaxObjectCode column (C)
+    const codeList = BPU_CODES.map(c => c.code).join(',');
+    ws['!dataValidations'].push({ sqref:'C2:C9999', type:'list', formula1:'"'+codeList+'"', showDropDown:true });
+    
+    // DocumentType column (E)
+    const docList = CORETAX_DOC_TYPES.join(',');
+    ws['!dataValidations'].push({ sqref:'E2:E9999', type:'list', formula1:'"'+docList+'"', showDropDown:true });
+
+    // Facility column (I)
+    const facList = [
+        'Tanpa Fasilitas',
+        'SKB PPh 22',
+        'SKB PPh 23',
+        'DTP',
+        'PP 23/2018',
+        'Fasilitas Lainnya'
+    ].join(',');
+    ws['!dataValidations'].push({ sqref:'I2:I9999', type:'list', formula1:'"'+facList+'"', showDropDown:true });
 
     XLSX.writeFile(wb, 'Template_BPU_Unifikasi.xlsx');
 }
@@ -5594,11 +5790,7 @@ function bpuConvertXML() {
     try {
         const tin = document.getElementById('bpu_cfgTIN').value.replace(/\D/g,'');
         if (tin.length !== 16) { bpuShowErr('NPWP Pemotong harus 16 digit!'); return; }
-        const month = document.getElementById('bpu_cfgMonth').value;
-        const year = document.getElementById('bpu_cfgYear').value;
-        const cert = document.getElementById('bpu_cfgCert').value;
-        const doc = document.getElementById('bpu_cfgDoc').value;
-        const gov = document.getElementById('bpu_cfgGov').value;
+        const gov = document.getElementById('bpu_cfgGov')?.value || 'N/A';
         const idtku = tin + '000000';
 
         const ci = idx => bpuHeaders.findIndex(h => h.toLowerCase().replace(/[\s_]+/g,'').includes(idx));
@@ -5609,10 +5801,12 @@ function bpuConvertXML() {
         const colDocType = ci('documenttype');
         const colDocDate = ci('documentdate');
         const colWDate = ci('withholdingdate');
+        const colFacility = ci('facility') >= 0 ? ci('facility') : ci('suratketerangan');
 
         if (colCpTin < 0) { bpuShowErr('Kolom CounterpartTin tidak ditemukan!'); return; }
         if (colCode < 0) { bpuShowErr('Kolom TaxObjectCode tidak ditemukan!'); return; }
         if (colBase < 0) { bpuShowErr('Kolom TaxBase tidak ditemukan!'); return; }
+        if (colWDate < 0) { bpuShowErr('Kolom WithholdingDate tidak ditemukan! (Dibutuhkan untuk Masa/Tahun Pajak)'); return; }
 
         let bpuList = '';
         bpuParsedData.forEach(row => {
@@ -5621,18 +5815,35 @@ function bpuConvertXML() {
             const taxBase = Number(row[colBase]) || 0;
             const rate = BPU_RATE_MAP[code] ?? 2;
             const docNum = String(row[colDocNum] ?? '').trim() || 'N/A';
-            const rowDoc = colDocType >= 0 && row[colDocType] ? String(row[colDocType]).trim() : doc;
+            
+            // Map Document Type to English
+            const rowDocIndo = colDocType >= 0 ? String(row[colDocType]).trim() : '';
+            const rowDoc = CORETAX_DOC_MAPPING[rowDocIndo] || rowDocIndo || 'TaxInvoice';
+            
+            // Map Facility to English
+            const rowFacIndo = colFacility >= 0 ? String(row[colFacility]).trim() : 'Tanpa Fasilitas';
+            const rowCert = CORETAX_FACILITY_MAPPING[rowFacIndo] || 'N/A';
+
             const docDate = bpuFormatDate(row[colDocDate]);
             const wDate = bpuFormatDate(row[colWDate]);
+            
+            // Derive Masa & Tahun from WithholdingDate
+            let rowMonth = 1, rowYear = 2025;
+            if (wDate && wDate.includes('-')) {
+                const parts = wDate.split('-');
+                rowYear = parts[0];
+                rowMonth = parseInt(parts[1]);
+            }
+
             const cpIdtku = cpTin + '000000';
 
             bpuList += `
     <Bpu>
-      <TaxPeriodMonth>${month}</TaxPeriodMonth>
-      <TaxPeriodYear>${year}</TaxPeriodYear>
+      <TaxPeriodMonth>${rowMonth}</TaxPeriodMonth>
+      <TaxPeriodYear>${rowYear}</TaxPeriodYear>
       <CounterpartTin>${cpTin}</CounterpartTin>
       <IDPlaceOfBusinessActivityOfIncomeRecipient>${cpIdtku}</IDPlaceOfBusinessActivityOfIncomeRecipient>
-      <TaxCertificate>${cert}</TaxCertificate>
+      <TaxCertificate>${rowCert}</TaxCertificate>
       <TaxObjectCode>${code}</TaxObjectCode>
       <TaxBase>${Math.round(taxBase)}</TaxBase>
       <Rate>${rate}</Rate>
@@ -5749,24 +5960,29 @@ const BP21_CODES = [
 ];
 
 let bp21ParsedData = [], bp21Headers = [], bp21XmlOutput = '';
+const BP21_RATE_MAP = {};
+BP21_CODES.forEach(c => BP21_RATE_MAP[c.code] = c.rate);
 
 function bp21DownloadTemplate() {
     const wb = XLSX.utils.book_new();
     const mainData = [
-        ['CustomerName','CounterpartTin','StatusTaxExemption','TaxObjectCode','Gross','Rate','DocumentType','DocumentNumber','DocumentDate','WithholdingDate'],
-        ['Budi Santoso','1403011006750026','K/3','21-100-35','40000000','16','1','ABC123','2025-01-13','2025-01-21'],
-        ['Siti Aminah','3173062510770011','TK/0','21-100-34','100000000','0','1','INV-002','2025-02-26','2025-02-28'],
-        ['Andi Gunawan','3374142512700001','K/1','21-402-03','5000000','15','1','DOC-003','2025-01-13','2025-01-21'],
+        ['CustomerName','CounterpartTin','StatusTaxExemption','TaxObjectCode','Gross','Rate','DocumentType','DocumentNumber','DocumentDate','WithholdingDate','Facility'],
+        ['Budi Santoso','1403011006750026','K/3','21-100-35','40000000','16','Invoice','ABC123','2025-01-13','2025-01-21','Tanpa Fasilitas'],
+        ['Siti Aminah','3173062510770011','TK/0','21-100-34','100000000','0','Invoice','INV-002','2025-02-26','2025-02-28','Tanpa Fasilitas'],
+        ['Andi Gunawan','3374142512700001','K/1','21-402-03','5000000','15','Bukti Pembayaran','DOC-003','2025-01-13','2025-01-21','PPh Ditanggung Pemerintah (DTP)'],
     ];
     const ws = XLSX.utils.aoa_to_sheet(mainData);
-    ws['!cols'] = [{wch:25},{wch:20},{wch:20},{wch:16},{wch:15},{wch:8},{wch:15},{wch:18},{wch:15},{wch:15}];
+    ws['!cols'] = [{wch:25},{wch:20},{wch:20},{wch:16},{wch:15},{wch:8},{wch:18},{wch:18},{wch:15},{wch:15},{wch:25}];
     XLSX.utils.book_append_sheet(wb, ws, 'Data_BP21');
 
-    // Reference sheet
+    // Reference sheet - BP21 Codes
     const refData = [['Kode Objek Pajak','Deskripsi','Catatan Tarif']];
     BP21_CODES.forEach(c => refData.push([c.code, c.desc, c.rate !== null ? c.rate + '%' : 'Isi manual (TER/progresif)']));
+    // Append BPU codes as secondary reference if needed
+    BPU_CODES.forEach(c => refData.push([c.code, c.desc, c.rate + '% (Unifikasi)']));
+
     const wsRef = XLSX.utils.aoa_to_sheet(refData);
-    wsRef['!cols'] = [{wch:18},{wch:50},{wch:30}];
+    wsRef['!cols'] = [{wch:18},{wch:70},{wch:30}];
     XLSX.utils.book_append_sheet(wb, wsRef, 'Referensi_Kode');
 
     // Reference PTKP
@@ -5785,12 +6001,42 @@ function bp21DownloadTemplate() {
     wsPtkp['!cols'] = [{wch:12},{wch:35}];
     XLSX.utils.book_append_sheet(wb, wsPtkp, 'Referensi_PTKP');
 
-    // Data validation for TaxObjectCode (D)
-    const codeList = BP21_CODES.map(c => c.code).join(',');
+    // Add Reference Document sheet
+    const docData = [['Jenis Dokumen (Coretax)']];
+    CORETAX_DOC_TYPES.forEach(d => docData.push([d]));
+    const wsDoc = XLSX.utils.aoa_to_sheet(docData);
+    wsDoc['!cols'] = [{wch:25}];
+    XLSX.utils.book_append_sheet(wb, wsDoc, 'Referensi_Dokumen');
+
+    // Add Reference Facility sheet
+    const facData = [['Fasilitas / Surat Keterangan']];
+    CORETAX_FACILITY_TYPES.forEach(f => facData.push([f]));
+    const wsFac = XLSX.utils.aoa_to_sheet(facData);
+    wsFac['!cols'] = [{wch:60}];
+    XLSX.utils.book_append_sheet(wb, wsFac, 'Referensi_Fasilitas');
+
+    // Add data validations
     if (!ws['!dataValidations']) ws['!dataValidations'] = [];
-    ws['!dataValidations'].push({ sqref:'D2:D9999', type:'list', formula1:'"'+codeList+'"', showDropDown:false });
-    // Data validation for StatusTaxExemption (C)
-    ws['!dataValidations'].push({ sqref:'C2:C9999', type:'list', formula1:'"TK/0,TK/1,TK/2,TK/3,K/0,K/1,K/2,K/3"', showDropDown:false });
+    
+    // TaxObjectCode (D)
+    const codeList = BP21_CODES.map(c => c.code).join(',');
+    ws['!dataValidations'].push({ sqref:'D2:D9999', type:'list', formula1:'"'+codeList+'"', showDropDown:true });
+    
+    // StatusTaxExemption (C)
+    ws['!dataValidations'].push({ sqref:'C2:C9999', type:'list', formula1:'"TK/0,TK/1,TK/2,TK/3,K/0,K/1,K/2,K/3"', showDropDown:true });
+
+    // DocumentType (G)
+    const docList = CORETAX_DOC_TYPES.join(',');
+    ws['!dataValidations'].push({ sqref:'G2:G9999', type:'list', formula1:'"'+docList+'"', showDropDown:true });
+
+    // Facility column (K)
+    const facList = [
+        'Tanpa Fasilitas',
+        'SKB PPh 21',
+        'DTP',
+        'Fasilitas Lainnya'
+    ].join(',');
+    ws['!dataValidations'].push({ sqref:'K2:K9999', type:'list', formula1:'"'+facList+'"', showDropDown:true });
 
     XLSX.writeFile(wb, 'Template_BP21_PPh21.xlsx');
 }
@@ -5841,10 +6087,6 @@ function bp21ConvertXML() {
     try {
         const tin = document.getElementById('bp21_cfgTIN').value.replace(/\D/g,'');
         if (tin.length !== 16) { bp21ShowErr('NPWP Pemotong harus 16 digit!'); return; }
-        const month = document.getElementById('bp21_cfgMonth').value;
-        const year = document.getElementById('bp21_cfgYear').value;
-        const cert = document.getElementById('bp21_cfgCert').value;
-        const doc = document.getElementById('bp21_cfgDoc').value;
         const deemedDefault = Number(document.getElementById('bp21_cfgDeemed').value) || 100;
         const idtku = tin + '000000';
 
@@ -5859,10 +6101,12 @@ function bp21ConvertXML() {
         const colDocDate = ci('documentdate');
         const colWDate = ci('withholdingdate');
         const colDeemed = ci('deemed');
+        const colFacility = ci('facility') >= 0 ? ci('facility') : ci('suratketerangan');
 
         if (colCpTin < 0) { bp21ShowErr('Kolom CounterpartTin tidak ditemukan!'); return; }
         if (colCode < 0) { bp21ShowErr('Kolom TaxObjectCode tidak ditemukan!'); return; }
         if (colGross < 0) { bp21ShowErr('Kolom Gross tidak ditemukan!'); return; }
+        if (colWDate < 0) { bp21ShowErr('Kolom WithholdingDate tidak ditemukan! (Dibutuhkan untuk Masa/Tahun Pajak)'); return; }
 
         let bp21List = '';
         bp21ParsedData.forEach(row => {
@@ -5870,22 +6114,40 @@ function bp21ConvertXML() {
             const ptkp = colPtkp >= 0 ? String(row[colPtkp] || 'TK/0').trim() : 'TK/0';
             const code = String(row[colCode] || '').trim();
             const gross = Number(row[colGross]) || 0;
-            const rate = colRate >= 0 ? (Number(row[colRate]) || 0) : 0;
+            const lookupRate = BP21_RATE_MAP[code];
+            const rate = (colRate >= 0 && row[colRate] !== undefined && row[colRate] !== '') ? (Number(row[colRate]) || 0) : (lookupRate !== null && lookupRate !== undefined ? lookupRate : 0);
             const deemed = colDeemed >= 0 && row[colDeemed] !== '' ? Number(row[colDeemed]) : deemedDefault;
             const docNum = colDocNum >= 0 ? String(row[colDocNum] ?? '').trim() || 'N/A' : 'N/A';
-            const rowDoc = colDocType >= 0 && row[colDocType] ? String(row[colDocType]).trim() : doc;
+            
+            // Map Document Type to English
+            const rowDocIndo = colDocType >= 0 ? String(row[colDocType]).trim() : '';
+            const rowDoc = CORETAX_DOC_MAPPING[rowDocIndo] || rowDocIndo || 'TaxInvoice';
+            
+            // Map Facility to English
+            const rowFacIndo = colFacility >= 0 ? String(row[colFacility]).trim() : 'Tanpa Fasilitas';
+            const rowCert = CORETAX_FACILITY_MAPPING[rowFacIndo] || 'N/A';
+
             const docDate = colDocDate >= 0 ? bpuFormatDate(row[colDocDate]) : '';
-            const wDate = colWDate >= 0 ? bpuFormatDate(row[colWDate]) : '';
+            const wDate = bpuFormatDate(row[colWDate]);
+
+            // Derive Masa & Tahun from WithholdingDate
+            let rowMonth = 1, rowYear = 2025;
+            if (wDate && wDate.includes('-')) {
+                const parts = wDate.split('-');
+                rowYear = parts[0];
+                rowMonth = parseInt(parts[1]);
+            }
+
             const cpIdtku = cpTin + '000000';
 
             bp21List += `
     <Bp21>
-      <TaxPeriodMonth>${month}</TaxPeriodMonth>
-      <TaxPeriodYear>${year}</TaxPeriodYear>
+      <TaxPeriodMonth>${rowMonth}</TaxPeriodMonth>
+      <TaxPeriodYear>${rowYear}</TaxPeriodYear>
       <CounterpartTin>${cpTin}</CounterpartTin>
       <IDPlaceOfBusinessActivityOfIncomeRecipient>${cpIdtku}</IDPlaceOfBusinessActivityOfIncomeRecipient>
       <StatusTaxExemption>${ptkp}</StatusTaxExemption>
-      <TaxCertificate>${cert}</TaxCertificate>
+      <TaxCertificate>${rowCert}</TaxCertificate>
       <TaxObjectCode>${code}</TaxObjectCode>
       <Gross>${Math.round(gross)}</Gross>
       <Deemed>${deemed}</Deemed>
