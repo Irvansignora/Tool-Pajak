@@ -1221,6 +1221,7 @@
                                 <option value="UM.0010">UM.0010 (Meter)</option>
                                 <option value="UM.0018">UM.0018 (Karton)</option>
                                 <option value="UM.0019">UM.0019 (Dos/Box)</option>
+                                <option value="UM.0033">UM.0033 (Pcs)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2541,8 +2542,8 @@ function xmlReset() {
 
 function xmlDownloadTemplate() {
     const data = [
-        { TaxInvoiceDate:'2025-02-02', RefDesc:'Referensi 001', BuyerDocument:'TIN', BuyerDocumentNumber:'1091031210912281', BuyerName:'PT CONTOH PEMBELI', BuyerAdress:'Jl. Contoh No. 123', BuyerEmail:'buyer@example.com', Name:'Barang Contoh', Price:15000, Qty:200, TotalDiscount:100000, TaxBase:2900000, Type:Jasa },
-        { TaxInvoiceDate:'2025-02-03', RefDesc:'Referensi 002', BuyerDocument:'National ID', BuyerDocumentNumber:'3201234567890123', BuyerName:'John Doe', BuyerAdress:'Jl. Merdeka No. 45', BuyerEmail:'john@example.com', Name:'Produk Sample', Price:25000, Qty:100, TotalDiscount:50000, TaxBase:2450000, Type:Barang }
+        { TaxInvoiceDate:'2025-02-02', RefDesc:'Referensi 001', BuyerDocument:'TIN', BuyerDocumentNumber:'1091031210912281', BuyerName:'PT CONTOH PEMBELI', BuyerAdress:'Jl. Contoh No. 123', BuyerEmail:'buyer@example.com', Name:'Barang Contoh', Price:15000, Qty:200, TotalDiscount:100000, TaxBase:2900000, Type:'Jasa' },
+        { TaxInvoiceDate:'2025-02-03', RefDesc:'Referensi 002', BuyerDocument:'National ID', BuyerDocumentNumber:'3201234567890123', BuyerName:'John Doe', BuyerAdress:'Jl. Merdeka No. 45', BuyerEmail:'john@example.com', Name:'Produk Sample', Price:25000, Qty:100, TotalDiscount:50000, TaxBase:2450000, Type:'Barang' }
     ];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
