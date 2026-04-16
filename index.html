@@ -1189,7 +1189,7 @@
 
                 <!-- Template & Upload -->
                 <div class="btn-row" style="margin-bottom:16px;">
-                    <button class="btn btn-yellow" onclick="rmDownloadTemplate()">📥 Download Template Excel (<span style="font-weight:700;">Update v2</span>)</button>
+                    <button class="btn btn-yellow" onclick="rmDownloadTemplate()">📥 Download Template Excel (<span style="font-weight:700;">Update v3</span>)</button>
                 </div>
 
                 <div class="upload-area" id="rm_uploadZone" onclick="document.getElementById('rm_fileInput').click()">
@@ -1205,7 +1205,7 @@
                         <span style="display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;"></span>
                         Konfigurasi Return
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">NPWP Pembeli (TIN)</label>
                             <input type="text" class="form-input" id="rm_cfgTIN" placeholder="0991183559012000" maxlength="16">
@@ -1214,39 +1214,9 @@
                             <label class="form-label">Tanggal Return (Default)</label>
                             <input type="date" class="form-input" id="rm_cfgDate">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Unit Satuan Default</label>
-                            <select class="form-select" id="rm_cfgUnit">
-                                <option value="UM.0021">UM.0021 (Unit)</option>
-                                <option value="UM.0001">UM.0001 (Buah)</option>
-                                <option value="UM.0002">UM.0002 (Kg)</option>
-                                <option value="UM.0003">UM.0003 (Gram)</option>
-                                <option value="UM.0005">UM.0005 (Liter)</option>
-                                <option value="UM.0010">UM.0010 (Meter)</option>
-                                <option value="UM.0018">UM.0018 (Karton)</option>
-                                <option value="UM.0019">UM.0019 (Dos/Box)</option>
-								<option value="UM.0033">UM.0033 (Pcs)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Type (Barang/Jasa)</label>
-                            <select class="form-select" id="rm_cfgType">
-                                <option value="A">A (Barang)</option>
-                                <option value="B">B (Jasa)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kolom No. Faktur</label>
-                            <input type="text" class="form-input" id="rm_cfgColInvoice" placeholder="No. Faktur Pajak" value="No. Faktur Pajak">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kolom NPWP Penjual</label>
-                            <input type="text" class="form-input" id="rm_cfgColSellerTIN" placeholder="NPWP Penjual" value="NPWP Penjual">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kolom Tanggal Return</label>
-                            <input type="text" class="form-input" id="rm_cfgColReturnDate" placeholder="Tanggal Return" value="Tanggal Return">
-                        </div>
+                    </div>
+                    <div style="margin-top:12px;padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;font-size:11px;color:var(--text-dim);line-height:1.6;">
+                        💡 <strong>Info:</strong> Kolom <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:10px;">Type</code> dan <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:10px;">Unit</code> sudah tersedia di template Excel. Isi per-baris sesuai kebutuhan (A=Barang, B=Jasa).
                     </div>
                 </div>
 
@@ -4827,13 +4797,30 @@ function impDownloadResult() {
 
     window.rmDownloadTemplate = function() {
         const data = [
-            { 'No. Faktur Pajak':'010.000-24.12345678', 'NPWP Penjual':'0991183559012000', 'Nama Barang':'Monitor LED 24"', 'Harga':1500000, 'Qty':2, 'Discount':0, 'Total':3000000, 'PPN':330000, 'Tanggal Return':'2025-03-25' },
-            { 'No. Faktur Pajak':'010.000-24.87654321', 'NPWP Penjual':'0123456789012000', 'Nama Barang':'Keyboard Mechanical', 'Harga':800000, 'Qty':5, 'Discount':50000, 'Total':3950000, 'PPN':434500, 'Tanggal Return':'2025-03-26' }
+            { 'No. Faktur Pajak':'010.000-24.12345678', 'NPWP Penjual':'0991183559012000', 'Nama Barang':'Monitor LED 24"', 'Harga':1500000, 'Qty':2, 'Discount':0, 'Total':3000000, 'PPN':330000, 'Type':'A', 'Unit':'UM.0021', 'Tanggal Return':'2025-03-25' },
+            { 'No. Faktur Pajak':'010.000-24.87654321', 'NPWP Penjual':'0123456789012000', 'Nama Barang':'Keyboard Mechanical', 'Harga':800000, 'Qty':5, 'Discount':50000, 'Total':3950000, 'PPN':434500, 'Type':'A', 'Unit':'UM.0021', 'Tanggal Return':'2025-03-26' }
         ];
         const ws = XLSX.utils.json_to_sheet(data);
+
+        // Add data validation sheet for Type & Unit references
+        const refData = [
+            ['Type_Code', 'Type_Desc', 'Unit_Code', 'Unit_Desc'],
+            ['A', 'Barang', 'UM.0001', 'Buah'],
+            ['B', 'Jasa', 'UM.0002', 'Kg'],
+            ['', '', 'UM.0003', 'Gram'],
+            ['', '', 'UM.0005', 'Liter'],
+            ['', '', 'UM.0010', 'Meter'],
+            ['', '', 'UM.0018', 'Karton'],
+            ['', '', 'UM.0019', 'Dos/Box'],
+            ['', '', 'UM.0021', 'Unit'],
+            ['', '', 'UM.0033', 'Pcs']
+        ];
+        const wsRef = XLSX.utils.aoa_to_sheet(refData);
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Template_Return');
-        XLSX.writeFile(wb, 'Template_Return_Masukan.xlsx');
+        XLSX.utils.book_append_sheet(wb, wsRef, 'Referensi');
+        XLSX.writeFile(wb, 'Template_Return_Masukan_v3.xlsx');
     };
 
     window.rmHandleFile = function(e) {
@@ -4913,32 +4900,29 @@ function impDownloadResult() {
         document.getElementById('rm_statStatus').style.color = 'var(--green)';
     }
 
-    function rmGetColIdx(customId, fallbackName) {
-        const customVal = document.getElementById(customId).value;
-        const key = customVal || fallbackName;
-        return rmHeaders.findIndex(h => h.toLowerCase().trim() === key.toLowerCase().trim());
+    function rmFindCol(name) {
+        return rmHeaders.findIndex(h => h.toLowerCase().trim() === name.toLowerCase().trim());
     }
 
     window.rmConvertToXML = function() {
         try {
-            const colInvoice   = rmGetColIdx('rm_cfgColInvoice', 'No. Faktur Pajak');
-            const colSellerTIN = rmGetColIdx('rm_cfgColSellerTIN', 'NPWP Penjual');
-            const colReturnDate = rmGetColIdx('rm_cfgColReturnDate', 'Tanggal Return');
-            
+            const colInvoice    = rmFindCol('No. Faktur Pajak');
+            const colSellerTIN  = rmFindCol('NPWP Penjual');
+            const colReturnDate = rmFindCol('Tanggal Return');
             const colNamaBarang = rmHeaders.findIndex(h => h.toLowerCase().includes('nama barang') || h.toLowerCase().includes('barang'));
-            const colHarga     = rmHeaders.findIndex(h => h.toLowerCase() === 'harga');
-            const colQty       = rmHeaders.findIndex(h => h.toLowerCase() === 'qty' || h.toLowerCase() === 'quantity');
-            const colDiscount  = rmHeaders.findIndex(h => h.toLowerCase().includes('discount') || h.toLowerCase().includes('diskon'));
-            const colTotal     = rmHeaders.findIndex(h => h.toLowerCase() === 'total');
-            const colPPN       = rmHeaders.findIndex(h => h.toLowerCase() === 'ppn');
+            const colHarga      = rmFindCol('Harga');
+            const colQty        = rmHeaders.findIndex(h => h.toLowerCase() === 'qty' || h.toLowerCase() === 'quantity');
+            const colDiscount   = rmHeaders.findIndex(h => h.toLowerCase().includes('discount') || h.toLowerCase().includes('diskon'));
+            const colTotal      = rmFindCol('Total');
+            const colPPN        = rmFindCol('PPN');
+            const colType       = rmFindCol('Type');
+            const colUnit       = rmFindCol('Unit');
 
-            if (colInvoice < 0) { rmShowError('Kolom "No. Faktur Pajak" tidak ditemukan. Cek nama kolom di konfigurasi.'); return; }
-            if (colSellerTIN < 0) { rmShowError('Kolom "NPWP Penjual" tidak ditemukan. Cek nama kolom di konfigurasi.'); return; }
+            if (colInvoice < 0) { rmShowError('Kolom "No. Faktur Pajak" tidak ditemukan di Excel.'); return; }
+            if (colSellerTIN < 0) { rmShowError('Kolom "NPWP Penjual" tidak ditemukan di Excel.'); return; }
 
             const tin = document.getElementById('rm_cfgTIN').value.replace(/\D/g,'').padEnd(16,'0');
             const defaultDateRaw = document.getElementById('rm_cfgDate').value; // yyyy-mm-dd
-            const unit = document.getElementById('rm_cfgUnit').value;
-            const type = document.getElementById('rm_cfgType').value;
 
             // Group by invoice number
             const invoiceMap = new Map();
@@ -4980,6 +4964,10 @@ function impDownloadResult() {
                     const total      = Number(row[colTotal]) || (harga * qty - discount);
                     const ppn        = Number(row[colPPN]) || 0;
 
+                    // Read Type & Unit per-row from Excel, fallback to defaults
+                    const rowType = colType >= 0 ? String(row[colType] || 'A').trim().toUpperCase() : 'A';
+                    const rowUnit = colUnit >= 0 ? String(row[colUnit] || 'UM.0021').trim() : 'UM.0021';
+
                     const taxBase      = total;
                     const otherTaxBase = taxBase * 11 / 12;
 
@@ -4987,18 +4975,16 @@ function impDownloadResult() {
                     totalVAT          += ppn;
                     totalOtherTaxBase += otherTaxBase;
 
-                    const namaBarangUnderscore = namaBarang.toUpperCase().replace(/\s+/g,' ').replace(/[^A-Z0-9 ]/g,'');
-                    const invoiceClean         = invoiceNum.replace(/[^A-Z0-9]/gi,'');
-                    const nRaw                 = namaBarangUnderscore;
-                    const nameField            = nRaw.substring(0,100).replace(/[<>&"]/g, c => c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':'&quot;');
+                    const namaBarangClean = namaBarang.toUpperCase().replace(/\s+/g,' ').replace(/[^A-Z0-9 ]/g,'');
+                    const nameField       = namaBarangClean.substring(0,100).replace(/[<>&"]/g, c => c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':'&quot;');
 
                     detailRows += `
           <Rows>
-            <Type>${type}</Type>
+            <Type>${rowType}</Type>
             <Name>${nameField}</Name>
             <Code>000000</Code>
             <Quantity>${qty.toFixed(2)}</Quantity>
-            <Unit>${unit}</Unit>
+            <Unit>${rowUnit}</Unit>
             <UnitPrice>${harga.toFixed(2)}</UnitPrice>
             <STLGRate>0</STLGRate>
             <ReturnQuantity>${qty.toFixed(2)}</ReturnQuantity>
@@ -5157,9 +5143,9 @@ function rnUpdateInfo() {
     const optCont = document.getElementById('rnOptionsContainer');
     
     // Update Info Text
-    if (fmt === 'faktur') info.innerHTML = '💡 <strong>Format Default:</strong> Masa Pajak-No Faktur-Penjual-Pembeli-Referensi';
-    else if (fmt === 'ebupot') info.innerHTML = '💡 <strong>Format Default:</strong> Masa Pajak-No Bupot-Pemotong-Dipotong-Referensi';
-    else if (fmt === 'nrp') info.innerHTML = '💡 <strong>Format Default:</strong> No NRP-No Faktur-Penjual-Pembeli-Tanggal Return';
+    if (fmt === 'faktur') info.innerHTML = '💡 <strong>Format Default:</strong> Masa Pajak - No Faktur - Penjual - Pembeli - Referensi';
+    else if (fmt === 'ebupot') info.innerHTML = '💡 <strong>Format Default:</strong> Masa Pajak - No Bupot - Pemotong - Dipotong - Referensi';
+    else if (fmt === 'nrp') info.innerHTML = '💡 <strong>Format Default:</strong> No NRP - No Faktur - Penjual - Pembeli - Tanggal Return';
 
     // Update Checkboxes
     optCont.innerHTML = '';
@@ -5301,9 +5287,9 @@ async function rnProcessFile(file, format, enabledFields, customText = '') {
         nameParts.push(clean(customText));
     }
     
-    let newName = nameParts.join('_') + '.pdf';
-    newName = newName.replace(/__+/g, '_').replace(/^_/, '').replace(/_$/, '');
-    if (newName === '.pdf') newName = 'Dokumen_Tak_Dikenal.pdf';
+    let newName = nameParts.join(' - ') + '.pdf';
+    newName = newName.replace(/\s*-\s*-\s*/g, ' - ').replace(/^\s*-\s*/, '').replace(/\s*-\s*$/, '');
+    if (newName === '.pdf') newName = 'Dokumen Tak Dikenal.pdf';
     
     return { file, newName, blob: file };
 }
