@@ -5404,8 +5404,8 @@ function rnExtractNRPData(text) {
     if (fakturM) d.nomorFaktur = fakturM[1].replace(/[.\-\s]/g, '');
     
     const names = [...text.matchAll(/Nama\s*:\s*(.*?)(?=\s+Alamat|\s+NPWP|\s+NIK|$)/gi)];
-    if (names.length >= 1) d.namaPenjual = names[0][1].trim();
-    if (names.length >= 2) d.namaPembeli = names[1][1].trim();
+    if (names.length >= 1) d.namaPembeli = names[0][1].trim();
+    if (names.length >= 2) d.namaPenjual = names[1][1].trim();
     
     const dateM = text.match(/(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i);
     if (dateM) d.tanggal = dateM[1].trim().replace(/\s+/g, '-');
