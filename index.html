@@ -4962,7 +4962,6 @@ function impDownloadResult() {
                     const qty        = Number(row[colQty]) || 0;
                     const discount   = Number(colDiscount >= 0 ? row[colDiscount] : 0) || 0;
                     const total      = Number(row[colTotal]) || (harga * qty - discount);
-                    const ppn        = Number(row[colPPN]) || 0;
 
                     // Read Type & Unit per-row from Excel, fallback to defaults
                     const rowType = colType >= 0 ? String(row[colType] || 'A').trim().toUpperCase() : 'A';
@@ -4970,6 +4969,9 @@ function impDownloadResult() {
 
                     const taxBase      = total;
                     const otherTaxBase = taxBase * 11 / 12;
+                    
+                    // Hitung PPN otomatis (12% dari OtherTaxBase, setara dengan 11% dari DPP)
+                    const ppn = Number((otherTaxBase * 12 / 100).toFixed(2));
 
                     totalTaxBase      += taxBase;
                     totalVAT          += ppn;
