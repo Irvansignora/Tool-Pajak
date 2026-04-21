@@ -5810,11 +5810,18 @@ function bpuRenderPreview() {
     let html = `<thead><tr style="background:rgba(236,72,153,0.08);">${bpuHeaders.map(h => `<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pink);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border);">${h}</th>`).join('')}<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);border-bottom:1px solid var(--border);">TARIF AUTO</th></tr></thead><tbody>`;
     bpuParsedData.slice(0,50).forEach((row, ri) => {
         const codeIdx = bpuHeaders.findIndex(h => h.toLowerCase().includes('taxobjectcode') || h.toLowerCase().includes('kode'));
+        const facIdx = bpuHeaders.findIndex(h => h.toLowerCase().includes('facility') || h.toLowerCase().includes('suratketerangan'));
         const code = codeIdx >= 0 ? String(row[codeIdx]).trim() : '';
-        const rate = BPU_RATE_MAP[code] ?? '?';
+        const facRaw = facIdx >= 0 ? String(row[facIdx]).trim() : '';
+        const facCert = CORETAX_FACILITY_MAPPING[facRaw] || 'N/A';
+        const hasFac = facRaw && facRaw !== '' && facRaw.toLowerCase() !== 'tanpa fasilitas' && facCert !== 'N/A';
+        const baseRate = BPU_RATE_MAP[code] ?? '?';
+        const rate = hasFac ? 0 : baseRate;
+        const rateColor = hasFac ? 'var(--yellow)' : 'var(--green)';
+        const rateLabel = hasFac ? '0% (Fasilitas)' : rate + '%';
         html += `<tr style="${ri%2===1?'background:rgba(255,255,255,0.02)':''}">` + bpuHeaders.map((h,i) => {
             return `<td style="padding:8px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04);">${row[i] ?? ''}</td>`;
-        }).join('') + `<td style="padding:8px 12px;color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.04);">${rate}%</td></tr>`;
+        }).join('') + `<td style="padding:8px 12px;color:${rateColor};font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.04);">${rateLabel}</td></tr>`;
     });
     html += '</tbody>';
     tbl.innerHTML = html;
@@ -5848,7 +5855,6 @@ function bpuConvertXML() {
             const cpTin = String(row[colCpTin] || '').replace(/\D/g,'').padEnd(16,'0');
             const code = String(row[colCode] || '').trim();
             const taxBase = Number(row[colBase]) || 0;
-            const rate = BPU_RATE_MAP[code] ?? 2;
             const docNum = String(row[colDocNum] ?? '').trim() || 'N/A';
             
             // Map Document Type to English
@@ -5858,6 +5864,10 @@ function bpuConvertXML() {
             // Map Facility to English
             const rowFacIndo = colFacility >= 0 ? String(row[colFacility]).trim() : 'Tanpa Fasilitas';
             const rowCert = CORETAX_FACILITY_MAPPING[rowFacIndo] || 'N/A';
+
+            // Jika ada fasilitas (SKB, DTP, dll) maka tarif = 0, kecuali Tanpa Fasilitas
+            const hasFacility = rowFacIndo && rowFacIndo !== '' && rowFacIndo.toLowerCase() !== 'tanpa fasilitas' && rowCert !== 'N/A';
+            const rate = hasFacility ? 0 : (BPU_RATE_MAP[code] ?? 2);
 
             const docDate = bpuFormatDate(row[colDocDate]);
             const wDate = bpuFormatDate(row[colWDate]);
@@ -6185,8 +6195,6 @@ function bp21ConvertXML() {
             const ptkp = colPtkp >= 0 ? String(row[colPtkp] || 'TK/0').trim() : 'TK/0';
             const code = String(row[colCode] || '').trim();
             const gross = Number(row[colGross]) || 0;
-            const lookupRate = BP21_RATE_MAP[code];
-            const rate = (colRate >= 0 && row[colRate] !== undefined && row[colRate] !== '') ? (Number(row[colRate]) || 0) : (lookupRate !== null && lookupRate !== undefined ? lookupRate : 0);
             const deemed = colDeemed >= 0 && row[colDeemed] !== '' ? Number(row[colDeemed]) : deemedDefault;
             const docNum = colDocNum >= 0 ? String(row[colDocNum] ?? '').trim() || 'N/A' : 'N/A';
             
@@ -6197,6 +6205,11 @@ function bp21ConvertXML() {
             // Map Facility to English
             const rowFacIndo = colFacility >= 0 ? String(row[colFacility]).trim() : 'Tanpa Fasilitas';
             const rowCert = CORETAX_FACILITY_MAPPING[rowFacIndo] || 'N/A';
+
+            // Jika ada fasilitas (SKB, DTP, dll) maka tarif = 0, kecuali Tanpa Fasilitas
+            const hasFacility = rowFacIndo && rowFacIndo !== '' && rowFacIndo.toLowerCase() !== 'tanpa fasilitas' && rowCert !== 'N/A';
+            const lookupRate = BP21_RATE_MAP[code];
+            const rate = hasFacility ? 0 : ((colRate >= 0 && row[colRate] !== undefined && row[colRate] !== '') ? (Number(row[colRate]) || 0) : (lookupRate !== null && lookupRate !== undefined ? lookupRate : 0));
 
             const docDate = colDocDate >= 0 ? bpuFormatDate(row[colDocDate]) : '';
             const wDate = bpuFormatDate(row[colWDate]);
