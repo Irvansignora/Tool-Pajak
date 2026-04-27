@@ -1137,8 +1137,17 @@
             <div class="upload-area" id="xmlUploadArea">
                 <span class="upload-icon">📤</span>
                 <div class="upload-title">Klik atau Drag & Drop File Excel</div>
-                <div class="upload-sub">Support: .xlsx, .xls</div>
-                <input type="file" id="xmlFileInput" accept=".xlsx,.xls">
+                <div class="upload-sub">Support: .xlsx, .xls · Multi-file upload</div>
+                <input type="file" id="xmlFileInput" accept=".xlsx,.xls" multiple>
+            </div>
+
+            <!-- File List -->
+            <div id="xmlFileList" style="display:none;margin-bottom:14px;"></div>
+
+            <!-- Processing Progress -->
+            <div id="xmlProcessProgress" style="display:none;margin-bottom:14px;">
+                <div class="progress-bar"><div class="progress-fill" id="xmlProgressFill"></div></div>
+                <div class="progress-text" id="xmlProgressText">Memproses...</div>
             </div>
 
             <!-- Buttons -->
@@ -2453,58 +2462,110 @@ function xmlUpdateCustom() {
     xmlSyncTIN();
 }
 
+let xmlIsProcessing = false;
+
+function xmlShowProgress(pct, text) {
+    const wrap = document.getElementById('xmlProcessProgress');
+    wrap.style.display = 'block';
+    document.getElementById('xmlProgressFill').style.width = pct + '%';
+    document.getElementById('xmlProgressText').textContent = text || 'Memproses...';
+}
+function xmlHideProgress() { document.getElementById('xmlProcessProgress').style.display = 'none'; }
+
+function xmlYield() { return new Promise(r => setTimeout(r, 0)); }
+
+function xmlReadFileAsync(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(new Uint8Array(e.target.result));
+        reader.onerror = () => reject(new Error('Gagal membaca: ' + file.name));
+        reader.readAsArrayBuffer(file);
+    });
+}
+
 (function() {
     const ua = document.getElementById('xmlUploadArea');
     const fi = document.getElementById('xmlFileInput');
-    ua.addEventListener('click', () => fi.click());
+    ua.addEventListener('click', () => { if (!xmlIsProcessing) fi.click(); });
     ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragover'); });
     ua.addEventListener('dragleave', () => ua.classList.remove('dragover'));
-    ua.addEventListener('drop', e => { e.preventDefault(); ua.classList.remove('dragover'); xmlHandleFile(e.dataTransfer.files[0]); });
-    fi.addEventListener('change', e => { if (e.target.files[0]) xmlHandleFile(e.target.files[0]); });
+    ua.addEventListener('drop', e => {
+        e.preventDefault(); ua.classList.remove('dragover');
+        if (!xmlIsProcessing) xmlHandleFiles([...e.dataTransfer.files].filter(f => /\.xlsx?$/i.test(f.name)));
+    });
+    fi.addEventListener('change', e => { if (e.target.files.length) xmlHandleFiles([...e.target.files]); });
     document.getElementById('xmlConvertBtn').addEventListener('click', xmlConvert);
     document.getElementById('xmlCopyBtn').addEventListener('click', xmlCopy);
     document.getElementById('xmlDownloadBtn').addEventListener('click', xmlDownloadFile);
 })();
 
-function xmlHandleFile(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-        xmlExcelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-        // Update display WITHOUT replacing innerHTML (fix re-upload bug)
-        const ua = document.getElementById('xmlUploadArea');
-        ua.querySelector('.upload-icon').textContent = '✅';
-        ua.querySelector('.upload-icon').style.color = 'var(--green)';
-        ua.querySelector('.upload-title').textContent = file.name;
-        ua.querySelector('.upload-title').style.color = 'var(--green)';
-        ua.querySelector('.upload-sub').textContent = `${xmlExcelData.length} baris data terdeteksi`;
-        ua.classList.add('success');
-        // Reset input value so same file can be re-selected
-        document.getElementById('xmlFileInput').value = '';
-        if (xmlSelectedTIN) document.getElementById('xmlConvertBtn').disabled = false;
-        document.getElementById('xmlResetBtn').style.display = 'inline-flex';
-        // Hide previous result if any
-        document.getElementById('xmlPreview').style.display = 'none';
-        document.getElementById('xmlDownloadBtn').style.display = 'none';
-        document.getElementById('xmlCopyBtn').style.display = 'none';
-        xmlContent = '';
-    };
-    reader.readAsArrayBuffer(file);
+async function xmlHandleFiles(files) {
+    if (!files || !files.length || xmlIsProcessing) return;
+    xmlIsProcessing = true;
+    xmlExcelData = [];
+    xmlContent = '';
+    const ua = document.getElementById('xmlUploadArea');
+    const fileListEl = document.getElementById('xmlFileList');
+
+    document.getElementById('xmlPreview').style.display = 'none';
+    document.getElementById('xmlDownloadBtn').style.display = 'none';
+    document.getElementById('xmlCopyBtn').style.display = 'none';
+
+    xmlShowProgress(5, `Membaca ${files.length} file...`);
+    await xmlYield();
+
+    // Read ALL files in parallel for speed
+    const buffers = await Promise.all([...files].map(f => xmlReadFileAsync(f).catch(() => null)));
+
+    const fileNames = [];
+    for (let i = 0; i < files.length; i++) {
+        if (!buffers[i]) { fileNames.push({ name: files[i].name, rows: 0, error: true }); continue; }
+        try {
+            const wb = XLSX.read(buffers[i], { type: 'array' });
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            xmlExcelData.push(...rows);
+            fileNames.push({ name: files[i].name, rows: rows.length });
+        } catch (err) {
+            fileNames.push({ name: files[i].name, rows: 0, error: true });
+        }
+        // Only yield every 5 files to keep UI alive without slowing down
+        if (i % 5 === 4) { xmlShowProgress(Math.round(((i+1)/files.length)*90)+5, `Parsing ${i+1}/${files.length}...`); await xmlYield(); }
+    }
+
+    xmlShowProgress(100, 'Selesai!');
+    setTimeout(xmlHideProgress, 500);
+
+    ua.querySelector('.upload-icon').textContent = '✅';
+    ua.querySelector('.upload-icon').style.color = 'var(--green)';
+    ua.querySelector('.upload-title').textContent = files.length === 1 ? files[0].name : `${files.length} file berhasil dimuat`;
+    ua.querySelector('.upload-title').style.color = 'var(--green)';
+    ua.querySelector('.upload-sub').textContent = `Total ${xmlExcelData.length} baris data dari ${files.length} file`;
+    ua.classList.add('success');
+
+    if (files.length > 1) {
+        fileListEl.style.display = 'block';
+        fileListEl.innerHTML = fileNames.map(f =>
+            `<div class="file-item"><div class="file-item-info"><div class="file-item-name">${f.error ? '❌' : '✅'} ${f.name}</div><div class="file-item-size">${f.rows} baris</div></div></div>`
+        ).join('');
+    } else { fileListEl.style.display = 'none'; }
+
+    document.getElementById('xmlFileInput').value = '';
+    if (xmlSelectedTIN && xmlExcelData.length) document.getElementById('xmlConvertBtn').disabled = false;
+    document.getElementById('xmlResetBtn').style.display = 'inline-flex';
+    xmlIsProcessing = false;
 }
 
 function xmlReset() {
-    // Reset semua state Excel to XML
     xmlExcelData = null;
     xmlContent = '';
+    xmlIsProcessing = false;
     const ua = document.getElementById('xmlUploadArea');
     ua.querySelector('.upload-icon').textContent = '📤';
     ua.querySelector('.upload-icon').style.color = '';
     ua.querySelector('.upload-title').textContent = 'Klik atau Drag & Drop File Excel';
     ua.querySelector('.upload-title').style.color = '';
-    ua.querySelector('.upload-sub').textContent = 'Support: .xlsx, .xls';
+    ua.querySelector('.upload-sub').textContent = 'Support: .xlsx, .xls · Multi-file upload';
     ua.classList.remove('success');
-    // Reset file input
     document.getElementById('xmlFileInput').value = '';
     document.getElementById('xmlConvertBtn').disabled = true;
     document.getElementById('xmlDownloadBtn').style.display = 'none';
@@ -2512,6 +2573,9 @@ function xmlReset() {
     document.getElementById('xmlResetBtn').style.display = 'none';
     document.getElementById('xmlPreview').style.display = 'none';
     document.getElementById('xmlPreviewBox').textContent = '';
+    document.getElementById('xmlFileList').style.display = 'none';
+    document.getElementById('xmlFileList').innerHTML = '';
+    xmlHideProgress();
 }
 
 function xmlDownloadTemplate() {
@@ -2577,37 +2641,30 @@ function xmlNum(v) {
 
 function xmlConvert() {
     if (!xmlExcelData || !xmlExcelData.length) return;
-    if (!xmlSelectedTIN) { alert('⚠️ Silakan pilih perusahaan terlebih dahulu!'); return; }
+    if (!xmlSelectedTIN) { alert('\u26a0\ufe0f Silakan pilih perusahaan terlebih dahulu!'); return; }
     const fixed = { TIN: xmlSelectedTIN, TaxInvoiceOpt:'Normal', TrxCode:'04', SellerIDTKU: xmlSelectedIDTKU, Unit:'UM.0021', STLGRate:'0', STLG:'0', Opt:'A', Code:'000000', BuyerCountry:'IDN', VATRate:'12' };
     const grouped = {};
     xmlExcelData.forEach(row => { const ref = row.RefDesc || 'NO-REF'; if (!grouped[ref]) grouped[ref] = []; grouped[ref].push(row); });
-    let xml = `<?xml version="1.0" encoding="utf-8" ?>\n<TaxInvoiceBulk xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TaxInvoice.xsd">\n\t<TIN>${fixed.TIN}</TIN>\n\t<ListOfTaxInvoice>\n`;
-    Object.keys(grouped).forEach(refDesc => {
+    const parts = [];
+    parts.push(`<?xml version="1.0" encoding="utf-8" ?>\n<TaxInvoiceBulk xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TaxInvoice.xsd">\n\t<TIN>${fixed.TIN}</TIN>\n\t<ListOfTaxInvoice>\n`);
+    const refKeys = Object.keys(grouped);
+    for (let gi = 0; gi < refKeys.length; gi++) {
+        const refDesc = refKeys[gi];
         const items = grouped[refDesc], first = items[0];
         let buyerTin = '', buyerDocNum = '';
         if (first.BuyerDocument === 'National ID') { buyerTin = '0000000000000000'; buyerDocNum = first.BuyerDocumentNumber || ''; }
         else if (first.BuyerDocument === 'TIN') { buyerTin = first.BuyerDocumentNumber || ''; buyerDocNum = ''; }
-        
-        // Handle IDTKU suffix (e.g. 1, 2, 3) from Excel column
         const nk = k => String(k).replace(/\s+/g,'').toLowerCase();
         let idtkuSuffix = '000000';
-        for (const k in first) {
-            if (nk(k) === 'buyeridtku') {
-                const val = String(first[k] || '').trim();
-                if (val) {
-                    idtkuSuffix = val.padStart(6, '0');
-                }
-                break;
-            }
-        }
-        
+        for (const k in first) { if (nk(k) === 'buyeridtku') { const val = String(first[k] || '').trim(); if (val) idtkuSuffix = val.padStart(6, '0'); break; } }
         let buyerIDTKU = (first.BuyerDocument === 'National ID') ? '000000' : `${buyerTin}${idtkuSuffix}`.padEnd(22,'0');
-        xml += `\t<TaxInvoice>\n\t\t<TaxInvoiceDate>${xmlFormatDate(first.TaxInvoiceDate)}</TaxInvoiceDate>\n\t\t<TaxInvoiceOpt>${fixed.TaxInvoiceOpt}</TaxInvoiceOpt>\n\t\t<TrxCode>${fixed.TrxCode}</TrxCode>\n\t\t<AddInfo/>\n\t\t<CustomDoc/>\n\t\t<CustomDocMonthYear/>\n\t\t<RefDesc>${xmlEscape(refDesc)}</RefDesc>\n\t\t<FacilityStamp/>\n\t\t<SellerIDTKU>${fixed.SellerIDTKU}</SellerIDTKU>\n\t\t<BuyerTin>${buyerTin}</BuyerTin>\n\t\t<BuyerDocument>${first.BuyerDocument||''}</BuyerDocument>\n\t\t<BuyerCountry>${fixed.BuyerCountry}</BuyerCountry>\n\t\t<BuyerDocumentNumber>${buyerDocNum}</BuyerDocumentNumber>\n\t\t<BuyerName>${xmlEscape(first.BuyerName)}</BuyerName>\n\t\t<BuyerAdress>${xmlEscape(first.BuyerAdress)}</BuyerAdress>\n\t\t<BuyerEmail>${xmlEscape(first.BuyerEmail)}</BuyerEmail>\n\t\t<BuyerIDTKU>${buyerIDTKU}</BuyerIDTKU>\n\t\t<ListOfGoodService>\n`;
-        items.forEach(row => {
-            const nk = k => k.replace(/\s+/g,'').toLowerCase();
+        parts.push(`\t<TaxInvoice>\n\t\t<TaxInvoiceDate>${xmlFormatDate(first.TaxInvoiceDate)}</TaxInvoiceDate>\n\t\t<TaxInvoiceOpt>${fixed.TaxInvoiceOpt}</TaxInvoiceOpt>\n\t\t<TrxCode>${fixed.TrxCode}</TrxCode>\n\t\t<AddInfo/>\n\t\t<CustomDoc/>\n\t\t<CustomDocMonthYear/>\n\t\t<RefDesc>${xmlEscape(refDesc)}</RefDesc>\n\t\t<FacilityStamp/>\n\t\t<SellerIDTKU>${fixed.SellerIDTKU}</SellerIDTKU>\n\t\t<BuyerTin>${buyerTin}</BuyerTin>\n\t\t<BuyerDocument>${first.BuyerDocument||''}</BuyerDocument>\n\t\t<BuyerCountry>${fixed.BuyerCountry}</BuyerCountry>\n\t\t<BuyerDocumentNumber>${buyerDocNum}</BuyerDocumentNumber>\n\t\t<BuyerName>${xmlEscape(first.BuyerName)}</BuyerName>\n\t\t<BuyerAdress>${xmlEscape(first.BuyerAdress)}</BuyerAdress>\n\t\t<BuyerEmail>${xmlEscape(first.BuyerEmail)}</BuyerEmail>\n\t\t<BuyerIDTKU>${buyerIDTKU}</BuyerIDTKU>\n\t\t<ListOfGoodService>\n`);
+        for (let ri = 0; ri < items.length; ri++) {
+            const row = items[ri];
+            const nk2 = k => k.replace(/\s+/g,'').toLowerCase();
             const fr = {};
             for (const k in row) {
-                const nkk = nk(k);
+                const nkk = nk2(k);
                 if (nkk==='price') fr.Price=row[k]; if (nkk==='qty') fr.Qty=row[k];
                 if (nkk==='totaldisco'||nkk==='totaldiscount') fr.TotalDiscount=row[k];
                 if (nkk==='taxbase') fr.TaxBase=row[k]; if (nkk==='type') fr.Type=row[k];
@@ -2623,17 +2680,24 @@ function xmlConvert() {
             let opt = fixed.Opt;
             if (fr.Type) { const t = String(fr.Type).toLowerCase().trim(); if (t==='barang'||t==='a') opt='A'; else if (t==='jasa'||t==='b') opt='B'; }
             const unit = opt==='A' ? 'UM.0021' : 'UM.0033';
-            xml += `\t\t\t<GoodService>\n\t\t\t\t<Opt>${opt}</Opt>\n\t\t\t\t<Code>${codeObj}</Code>\n\t\t\t\t<Name>${xmlEscape(fr.Name)}</Name>\n\t\t\t\t<Unit>${unit}</Unit>\n\t\t\t\t<Price>${price.toFixed(2)}</Price>\n\t\t\t\t<Qty>${qty.toFixed(2)}</Qty>\n\t\t\t\t<TotalDiscount>${discount.toFixed(2)}</TotalDiscount>\n\t\t\t\t<TaxBase>${taxBase.toFixed(2)}</TaxBase>\n\t\t\t\t<OtherTaxBase>${otherTaxBase.toFixed(2)}</OtherTaxBase>\n\t\t\t\t<VATRate>${vatRate.toFixed(2)}</VATRate>\n\t\t\t\t<VAT>${vat.toFixed(2)}</VAT>\n\t\t\t\t<STLGRate>${fixed.STLGRate}</STLGRate>\n\t\t\t\t<STLG>${fixed.STLG}</STLG>\n\t\t\t</GoodService>\n`;
-        });
-        xml += `\t\t</ListOfGoodService>\n\t</TaxInvoice>\n`;
-    });
-    xml += `\t</ListOfTaxInvoice>\n</TaxInvoiceBulk>`;
-    xmlContent = xml;
-    document.getElementById('xmlPreviewBox').textContent = xml;
+            parts.push(`\t\t\t<GoodService>\n\t\t\t\t<Opt>${opt}</Opt>\n\t\t\t\t<Code>${codeObj}</Code>\n\t\t\t\t<Name>${xmlEscape(fr.Name)}</Name>\n\t\t\t\t<Unit>${unit}</Unit>\n\t\t\t\t<Price>${price.toFixed(2)}</Price>\n\t\t\t\t<Qty>${qty.toFixed(2)}</Qty>\n\t\t\t\t<TotalDiscount>${discount.toFixed(2)}</TotalDiscount>\n\t\t\t\t<TaxBase>${taxBase.toFixed(2)}</TaxBase>\n\t\t\t\t<OtherTaxBase>${otherTaxBase.toFixed(2)}</OtherTaxBase>\n\t\t\t\t<VATRate>${vatRate.toFixed(2)}</VATRate>\n\t\t\t\t<VAT>${vat.toFixed(2)}</VAT>\n\t\t\t\t<STLGRate>${fixed.STLGRate}</STLGRate>\n\t\t\t\t<STLG>${fixed.STLG}</STLG>\n\t\t\t</GoodService>\n`);
+        }
+        parts.push(`\t\t</ListOfGoodService>\n\t</TaxInvoice>\n`);
+    }
+    parts.push(`\t</ListOfTaxInvoice>\n</TaxInvoiceBulk>`);
+    xmlContent = parts.join('');
+    const previewBox = document.getElementById('xmlPreviewBox');
+    const MAX_PREVIEW = 50000;
+    if (xmlContent.length > MAX_PREVIEW) {
+        previewBox.textContent = xmlContent.substring(0, MAX_PREVIEW) + `\n\n... (${xmlExcelData.length} baris, ${(xmlContent.length/1024).toFixed(0)} KB \u2014 preview dipotong, download untuk file lengkap)`;
+    } else {
+        previewBox.textContent = xmlContent;
+    }
     document.getElementById('xmlPreview').style.display = 'block';
     document.getElementById('xmlDownloadBtn').style.display = 'inline-flex';
     document.getElementById('xmlCopyBtn').style.display = 'inline-flex';
 }
+
 
 function xmlCopy() {
     navigator.clipboard.writeText(xmlContent).then(() => {
