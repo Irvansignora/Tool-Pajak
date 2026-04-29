@@ -991,7 +991,7 @@
     <p>Platform lengkap untuk kebutuhan perpajakan Indonesia — konversi PDF, generate XML Coretax, kalkulator Pajak, dan lebih banyak lagi.</p>
     <div class="hero-stats">
         <div class="hero-stat">
-            <div class="hero-stat-num">8</div>
+            <div class="hero-stat-num">6+</div>
             <div class="hero-stat-label">Fitur Tools</div>
         </div>
         <div class="hero-stat">
@@ -5328,11 +5328,29 @@ async function rnProcessFile(file, format, enabledFields, customText = '') {
     const pdf = await pdfjsLib.getDocument({data: new Uint8Array(ab)}).promise;
     
     let fullText = '';
-    const pagesToRead = Math.min(pdf.numPages, 3);
-    for (let pg = 1; pg <= pagesToRead; pg++) {
-        const page = await pdf.getPage(pg);
-        const tc = await page.getTextContent();
-        fullText += tc.items.map(it => it.str).join(' ') + '\n';
+    
+    if (format === 'faktur') {
+        // Faktur Pajak: HARUS baca SEMUA halaman
+        // Karena masa pajak & referensi ada di halaman terakhir (setelah detail produk)
+        // Faktur bisa >2 halaman jika produknya banyak
+        for (let pg = 1; pg <= pdf.numPages; pg++) {
+            const page = await pdf.getPage(pg);
+            const tc = await page.getTextContent();
+            fullText += tc.items.map(it => it.str).join(' ') + '\n';
+        }
+    } else {
+        // Untuk format lain (ebupot, nrp): baca halaman 1-2 + halaman terakhir
+        // supaya header dan footer selalu terbaca
+        const pagesToRead = new Set();
+        pagesToRead.add(1);
+        if (pdf.numPages >= 2) pagesToRead.add(2);
+        if (pdf.numPages >= 3) pagesToRead.add(pdf.numPages); // halaman terakhir
+        
+        for (const pg of pagesToRead) {
+            const page = await pdf.getPage(pg);
+            const tc = await page.getTextContent();
+            fullText += tc.items.map(it => it.str).join(' ') + '\n';
+        }
     }
     await pdf.destroy();
     
@@ -5382,13 +5400,42 @@ function rnExtractFakturData(text) {
     }
     
     // ── Masa Pajak ──
-    const dateM = text.match(/Tanggal\s*:\s*(\d{1,2}\s+\w+\s+\d{4})/i) || 
-                  text.match(/(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i);
-    if (dateM) {
-        const parts = dateM[1].split(' ');
-        if (parts.length === 3) {
-            const months = {'Januari':'01','Februari':'02','Maret':'03','April':'04','Mei':'05','Juni':'06','Juli':'07','Agustus':'08','September':'09','Oktober':'10','November':'11','Desember':'12'};
-            d.masaPajak = `${parts[2]}-${months[parts[1]]||'00'}`;
+    // Cari tanggal faktur - bisa di halaman pertama (header) atau terakhir (footer)
+    // Prioritas: pola "Tanggal :" yang labeled, lalu fallback ke tanggal Indonesia manapun
+    const months = {'Januari':'01','Februari':'02','Maret':'03','April':'04','Mei':'05','Juni':'06','Juli':'07','Agustus':'08','September':'09','Oktober':'10','November':'11','Desember':'12'};
+    const monthNames = Object.keys(months).join('|');
+    
+    // Coba cari semua tanggal Indonesia di seluruh text
+    const allDates = [...text.matchAll(new RegExp(`(\\d{1,2})\\s+(${monthNames})\\s+(\\d{4})`, 'gi'))];
+    
+    if (allDates.length > 0) {
+        // Prioritas 1: Tanggal yang ada label "Tanggal :"
+        let bestDate = null;
+        for (const dm of allDates) {
+            const preCtx = text.substring(Math.max(0, dm.index - 50), dm.index);
+            if (/Tanggal\s*:?\s*$/i.test(preCtx)) {
+                bestDate = dm;
+                break;
+            }
+        }
+        // Prioritas 2: Tanggal yang muncul di area "Sesuai dengan" / footer (biasanya di halaman terakhir)
+        if (!bestDate) {
+            for (const dm of allDates) {
+                const preCtx = text.substring(Math.max(0, dm.index - 200), dm.index);
+                if (/Sesuai\s+dengan\s+ketentuan/i.test(preCtx)) {
+                    bestDate = dm;
+                    break;
+                }
+            }
+        }
+        // Prioritas 3: Ambil tanggal pertama yang bukan bagian dari detail produk
+        if (!bestDate) {
+            bestDate = allDates[0];
+        }
+        
+        if (bestDate) {
+            const bulan = bestDate[2].charAt(0).toUpperCase() + bestDate[2].slice(1).toLowerCase();
+            d.masaPajak = `${bestDate[3]}-${months[bulan] || '00'}`;
         }
     }
     
@@ -5414,8 +5461,21 @@ function rnExtractFakturData(text) {
         if (names.length >= 2) d.namaPembeli = names[1][1].trim();
     }
     
-    const refM = text.match(/Referensi\s*:\s*([^\n\)]+)/i) || text.match(/\(Referensi\s*:?\s*([^)]+)\)/i);
-    if (refM) d.referensi = refM[1].trim();
+    // ── Referensi ──
+    // Cari di seluruh text (termasuk halaman terakhir) dengan multiple pola
+    const refPatterns = [
+        /\(Referensi:\s*([^)]+)\)/i,
+        /\(Referensi\s+([^)]+)\)/i,
+        /Referensi\s*:\s*([^\n\)]+)/i,
+        /Referensi\s+([A-Z0-9][\w\-\/]*)/i
+    ];
+    for (const pat of refPatterns) {
+        const m = text.match(pat);
+        if (m) {
+            d.referensi = m[1].trim().replace(/[\)\s]+$/, '');
+            if (d.referensi.length > 0) break;
+        }
+    }
 
     return d;
 }
