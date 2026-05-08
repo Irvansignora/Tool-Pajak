@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PajakTools — Suite Lengkap Alat Pajak Indonesia</title>
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PajakTools">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <script src="libs/pdf.min.js"></script>
     <script src="libs/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="libs/jszip.min.js"></script>
     <script>
         // Set PDF.js worker ke path absolut agar bekerja di Electron (offline)
         pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('libs/pdf.worker.min.js', document.baseURI).href;
@@ -6434,6 +6441,114 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+</script>
+
+<!-- ══════════════════════════════════════════════════════════
+     PWA — Service Worker Registration & Update Notification
+     ══════════════════════════════════════════════════════════ -->
+<div id="pwa-update-toast" style="
+  display:none;
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:9999;
+  background:#1e2d42;
+  border:1px solid #3b82f6;
+  border-radius:14px;
+  padding:14px 20px;
+  display:none;
+  align-items:center;
+  gap:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;
+  font-size:14px;
+  color:#e2eaf8;
+  max-width:380px;
+  width:calc(100% - 48px);
+">
+  <span>🚀 <strong>Update tersedia!</strong> Versi baru PajakTools siap dipakai.</span>
+  <button id="pwa-update-btn" style="
+    background:#3b82f6;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:7px 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    font-family:inherit;
+  ">Perbarui</button>
+  <button id="pwa-dismiss-btn" style="
+    background:transparent;
+    color:#6b83a3;
+    border:none;
+    cursor:pointer;
+    font-size:18px;
+    line-height:1;
+    padding:0 2px;
+  ">✕</button>
+</div>
+
+<script>
+(function() {
+  if (!('serviceWorker' in navigator)) return;
+
+  let newWorker = null;
+  const toast = document.getElementById('pwa-update-toast');
+
+  function showToast() {
+    toast.style.display = 'flex';
+  }
+
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+
+    // Cek update saat halaman dibuka
+    reg.update();
+
+    // Dengarkan kalau ada SW baru menunggu
+    reg.addEventListener('updatefound', () => {
+      newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          // Ada versi baru menunggu — tampilkan toast
+          showToast();
+        }
+      });
+    });
+
+    // Kalau sudah ada SW waiting sejak load (misal tab dibuka ulang)
+    if (reg.waiting && navigator.serviceWorker.controller) {
+      newWorker = reg.waiting;
+      showToast();
+    }
+
+  }).catch(err => console.warn('SW registration failed:', err));
+
+  // Tombol "Perbarui": minta SW baru ambil alih, lalu reload
+  document.getElementById('pwa-update-btn').addEventListener('click', () => {
+    if (newWorker) {
+      newWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+    // Reload sekali SW baru aktif
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+  });
+
+  // Tombol dismiss
+  document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+    toast.style.display = 'none';
+  });
+
+  // Cek update di background setiap 60 detik (buat aplikasi yang dibuka lama)
+  setInterval(() => {
+    navigator.serviceWorker.getRegistration('./sw.js').then(reg => {
+      if (reg) reg.update();
+    });
+  }, 60000);
+})();
 </script>
 </body>
 </html>
