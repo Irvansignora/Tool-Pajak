@@ -5024,6 +5024,12 @@ function impDownloadResult() {
                     finalReturnDate = '01-01-2025'; // Absolute fallback
                 }
 
+                // Tentukan tahun dari finalReturnDate (format DD-MM-YYYY)
+                const returnYear = finalReturnDate ? parseInt(finalReturnDate.split('-')[2], 10) : 2025;
+                // Masa pajak 2024: OtherTaxBase = TaxBase (langsung dari DPP input, tanpa × 11/12)
+                // Masa pajak 2025+: OtherTaxBase = TaxBase × 11/12 (DPP Nilai Lain sesuai PMK tarif 12%)
+                const is2024 = returnYear === 2024;
+
                 let totalTaxBase = 0, totalVAT = 0, totalOtherTaxBase = 0;
                 let detailRows = '';
 
@@ -5038,11 +5044,15 @@ function impDownloadResult() {
                     const rowType = colType >= 0 ? String(row[colType] || 'A').trim().toUpperCase() : 'A';
                     const rowUnit = colUnit >= 0 ? String(row[colUnit] || 'UM.0021').trim() : 'UM.0021';
 
-                    const taxBase      = total;
-                    const otherTaxBase = taxBase * 11 / 12;
+                    const taxBase = total;
+                    // 2024: DPP Nilai Lain = DPP (tidak ada faktor 11/12, tarif PPN masih 11%)
+                    // 2025+: DPP Nilai Lain = DPP × 11/12 (tarif PPN 12% dengan DPP Nilai Lain)
+                    const otherTaxBase = is2024 ? taxBase : Number((taxBase * 11 / 12).toFixed(2));
                     
-                    // Hitung PPN otomatis (12% dari OtherTaxBase, setara dengan 11% dari DPP)
-                    const ppn = Number((otherTaxBase * 12 / 100).toFixed(2));
+                    // Hitung PPN: 2024 → 11% dari DPP, 2025+ → 12% dari OtherTaxBase (setara 11% dari DPP)
+                    const ppn = is2024
+                        ? Number((taxBase * 11 / 100).toFixed(2))
+                        : Number((otherTaxBase * 12 / 100).toFixed(2));
 
                     totalTaxBase      += taxBase;
                     totalVAT          += ppn;
