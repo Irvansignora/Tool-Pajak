@@ -1227,8 +1227,17 @@
                             <input type="text" class="form-input" id="rm_cfgTIN" placeholder="0991183559012000" maxlength="16">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Tanggal Return (Default)</label>
-                            <input type="date" class="form-input" id="rm_cfgDate">
+                            <label class="form-label">Hitung DPP Nilai Lain (× 11/12)?</label>
+                            <div style="display:flex;gap:12px;margin-top:6px;">
+                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);">
+                                    <input type="radio" name="rm_dppNilaiLain" id="rm_dppNilaiLainNo" value="no" checked style="accent-color:var(--accent);width:16px;height:16px;">
+                                    <span>No</span> <span style="font-size:11px;color:var(--text-dim);">(DPP asli / faktur 2024)</span>
+                                </label>
+                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);">
+                                    <input type="radio" name="rm_dppNilaiLain" id="rm_dppNilaiLainYes" value="yes" style="accent-color:var(--accent);width:16px;height:16px;">
+                                    <span>Yes</span> <span style="font-size:11px;color:var(--text-dim);">(× 11/12 / faktur 2025+)</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div style="margin-top:12px;padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;font-size:11px;color:var(--text-dim);line-height:1.6;">
@@ -4814,13 +4823,8 @@ function impDownloadResult() {
 (function() {
     let rmParsedData = [], rmHeaders = [], rmXmlOutput = '';
 
-    // Set today's date on load
+    // Init on load
     window.addEventListener('DOMContentLoaded', () => {
-        const t = new Date();
-        const dd2 = String(t.getDate()).padStart(2,'0');
-        const mm2 = String(t.getMonth()+1).padStart(2,'0');
-        document.getElementById('rm_cfgDate').value = `${t.getFullYear()}-${mm2}-${dd2}`;
-
         // Drag & drop on upload zone
         const uz = document.getElementById('rm_uploadZone');
         uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
@@ -4993,7 +4997,8 @@ function impDownloadResult() {
             if (colSellerTIN < 0) { rmShowError('Kolom "NPWP Penjual" tidak ditemukan di Excel.'); return; }
 
             const tin = document.getElementById('rm_cfgTIN').value.replace(/\D/g,'').padEnd(16,'0');
-            const defaultDateRaw = document.getElementById('rm_cfgDate').value; // yyyy-mm-dd
+            // Baca pilihan user: apakah DPP Nilai Lain perlu dikalikan 11/12?
+            const hitungDppNilaiLain = document.querySelector('input[name="rm_dppNilaiLain"]:checked')?.value === 'yes';
 
             // Group by invoice number
             const invoiceMap = new Map();
@@ -5009,26 +5014,22 @@ function impDownloadResult() {
             invoiceMap.forEach((rows, invoiceNum) => {
                 const sellerTIN = String(rows[0][colSellerTIN] || '').replace(/\D/g,'').padEnd(16,'0');
                 
-                // Determine Return Date for this invoice
+                // Tentukan Return Date untuk invoice ini
                 let finalReturnDate = '';
                 const rowDateRaw = colReturnDate >= 0 ? rows[0][colReturnDate] : null;
                 const formattedRowDate = bpuFormatDate(rowDateRaw); // returns YYYY-MM-DD
-                
                 if (formattedRowDate && formattedRowDate.includes('-')) {
                     const [ry, rmo, rd] = formattedRowDate.split('-');
                     finalReturnDate = `${rd}-${rmo}-${ry}`;
-                } else if (defaultDateRaw && defaultDateRaw.includes('-')) {
-                    const [dy, dmo, dd] = defaultDateRaw.split('-');
-                    finalReturnDate = `${dd}-${dmo}-${dy}`;
                 } else {
-                    finalReturnDate = '01-01-2025'; // Absolute fallback
+                    const t = new Date();
+                    const mm2 = String(t.getMonth()+1).padStart(2,'0');
+                    const dd2 = String(t.getDate()).padStart(2,'0');
+                    finalReturnDate = `${dd2}-${mm2}-${t.getFullYear()}`;
                 }
 
-                // Tentukan tahun dari finalReturnDate (format DD-MM-YYYY)
-                const returnYear = finalReturnDate ? parseInt(finalReturnDate.split('-')[2], 10) : 2025;
-                // Masa pajak 2024: OtherTaxBase = TaxBase (langsung dari DPP input, tanpa × 11/12)
-                // Masa pajak 2025+: OtherTaxBase = TaxBase × 11/12 (DPP Nilai Lain sesuai PMK tarif 12%)
-                const is2024 = returnYear === 2024;
+                // Gunakan pilihan konfigurasi: Yes → hitung × 11/12, No → pakai DPP asli
+                // (diset user lewat radio "Hitung DPP Nilai Lain?" di panel konfigurasi)
 
                 let totalTaxBase = 0, totalVAT = 0, totalOtherTaxBase = 0;
                 let detailRows = '';
@@ -5045,14 +5046,14 @@ function impDownloadResult() {
                     const rowUnit = colUnit >= 0 ? String(row[colUnit] || 'UM.0021').trim() : 'UM.0021';
 
                     const taxBase = total;
-                    // 2024: DPP Nilai Lain = DPP (tidak ada faktor 11/12, tarif PPN masih 11%)
-                    // 2025+: DPP Nilai Lain = DPP × 11/12 (tarif PPN 12% dengan DPP Nilai Lain)
-                    const otherTaxBase = is2024 ? taxBase : Number((taxBase * 11 / 12).toFixed(2));
-                    
-                    // Hitung PPN: 2024 → 11% dari DPP, 2025+ → 12% dari OtherTaxBase (setara 11% dari DPP)
-                    const ppn = is2024
-                        ? Number((taxBase * 11 / 100).toFixed(2))
-                        : Number((otherTaxBase * 12 / 100).toFixed(2));
+                    // No  → OtherTaxBase = DPP asli (untuk faktur 2024, tidak perlu × 11/12), PPN 11%
+                    // Yes → OtherTaxBase = DPP × 11/12 (DPP Nilai Lain, untuk faktur 2025+), PPN 12%
+                    const otherTaxBase = hitungDppNilaiLain
+                        ? Number((taxBase * 11 / 12).toFixed(2))
+                        : taxBase;
+                    const ppn = hitungDppNilaiLain
+                        ? Number((otherTaxBase * 12 / 100).toFixed(2))
+                        : Number((taxBase * 11 / 100).toFixed(2));
 
                     totalTaxBase      += taxBase;
                     totalVAT          += ppn;
