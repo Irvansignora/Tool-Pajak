@@ -1070,6 +1070,9 @@
             <button class="ctx-sub-btn" onclick="switchCoretaxSub('bp21')">
                 <span>📊</span> BP21 PPh 21
             </button>
+            <button class="ctx-sub-btn" onclick="switchCoretaxSub('csv')">
+                <span>📂</span> CSV eFaktur
+            </button>
         </div>
 
         <!-- ═══ Sub-Panel: Pajak Keluaran ═══ -->
@@ -1444,6 +1447,146 @@
                 <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;" id="bp21_xmlPreview">
                     <div style="font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;margin-bottom:10px;">🗂 XML Output Preview</div>
                     <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="bp21_xmlContent"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Sub-Panel: CSV eFaktur → XML Coretax ═══ -->
+        <div id="ctx-csv" class="ctx-sub-panel">
+            <div class="tool-card">
+                <div class="tool-card-header">
+                    <div class="tool-card-icon" style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.3)">📂</div>
+                    <div>
+                        <div class="tool-card-title">CSV eFaktur → XML Coretax</div>
+                        <div class="tool-card-desc">Konversi file CSV ekspor eFaktur (format ACC-TIN-XXXX.csv) ke XML Faktur Pajak Coretax · Faktur Keluaran</div>
+                    </div>
+                </div>
+
+                <!-- Config Panel -->
+                <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:20px;">
+                    <div style="font-weight:600;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                        <span style="display:inline-block;width:3px;height:14px;background:var(--green);border-radius:2px;"></span>
+                        Konfigurasi Seller
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                        <div class="form-group">
+                            <label class="form-label">NPWP / TIN Penjual (15 digit)</label>
+                            <input type="text" class="form-input" id="csv_sellerTin" placeholder="012345678901000" maxlength="15" oninput="csvAutoIdtku()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">IDTKU Penjual (22 digit)</label>
+                            <input type="text" class="form-input" id="csv_sellerIdtku" placeholder="0123456789010000000000" maxlength="22">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">Tipe Item &nbsp;<span style="font-weight:400;color:var(--text-dim)">(berlaku semua item)</span></label>
+                            <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;width:fit-content;">
+                                <button id="csv_optBtnA" onclick="csvSetOpt('A')" style="padding:9px 24px;border:none;background:rgba(59,130,246,0.15);color:var(--accent2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;border-right:1px solid var(--border2);">A &nbsp;<span style="font-weight:400;font-size:11px;">Barang</span></button>
+                                <button id="csv_optBtnB" onclick="csvSetOpt('B')" style="padding:9px 24px;border:none;background:transparent;color:var(--text-dim);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;">B &nbsp;<span style="font-weight:400;font-size:11px;">Jasa</span></button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Satuan Ukur / Unit &nbsp;<span style="font-weight:400;color:var(--text-dim)">(berlaku semua item)</span></label>
+                            <select id="csv_unitSelect" class="form-input" style="font-family:'IBM Plex Mono',monospace;font-size:12px;">
+                                <optgroup label="── Barang Kena Pajak (BKP) ──">
+                                    <option value="UM.0018">UM.0018 — Unit</option>
+                                    <option value="UM.0021">UM.0021 — Piece / Pcs</option>
+                                    <option value="UM.0017">UM.0017 — Lusin / Dozen</option>
+                                    <option value="UM.0019">UM.0019 — Set</option>
+                                    <option value="UM.0022">UM.0022 — Boks / Box</option>
+                                    <option value="UM.0037">UM.0037 — Karton / Carton</option>
+                                    <option value="UM.0020">UM.0020 — Lembar / Sheet</option>
+                                    <option value="UM.0003">UM.0003 — Kilogram</option>
+                                    <option value="UM.0004">UM.0004 — Gram</option>
+                                    <option value="UM.0001">UM.0001 — Metrik Ton</option>
+                                    <option value="UM.0002">UM.0002 — Wet Ton</option>
+                                    <option value="UM.0005">UM.0005 — Karat / Carat</option>
+                                    <option value="UM.0007">UM.0007 — Liter</option>
+                                    <option value="UM.0006">UM.0006 — Kiloliter</option>
+                                    <option value="UM.0008">UM.0008 — Barrel</option>
+                                    <option value="UM.0036">UM.0036 — Drum</option>
+                                    <option value="UM.0011">UM.0011 — Sentimeter Kubik / cc</option>
+                                    <option value="UM.0013">UM.0013 — Meter</option>
+                                    <option value="UM.0012">UM.0012 — Meter Persegi / m²</option>
+                                    <option value="UM.0014">UM.0014 — Inci / Inches</option>
+                                    <option value="UM.0015">UM.0015 — Sentimeter</option>
+                                    <option value="UM.0016">UM.0016 — Yard</option>
+                                    <option value="UM.0009">UM.0009 — MMBTU</option>
+                                    <option value="UM.0010">UM.0010 — Ampere</option>
+                                    <option value="UM.0033">UM.0033 — Lainnya / Others (BKP)</option>
+                                </optgroup>
+                                <optgroup label="── Jasa Kena Pajak (JKP) ──">
+                                    <option value="UM.0030">UM.0030 — Kegiatan / Activity</option>
+                                    <option value="UM.0024">UM.0024 — Bulan / Month</option>
+                                    <option value="UM.0025">UM.0025 — Minggu / Week</option>
+                                    <option value="UM.0026">UM.0026 — Hari / Day</option>
+                                    <option value="UM.0027">UM.0027 — Jam / Hour</option>
+                                    <option value="UM.0028">UM.0028 — Menit / Minute</option>
+                                    <option value="UM.0023">UM.0023 — Tahun / Year</option>
+                                    <option value="UM.0029">UM.0029 — Laporan / Report</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-top:14px;">
+                        <span style="color:var(--yellow);font-weight:600;">Tip:</span> IDTKU = NPWP 15 digit + 7 digit kode cabang. Contoh: <code>012345678901000<strong>0000000</strong></code>
+                    </div>
+                </div>
+
+                <!-- Upload Area -->
+                <div class="upload-area" id="csv_uploadZone" onclick="document.getElementById('csv_fileInput').click()">
+                    <span class="upload-icon">📂</span>
+                    <div class="upload-title" id="csv_dropTitle">Drop file CSV eFaktur di sini atau klik untuk pilih</div>
+                    <div class="upload-sub" id="csv_dropSub">Format: ACC-TIN-YYYY-XXXXXXXX.csv · Ekspor dari aplikasi eFaktur DJP</div>
+                    <input type="file" id="csv_fileInput" accept=".csv" onchange="csvHandleFile(event.target.files[0])">
+                </div>
+
+                <!-- Stats -->
+                <div id="csv_statsBar" style="display:none;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+                    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+                        <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--accent);" id="csv_statFk">0</div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Faktur (FK)</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+                        <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--cyan);" id="csv_statOf">0</div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Item (OF)</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+                        <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--purple);" id="csv_statRows">0</div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Total Baris</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="btn-row" style="margin:20px 0 16px;">
+                    <button class="btn btn-primary" id="csv_btnConvert" onclick="csvStartConvert()" disabled>⚡ Convert ke Coretax XML</button>
+                    <button class="btn btn-green" id="csv_btnDownload" onclick="csvDownload()" style="display:none;">⬇ Download XML</button>
+                    <button class="btn btn-teal" id="csv_btnCopy" onclick="csvCopyXml()" style="display:none;">📋 Copy XML</button>
+                    <button class="btn btn-red" id="csv_btnReset" onclick="csvReset()" style="display:none;">↺ Reset</button>
+                </div>
+
+                <!-- Log -->
+                <div style="background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:14px 16px;height:140px;overflow-y:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.7;" id="csv_log">
+                    <span style="color:var(--text-dim);">// Siap — isi konfigurasi, upload CSV, lalu tekan Convert</span>
+                </div>
+
+                <!-- Result Stats -->
+                <div id="csv_resultBar" style="display:none;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+                    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+                        <div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--green);" id="csv_resCount">0</div>
+                        <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">TaxInvoice dihasilkan</div>
+                    </div>
+                    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+                        <div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--green);" id="csv_resSize">0 KB</div>
+                        <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">Ukuran file XML</div>
+                    </div>
+                </div>
+
+                <!-- XML Preview -->
+                <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:18px;display:none;margin-top:16px;" id="csv_xmlPreview">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:10px;">🗂 XML Output Preview (500 baris pertama)</div>
+                    <pre style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);white-space:pre;overflow-x:auto;line-height:1.7;max-height:400px;overflow-y:auto;" id="csv_xmlContent"></pre>
                 </div>
             </div>
         </div>
@@ -2376,7 +2519,7 @@ function switchTab(id) {
 function switchCoretaxSub(id) {
     const btns = document.querySelectorAll('.ctx-sub-btn');
     const panels = document.querySelectorAll('.ctx-sub-panel');
-    const IDs = ['keluaran', 'return', 'bpu', 'bp21'];
+    const IDs = ['keluaran', 'return', 'bpu', 'bp21', 'csv'];
     
     btns.forEach((btn, idx) => {
         btn.classList.toggle('active', IDs[idx] === id);
@@ -6448,6 +6591,331 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault(); uz.classList.remove('dragover');
             const f = e.dataTransfer.files[0];
             if (f) { const dt = new DataTransfer(); dt.items.add(f); document.getElementById('bp21_fileInput').files = dt.files; bp21HandleFile({target:{files:[f]}}); }
+        });
+    }
+});
+
+// ════════════════════════════════════════════════
+//  TAB 1 SUB: CSV eFaktur → XML Coretax
+// ════════════════════════════════════════════════
+let csvParsedData = null;   // { fkRows, ofMap }
+let csvXmlOutput  = null;
+let csvFileName   = 'coretax_output.xml';
+let csvSelectedOpt  = 'A'; // A=Barang, B=Jasa
+let csvSelectedUnit = 'UM.0018';
+
+function csvAutoIdtku() {
+    const tin = document.getElementById('csv_sellerTin').value.trim();
+    if (tin.length === 15) {
+        const idtku = document.getElementById('csv_sellerIdtku');
+        if (!idtku.value) idtku.value = tin + '0000000';
+    }
+}
+
+function csvSetOpt(val) {
+    csvSelectedOpt = val;
+    const btnA = document.getElementById('csv_optBtnA');
+    const btnB = document.getElementById('csv_optBtnB');
+    if (val === 'A') {
+        btnA.style.background = 'rgba(59,130,246,0.15)';
+        btnA.style.color = 'var(--accent2)';
+        btnB.style.background = 'transparent';
+        btnB.style.color = 'var(--text-dim)';
+    } else {
+        btnB.style.background = 'rgba(249,115,22,0.15)';
+        btnB.style.color = 'var(--orange)';
+        btnA.style.background = 'transparent';
+        btnA.style.color = 'var(--text-dim)';
+    }
+}
+
+function csvHandleFile(file) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        csvLog('warn', '✗ File bukan CSV: ' + file.name);
+        return;
+    }
+    csvFileName = file.name.replace(/\.csv$/i, '') + '_coretax.xml';
+    const reader = new FileReader();
+    reader.onload = e => csvParseCSV(e.target.result, file.name);
+    reader.readAsText(file, 'latin1');
+}
+
+function csvParseLine(line) {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+            else inQ = !inQ;
+        } else if (ch === ',' && !inQ) {
+            result.push(cur); cur = '';
+        } else { cur += ch; }
+    }
+    result.push(cur);
+    return result;
+}
+
+function csvParseCSV(text, fname) {
+    csvLogClear();
+    csvLog('info', '▶ Membaca: ' + fname);
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    const rows  = lines.map(csvParseLine);
+    const dataRows = rows.slice(2); // skip LT + OF header rows
+
+    const fkRows = [], ofMap = {};
+    let currentFk = null, fkCount = 0, ofCount = 0;
+
+    for (const row of dataRows) {
+        if (!row[0]) continue;
+        const type = row[0].trim().toUpperCase();
+        if (type === 'FK') {
+            currentFk = (row[3] || '').trim();
+            fkRows.push(row);
+            ofMap[currentFk] = [];
+            fkCount++;
+        } else if (type === 'OF' && currentFk) {
+            ofMap[currentFk].push(row);
+            ofCount++;
+        }
+    }
+
+    csvParsedData = { fkRows, ofMap };
+
+    // Stats
+    document.getElementById('csv_statFk').textContent   = fkCount.toLocaleString('id');
+    document.getElementById('csv_statOf').textContent   = ofCount.toLocaleString('id');
+    document.getElementById('csv_statRows').textContent = dataRows.length.toLocaleString('id');
+    document.getElementById('csv_statsBar').style.display = 'grid';
+
+    // Drop zone update
+    document.getElementById('csv_dropTitle').textContent = '✓ ' + fname;
+    document.getElementById('csv_dropSub').textContent   = fkCount + ' faktur · ' + ofCount + ' item';
+
+    csvLog('success', '✓ Parsed: ' + fkCount + ' FK, ' + ofCount + ' OF rows');
+    document.getElementById('csv_btnConvert').disabled = false;
+}
+
+function csvStartConvert() {
+    if (!csvParsedData) return;
+    csvSelectedUnit = document.getElementById('csv_unitSelect').value;
+    const sellerTin   = document.getElementById('csv_sellerTin').value.trim();
+    const sellerIdtku = document.getElementById('csv_sellerIdtku').value.trim() ||
+                        (sellerTin.padEnd(22,'0').slice(0,22));
+    if (!sellerTin || sellerTin.length < 15)
+        csvLog('warn', '⚠ NPWP Penjual belum diisi (15 digit)');
+
+    document.getElementById('csv_btnConvert').disabled = true;
+    csvLogClear();
+    csvLog('info', '▶ Memulai konversi ' + csvParsedData.fkRows.length + ' faktur...');
+    csvLog('info', '// Tipe item : ' + (csvSelectedOpt === 'A' ? 'A (Barang)' : 'B (Jasa)'));
+    csvLog('info', '// Satuan    : ' + csvSelectedUnit);
+
+    setTimeout(() => csvDoConvert(sellerTin, sellerIdtku), 50);
+}
+
+function csvDoConvert(sellerTin, sellerIdtku) {
+    const { fkRows, ofMap } = csvParsedData;
+    // Column indices for FK row
+    const FK = { KODE:1, FG_PENGGANTI:2, NOMOR:3, MASA:4, TAHUN:5, TGL:6,
+                 NPWP:7, NAMA:8, ALAMAT:9, DPP:10, PPN:11, PPNBM:12,
+                 ADDINFO:13, REF:18 };
+    // Column indices for OF row
+    const OF = { KODE:1, NAMA:2, HARGA:3, QTY:4, TOTAL:5, DISKON:6, DPP:7, PPN:8, TARIF_PPNBM:9, PPNBM:10 };
+
+    let invoicesXml = '', done = 0, errors = 0;
+
+    for (let i = 0; i < fkRows.length; i++) {
+        const row = fkRows[i];
+        const nomorFaktur = (row[FK.NOMOR] || '').trim();
+        const items = ofMap[nomorFaktur] || [];
+        try {
+            const tgl = csvParseDate((row[FK.TGL] || '').trim());
+            const buyerNpwp  = (row[FK.NPWP] || '').trim().replace(/\D/g,'').padStart(15,'0');
+            const buyerIdtku = buyerNpwp.padEnd(22,'0').slice(0,22);
+            const trxCode    = (row[FK.KODE] || '04').trim();
+            const opt        = (row[FK.FG_PENGGANTI] || '0').trim() === '1' ? 'Replacement' : 'Normal';
+            const addInfo    = (row[FK.ADDINFO] || '0').trim();
+            const refDesc    = csvXmlEsc((row[FK.REF] || '').trim());
+
+            let gsXml = '';
+            if (items.length === 0) {
+                const dpp = csvNum(row[FK.DPP]), ppn = csvNum(row[FK.PPN]);
+                const vr  = dpp > 0 ? Math.round((ppn/dpp)*100) : 12;
+                gsXml = csvBuildGS({ nama:'Barang/Jasa', kode:'000000', price:dpp, qty:1, diskon:0,
+                    taxBase:dpp, otherTaxBase:Math.round(dpp/1.1), vatRate:vr, vat:ppn, stlgRate:0, stlg:0 });
+            } else {
+                for (const item of items) {
+                    const dpp = csvNum(item[OF.DPP]), ppn = csvNum(item[OF.PPN]);
+                    const vr  = dpp > 0 ? Math.round((ppn/dpp)*100) : 12;
+                    gsXml += csvBuildGS({
+                        nama:    csvXmlEsc((item[OF.NAMA]||'').trim()),
+                        kode:    (item[OF.KODE]||'000000').trim()||'000000',
+                        price:   csvNum(item[OF.HARGA]),
+                        qty:     csvNum(item[OF.QTY])||1,
+                        diskon:  csvNum(item[OF.DISKON]),
+                        taxBase: dpp,
+                        otherTaxBase: Math.round(dpp/(1+vr/100*(vr>11?0.1:1))),
+                        vatRate: vr, vat: ppn,
+                        stlgRate: csvNum(item[OF.TARIF_PPNBM]),
+                        stlg:     csvNum(item[OF.PPNBM])
+                    });
+                }
+            }
+
+            invoicesXml +=
+`    <TaxInvoice>
+      <TaxInvoiceDate>${tgl}</TaxInvoiceDate>
+      <TaxInvoiceOpt>${opt}</TaxInvoiceOpt>
+      <TrxCode>${trxCode}</TrxCode>
+      <AddInfo>${addInfo === '0' ? '' : addInfo}</AddInfo>
+      <CustomDoc/>
+      <CustomDocMonthYear/>
+      <RefDesc>${refDesc}</RefDesc>
+      <FacilityStamp/>
+      <SellerIDTKU>${sellerIdtku}</SellerIDTKU>
+      <BuyerTin>${buyerNpwp}</BuyerTin>
+      <BuyerDocument>TIN</BuyerDocument>
+      <BuyerCountry>IDN</BuyerCountry>
+      <BuyerDocumentNumber/>
+      <BuyerName>${csvXmlEsc((row[FK.NAMA]||'').trim())}</BuyerName>
+      <BuyerAdress>${csvXmlEsc((row[FK.ALAMAT]||'').trim())}</BuyerAdress>
+      <BuyerEmail></BuyerEmail>
+      <BuyerIDTKU>${buyerIdtku}</BuyerIDTKU>
+      <ListOfGoodService>
+${gsXml}      </ListOfGoodService>
+    </TaxInvoice>
+`;
+            done++;
+        } catch(err) {
+            errors++;
+            csvLog('error', '✗ Baris ' + (i+2) + ': ' + err.message + ' (Faktur: ' + nomorFaktur + ')');
+        }
+    }
+
+    const tinVal = sellerTin || '000000000000000';
+    const fullXml =
+`<?xml version="1.0" encoding="UTF-8"?>
+<TaxInvoiceBulk xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TaxInvoice.xsd">
+  <TIN>${tinVal}</TIN>
+  <ListOfTaxInvoice>
+${invoicesXml}  </ListOfTaxInvoice>
+</TaxInvoiceBulk>`;
+
+    csvXmlOutput = fullXml;
+
+    const sizeKb = Math.round(new Blob([fullXml]).size / 1024);
+    document.getElementById('csv_resCount').textContent = done.toLocaleString('id');
+    document.getElementById('csv_resSize').textContent  = sizeKb > 1024 ? (sizeKb/1024).toFixed(1)+' MB' : sizeKb+' KB';
+    document.getElementById('csv_resultBar').style.display = 'grid';
+
+    // XML preview (first 500 lines)
+    const previewLines = fullXml.split('\n').slice(0,500).join('\n');
+    document.getElementById('csv_xmlContent').textContent = previewLines + (fullXml.split('\n').length > 500 ? '\n... (terpotong untuk preview)' : '');
+    document.getElementById('csv_xmlPreview').style.display = 'block';
+
+    document.getElementById('csv_btnDownload').style.display = '';
+    document.getElementById('csv_btnCopy').style.display     = '';
+    document.getElementById('csv_btnReset').style.display    = '';
+    document.getElementById('csv_btnConvert').disabled = false;
+
+    csvLog('success', '✓ Selesai: ' + done + ' faktur berhasil dikonversi');
+    if (errors > 0) csvLog('warn', '⚠ ' + errors + ' faktur gagal');
+    csvLog('info', '// Ukuran XML: ' + sizeKb + ' KB');
+}
+
+function csvBuildGS({ nama, kode, price, qty, diskon, taxBase, otherTaxBase, vatRate, vat, stlgRate, stlg }) {
+    return `        <GoodService>
+          <Opt>${csvSelectedOpt}</Opt>
+          <Code>${kode||'000000'}</Code>
+          <Name>${nama}</Name>
+          <Unit>${csvSelectedUnit}</Unit>
+          <Price>${csvRound(price)}</Price>
+          <Qty>${csvRound(qty)}</Qty>
+          <TotalDiscount>${csvRound(diskon)}</TotalDiscount>
+          <TaxBase>${csvRound(taxBase)}</TaxBase>
+          <OtherTaxBase>${csvRound(otherTaxBase)}</OtherTaxBase>
+          <VATRate>${vatRate||12}</VATRate>
+          <VAT>${csvRound(vat)}</VAT>
+          <STLGRate>${stlgRate||0}</STLGRate>
+          <STLG>${csvRound(stlg)}</STLG>
+        </GoodService>
+`;
+}
+
+function csvParseDate(s) {
+    if (!s) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+    return s;
+}
+function csvNum(v) {
+    if (v===undefined||v===null||v===''||v==='NaN') return 0;
+    const n = parseFloat(String(v).replace(/,/g,''));
+    return isNaN(n) ? 0 : n;
+}
+function csvRound(v) {
+    const n = csvNum(v);
+    return Number.isInteger(n) ? n : Math.round(n);
+}
+function csvXmlEsc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function csvDownload() {
+    if (!csvXmlOutput) return;
+    const blob = new Blob([csvXmlOutput], { type:'application/xml;charset=UTF-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = csvFileName; a.click();
+    URL.revokeObjectURL(url);
+    csvLog('success', '⬇ Download: ' + csvFileName);
+}
+function csvCopyXml() {
+    if (!csvXmlOutput) return;
+    navigator.clipboard.writeText(csvXmlOutput).then(() => csvLog('success', '✓ XML disalin ke clipboard'));
+}
+function csvReset() {
+    csvParsedData = null; csvXmlOutput = null;
+    document.getElementById('csv_fileInput').value = '';
+    document.getElementById('csv_dropTitle').textContent = 'Drop file CSV eFaktur di sini atau klik untuk pilih';
+    document.getElementById('csv_dropSub').textContent   = 'Format: ACC-TIN-YYYY-XXXXXXXX.csv · Ekspor dari aplikasi eFaktur DJP';
+    document.getElementById('csv_statsBar').style.display   = 'none';
+    document.getElementById('csv_resultBar').style.display  = 'none';
+    document.getElementById('csv_xmlPreview').style.display = 'none';
+    document.getElementById('csv_btnDownload').style.display = 'none';
+    document.getElementById('csv_btnCopy').style.display     = 'none';
+    document.getElementById('csv_btnReset').style.display    = 'none';
+    document.getElementById('csv_btnConvert').disabled = true;
+    csvLogClear();
+    csvLog('info', '// Reset — siap untuk file baru');
+}
+
+// Log helpers
+function csvLog(type, msg) {
+    const box = document.getElementById('csv_log');
+    const colors = { info:'var(--text-dim)', success:'var(--green)', warn:'var(--yellow)', error:'#fda4af' };
+    const span = document.createElement('div');
+    span.style.color = colors[type] || colors.info;
+    span.textContent = msg;
+    box.appendChild(span);
+    box.scrollTop = box.scrollHeight;
+}
+function csvLogClear() { document.getElementById('csv_log').innerHTML = ''; }
+
+// Drag & drop wiring for CSV zone
+document.addEventListener('DOMContentLoaded', () => {
+    const cz = document.getElementById('csv_uploadZone');
+    if (cz) {
+        cz.addEventListener('dragover',  e => { e.preventDefault(); cz.classList.add('dragover'); });
+        cz.addEventListener('dragleave', () => cz.classList.remove('dragover'));
+        cz.addEventListener('drop', e => {
+            e.preventDefault(); cz.classList.remove('dragover');
+            const f = e.dataTransfer.files[0];
+            if (f) csvHandleFile(f);
         });
     }
 });
