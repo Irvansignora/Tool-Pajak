@@ -4,7 +4,7 @@
 // Setiap kali ada versi baru, user diberi notifikasi.
 // ============================================================
 
-const CACHE_NAME = 'pajak-tools-v6';
+const CACHE_NAME = 'pajak-tools-v7';
 
 // Semua file yang di-cache saat install (precache)
 const PRECACHE_URLS = [
