@@ -1468,15 +1468,55 @@
                         <span style="display:inline-block;width:3px;height:14px;background:var(--green);border-radius:2px;"></span>
                         Konfigurasi Seller
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-                        <div class="form-group">
-                            <label class="form-label">NPWP / TIN Penjual (16 digit)</label>
-                            <input type="text" class="form-input" id="csv_sellerTin" placeholder="0012345678901000" maxlength="16" oninput="csvAutoIdtku()">
+                    <!-- Company Card Selector (same as Excel to XML tab) -->
+                    <div style="font-size:12px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-bottom:10px;">Pilih perusahaan penjual:</div>
+                    <div class="company-grid" style="margin-bottom:14px;" id="csv_companyGrid">
+                        <div class="company-card" data-tin="0991183559012000" data-idtku="099118355901200000000000" onclick="csvSelectCompany(this)">
+                            <div class="company-name">RDTN</div>
+                            <div class="company-npwp">099118355-9012-000</div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">IDTKU Penjual (22 digit)</label>
-                            <input type="text" class="form-input" id="csv_sellerIdtku" placeholder="0012345678901000000000" maxlength="22">
+                        <div class="company-card" data-tin="0014602601904000" data-idtku="001460260190400000000000" onclick="csvSelectCompany(this)">
+                            <div class="company-name">SNB</div>
+                            <div class="company-npwp">001460260-1904-000</div>
                         </div>
+                        <div class="company-card" data-tin="0018852632007000" data-idtku="001885263200700000000000" onclick="csvSelectCompany(this)">
+                            <div class="company-name">UDN</div>
+                            <div class="company-npwp">001885263-2007-000</div>
+                        </div>
+                        <div class="company-card" data-tin="0837291145048000" data-idtku="083729114504800000000000" onclick="csvSelectCompany(this)">
+                            <div class="company-name">USI</div>
+                            <div class="company-npwp">083729114-5048-000</div>
+                        </div>
+                        <div class="company-card" data-tin="0027024041009000" data-idtku="002702404100900000000000" onclick="csvSelectCompany(this)">
+                            <div class="company-name">RPD</div>
+                            <div class="company-npwp">002702404-1009-000</div>
+                        </div>
+                        <div class="company-card" id="csv_customCard" data-tin="" data-idtku="" onclick="csvSelectCompany(this)">
+                            <div class="company-name">✏️ Custom</div>
+                            <div class="company-npwp" id="csv_customCardNpwp">Klik untuk isi NPWP</div>
+                        </div>
+                    </div>
+                    <!-- Custom NPWP Input (muncul saat Custom dipilih) -->
+                    <div id="csv_customInputWrap" style="display:none;margin-bottom:14px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:14px;">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">✏️ Input NPWP Custom</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">Nama Perusahaan</label>
+                                <input type="text" class="form-input" id="csv_customName" placeholder="Contoh: PT Maju Jaya" oninput="csvUpdateCustom()">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">NPWP / TIN Penjual (16 digit)</label>
+                                <input type="text" class="form-input" id="csv_customNpwp" placeholder="Contoh: 0123456789012000" maxlength="16" inputmode="numeric" oninput="csvUpdateCustom()">
+                            </div>
+                        </div>
+                        <div id="csv_customValidation" style="font-size:11px;font-family:'IBM Plex Mono',monospace;margin-top:8px;color:var(--green);"></div>
+                    </div>
+                    <!-- Hidden fields to hold resolved TIN & IDTKU -->
+                    <input type="hidden" id="csv_sellerTin">
+                    <input type="hidden" id="csv_sellerIdtku">
+                    <!-- Active badge -->
+                    <div id="csv_activeBadge" style="display:none;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--green);background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:8px 14px;margin-bottom:14px;">
+                        <span id="csv_activeBadgeText"></span>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
@@ -1530,7 +1570,7 @@
                         </div>
                     </div>
                     <div style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-top:14px;">
-                        <span style="color:var(--yellow);font-weight:600;">Tip:</span> IDTKU = NPWP 15 digit + 7 digit kode cabang. Contoh: <code>012345678901000<strong>0000000</strong></code>
+                        <span style="color:var(--yellow);font-weight:600;">Tip:</span> IDTKU = TIN 16 digit + 6 digit kode cabang. Contoh: <code>0123456789012000<strong>000000</strong></code>
                     </div>
                 </div>
 
@@ -6604,12 +6644,71 @@ let csvFileName   = 'coretax_output.xml';
 let csvSelectedOpt  = 'A'; // A=Barang, B=Jasa
 let csvSelectedUnit = 'UM.0018';
 
-function csvAutoIdtku() {
-    const tin = document.getElementById('csv_sellerTin').value.trim();
-    if (tin.length === 15) {
-        const idtku = document.getElementById('csv_sellerIdtku');
-        if (!idtku.value) idtku.value = tin + '0000000';
+function csvSelectCompany(el) {
+    // Deselect all company cards in the CSV grid only
+    document.querySelectorAll('#csv_companyGrid .company-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+
+    const customWrap = document.getElementById('csv_customInputWrap');
+
+    if (el.id === 'csv_customCard') {
+        customWrap.style.display = 'block';
+        document.getElementById('csv_sellerTin').value   = '';
+        document.getElementById('csv_sellerIdtku').value = '';
+        csvUpdateCustom();
+        return;
+    } else {
+        customWrap.style.display = 'none';
     }
+
+    const tin   = el.dataset.tin;
+    const idtku = tin + '000000';
+    document.getElementById('csv_sellerTin').value   = tin;
+    document.getElementById('csv_sellerIdtku').value = idtku;
+
+    const badge = document.getElementById('csv_activeBadge');
+    badge.style.display = 'block';
+    document.getElementById('csv_activeBadgeText').textContent =
+        `✓ Perusahaan aktif: ${el.querySelector('.company-name').textContent} · TIN: ${tin} · IDTKU: ${idtku}`;
+}
+
+function csvUpdateCustom() {
+    const name    = document.getElementById('csv_customName').value.trim();
+    const npwpRaw = document.getElementById('csv_customNpwp').value.replace(/\D/g, '');
+    const valEl   = document.getElementById('csv_customValidation');
+    const cardNpwp = document.getElementById('csv_customCardNpwp');
+
+    // Enforce digits only
+    document.getElementById('csv_customNpwp').value = npwpRaw;
+
+    if (npwpRaw.length === 0) {
+        valEl.textContent = '';
+        cardNpwp.textContent = 'Klik untuk isi NPWP';
+        document.getElementById('csv_sellerTin').value   = '';
+        document.getElementById('csv_sellerIdtku').value = '';
+        document.getElementById('csv_activeBadge').style.display = 'none';
+        return;
+    }
+    if (npwpRaw.length !== 16) {
+        valEl.style.color = '#f87171';
+        valEl.textContent = `❌ TIN harus 16 digit — saat ini ${npwpRaw.length} digit`;
+        document.getElementById('csv_sellerTin').value   = '';
+        document.getElementById('csv_sellerIdtku').value = '';
+        cardNpwp.textContent = npwpRaw;
+        document.getElementById('csv_activeBadge').style.display = 'none';
+        return;
+    }
+    // Valid
+    const idtku = npwpRaw + '000000';
+    valEl.style.color = 'var(--green)';
+    valEl.textContent = `✓ TIN valid: ${npwpRaw} · IDTKU: ${idtku}`;
+    cardNpwp.textContent = npwpRaw;
+    document.getElementById('csv_sellerTin').value   = npwpRaw;
+    document.getElementById('csv_sellerIdtku').value = idtku;
+    const badge = document.getElementById('csv_activeBadge');
+    badge.style.display = 'block';
+    document.getElementById('csv_activeBadgeText').textContent =
+        `✓ Perusahaan aktif: ${name || 'Custom'} · TIN: ${npwpRaw} · IDTKU: ${idtku}`;
 }
 
 function csvSetOpt(val) {
@@ -6702,9 +6801,9 @@ function csvStartConvert() {
     csvSelectedUnit = document.getElementById('csv_unitSelect').value;
     const sellerTin   = document.getElementById('csv_sellerTin').value.trim();
     const sellerIdtku = document.getElementById('csv_sellerIdtku').value.trim() ||
-                        (sellerTin.padEnd(22,'0').slice(0,22));
-    if (!sellerTin || sellerTin.length < 15)
-        csvLog('warn', '⚠ NPWP Penjual belum diisi (15 digit)');
+                        (sellerTin + '000000');
+    if (!sellerTin || sellerTin.length < 16)
+        csvLog('warn', '⚠ Perusahaan penjual belum dipilih atau TIN belum valid (16 digit)');
 
     document.getElementById('csv_btnConvert').disabled = true;
     csvLogClear();
@@ -6732,8 +6831,8 @@ function csvDoConvert(sellerTin, sellerIdtku) {
         const items = ofMap[nomorFaktur] || [];
         try {
             const tgl = csvParseDate((row[FK.TGL] || '').trim());
-            const buyerNpwp  = (row[FK.NPWP] || '').trim().replace(/\D/g,'').padStart(15,'0');
-            const buyerIdtku = buyerNpwp.padEnd(22,'0').slice(0,22);
+            const buyerNpwp  = (row[FK.NPWP] || '').trim().replace(/\D/g,'').padStart(16,'0').slice(0,16);
+            const buyerIdtku = buyerNpwp + '000000';
             const trxCode    = (row[FK.KODE] || '04').trim();
             const opt        = (row[FK.FG_PENGGANTI] || '0').trim() === '1' ? 'Replacement' : 'Normal';
             const addInfo    = (row[FK.ADDINFO] || '0').trim();
@@ -6794,7 +6893,7 @@ ${gsXml}      </ListOfGoodService>
         }
     }
 
-    const tinVal = sellerTin || '000000000000000';
+    const tinVal = sellerTin || '0000000000000000';
     const fullXml =
 `<?xml version="1.0" encoding="UTF-8"?>
 <TaxInvoiceBulk xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TaxInvoice.xsd">
