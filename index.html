@@ -987,9 +987,10 @@
             z-index: 9999;
             background: rgba(8,12,20,0.97);
             backdrop-filter: blur(14px);
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
         }
         #license-overlay.show { display: flex; }
         .license-box {
@@ -1000,6 +1001,7 @@
             width: 100%;
             max-width: 460px;
             box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            margin: auto;
         }
         .license-logo { display:flex; align-items:center; gap:10px; margin-bottom:24px; }
         .license-logo-icon {
@@ -5957,10 +5959,11 @@ function rnExtractSTPData(text) {
     }
 
     // ── Nama WP ──
-    // "Nama PKP/Wajib Pajak : PT RAMA INDONESIA"
-    const namaM = text.match(/Nama\s+PKP\s*\/\s*Wajib\s+Pajak\s*:\s*([^\n\r]+)/i) ||
-                  text.match(/Nama\s+Wajib\s+Pajak\s*:\s*([^\n\r]+)/i) ||
-                  text.match(/Nama\s+PKP\s*:\s*([^\n\r]+)/i);
+    // "Nama PKP/Wajib Pajak : PT RAMA INDONESIA" — stop sebelum NPWP / Alamat / field berikutnya
+    const namaStop = '(?=\\s*(?:NPWP|Alamat|Tanggal|Nomor|II\\.|I\\.|$))';
+    const namaM = text.match(new RegExp('Nama\\s+PKP\\s*\\/\\s*Wajib\\s+Pajak\\s*:\\s*([^:]+?)' + namaStop, 'i')) ||
+                  text.match(new RegExp('Nama\\s+Wajib\\s+Pajak\\s*:\\s*([^:]+?)' + namaStop, 'i')) ||
+                  text.match(new RegExp('Nama\\s+PKP\\s*:\\s*([^:]+?)' + namaStop, 'i'));
     if (namaM) d.namaWP = namaM[1].trim().replace(/\s+/g, ' ');
 
     // ── NPWP ──
