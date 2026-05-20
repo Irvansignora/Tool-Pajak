@@ -1100,7 +1100,7 @@
     </div>
     <div class="license-form-group">
       <label class="license-label">License Key</label>
-      <input class="license-input key-field" type="text" id="lic_key" placeholder="PRS-XXXX-XXXX-XXXX-XXXX" autocomplete="off" maxlength="19" oninput="formatLicKey(this)">
+      <input class="license-input key-field" type="text" id="lic_key" placeholder="PRS-XXXX-XXXX-XXXX-XXXX" autocomplete="off" maxlength="23" oninput="formatLicKey(this)">
     </div>
 
     <div id="lic_error" class="license-error"></div>
@@ -7442,7 +7442,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       out = out.substring(0,4) + grouped;
     }
-    el.value = out.substring(0,19);
+    el.value = out.substring(0,23);
 
     // Show company field if PRU prefix detected
     const prefix = el.value.substring(0,3);
