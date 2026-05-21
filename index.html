@@ -7391,7 +7391,7 @@ function csvDoConvert(sellerTin, sellerIdtku) {
                         qty:     csvNum(item[OF.QTY])||1,
                         diskon:  csvNum(item[OF.DISKON]),
                         taxBase: dpp,
-                        otherTaxBase: Math.round(dpp/(1+vr/100*(vr>11?0.1:1))),
+                        otherTaxBase: (vr === 12 ? Math.round(dpp * 11/12) : dpp),
                         vatRate: vr, vat: ppn,
                         stlgRate: csvNum(item[OF.TARIF_PPNBM]),
                         stlg:     csvNum(item[OF.PPNBM])
