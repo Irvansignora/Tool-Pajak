@@ -7377,13 +7377,11 @@ function csvDoConvert(sellerTin, sellerIdtku) {
             let gsXml = '';
             if (items.length === 0) {
                 const dpp = csvNum(row[FK.DPP]), ppn = csvNum(row[FK.PPN]);
-                const vr  = dpp > 0 ? Math.round((ppn/dpp)*100) : 12;
                 gsXml = csvBuildGS({ nama:'Barang/Jasa', kode:'000000', price:dpp, qty:1, diskon:0,
-                    taxBase:dpp, otherTaxBase:Math.round(dpp/1.1), vatRate:vr, vat:ppn, stlgRate:0, stlg:0 });
+                    taxBase:dpp, otherTaxBase:Math.round(dpp*11/12), vatRate:12, vat:ppn, stlgRate:0, stlg:0 });
             } else {
                 for (const item of items) {
                     const dpp = csvNum(item[OF.DPP]), ppn = csvNum(item[OF.PPN]);
-                    const vr  = dpp > 0 ? Math.round((ppn/dpp)*100) : 12;
                     gsXml += csvBuildGS({
                         nama:    csvXmlEsc((item[OF.NAMA]||'').trim()),
                         kode:    (item[OF.KODE]||'000000').trim()||'000000',
@@ -7391,8 +7389,8 @@ function csvDoConvert(sellerTin, sellerIdtku) {
                         qty:     csvNum(item[OF.QTY])||1,
                         diskon:  csvNum(item[OF.DISKON]),
                         taxBase: dpp,
-                        otherTaxBase: (vr === 12 ? Math.round(dpp * 11/12) : dpp),
-                        vatRate: vr, vat: ppn,
+                        otherTaxBase: Math.round(dpp*11/12),
+                        vatRate: 12, vat: ppn,
                         stlgRate: csvNum(item[OF.TARIF_PPNBM]),
                         stlg:     csvNum(item[OF.PPNBM])
                     });
