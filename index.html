@@ -1870,19 +1870,24 @@
                         <input class="prev-input" id="csv_bulkCustomDoc" placeholder="CustomDoc (bulk)" style="width:130px;">
                         <button class="csv-bulk-btn" onclick="csvBulkSetCustomDoc()">Set CustomDoc</button>
                         <button class="csv-bulk-btn" onclick="csvBulkClearCustomDoc()">✕ Clear</button>
+                        <span style="color:var(--border2);margin:0 4px;">|</span>
+                        <label>Cabang Buyer:</label>
+                        <input class="prev-input" id="csv_bulkCabang" type="number" min="0" max="999" placeholder="0" style="width:60px;text-align:center;" title="Set kode cabang buyer untuk semua faktur">
+                        <button class="csv-bulk-btn" onclick="csvBulkSetCabang()">Set Cabang</button>
                     </div>
                     <div class="csv-preview-table-wrap">
                         <table class="csv-preview-table">
                             <thead>
                                 <tr>
                                     <th class="td-no">#</th>
-                                    <th>No. Faktur</th>
+                                    <th>No. Invoice</th>
                                     <th>Tgl</th>
                                     <th>Pembeli</th>
                                     <th>DPP</th>
                                     <th>TrxCode</th>
                                     <th>AddInfo</th>
                                     <th>CustomDoc</th>
+                                    <th title="Kode Cabang Buyer — menentukan 6 digit akhir BuyerTin &amp; BuyerIDTKU">Cabang Buyer</th>
                                 </tr>
                             </thead>
                             <tbody id="csv_previewTbody"></tbody>
@@ -7020,7 +7025,7 @@ let csvSelectedUnit = 'UM.0018';
 let csvOverrides = {};
 
 function csvRenderPreview(fkRows) {
-    const FK = { KODE:1, NOMOR:3, TGL:6, NPWP:7, NAMA:8, DPP:10 };
+    const FK = { KODE:1, NOMOR:3, TGL:6, NPWP:7, NAMA:8, DPP:10, INV:17 };
     const tbody = document.getElementById('csv_previewTbody');
     const wrap  = document.getElementById('csv_previewWrap');
     const countEl = document.getElementById('csv_previewCount');
@@ -7028,25 +7033,28 @@ function csvRenderPreview(fkRows) {
     csvOverrides = {};
 
     fkRows.forEach((row, i) => {
-        const nomor    = (row[FK.NOMOR] || '').trim();
+        const nomor    = (row[FK.NOMOR] || '').trim(); // kunci internal tetap pakai nomor faktur
+        const inv      = (row[FK.INV]   || '').trim(); // nomor invoice (IP/IN) untuk tampilan
         const tgl      = (row[FK.TGL]   || '').trim();
         const buyer    = (row[FK.NAMA]  || '').trim();
         const dpp      = csvNum(row[FK.DPP]);
         const trxInit  = (row[FK.KODE]  || '04').trim();
+        const npwpRaw  = (row[FK.NPWP]  || '').trim().replace(/\D/g,'');
+        const buyerTin = npwpRaw.length === 15 ? '0' + npwpRaw : npwpRaw.slice(0,16);
 
-        // Init override dari CSV
-        csvOverrides[nomor] = { trxCode: trxInit, addInfo: '', customDoc: '' };
+        // Init override: kodeCabang default '0' (000000 = kantor pusat)
+        csvOverrides[nomor] = { trxCode: trxInit, addInfo: '', customDoc: '', kodeCabang: '0' };
 
-        const badgeClass = trxInit === '07' ? 'badge-07' : trxInit === '08' ? 'badge-08' : trxInit === '04' ? 'badge-04' : 'badge-other';
         const dppFmt = dpp.toLocaleString('id-ID');
+        const invDisp = inv || nomor.slice(-12);
 
         const tr = document.createElement('tr');
         tr.dataset.nomor = nomor;
         tr.innerHTML = `
             <td class="td-no">${i+1}</td>
-            <td class="td-nomor" title="${nomor}">${nomor.slice(-12)}</td>
+            <td class="td-nomor" title="${inv}">${invDisp.length > 18 ? invDisp.slice(0,18)+'…' : invDisp}</td>
             <td style="color:var(--text-dim)">${tgl}</td>
-            <td class="td-buyer" title="${buyer}">${buyer.length > 22 ? buyer.slice(0,22)+'…' : buyer}</td>
+            <td class="td-buyer" title="${buyer}">${buyer.length > 20 ? buyer.slice(0,20)+'…' : buyer}</td>
             <td style="color:var(--green);text-align:right">${dppFmt}</td>
             <td>
                 <select class="prev-select" onchange="csvOverrideSet('${nomor}','trxCode',this.value,this)">
@@ -7070,6 +7078,17 @@ function csvRenderPreview(fkRows) {
                 <input class="prev-input" placeholder="—" style="width:110px;"
                     oninput="csvOverrideSet('${nomor}','customDoc',this.value,this)"
                     value="">
+            </td>
+            <td>
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <input class="prev-input" type="number" min="0" max="999"
+                        placeholder="0" style="width:52px;text-align:center;"
+                        title="Kode Cabang Buyer (0 = pusat)"
+                        oninput="csvOverrideSet('${nomor}','kodeCabang',this.value,this)"
+                        value="0">
+                    <span style="font-size:10px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;"
+                        title="BuyerTin: ${buyerTin.slice(0,10)}…+cabang">🏢</span>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -7131,6 +7150,17 @@ function csvBulkClearCustomDoc() {
         if (inp) inp.value = '';
     });
     document.getElementById('csv_bulkCustomDoc').value = '';
+}
+
+function csvBulkSetCabang() {
+    const val = document.getElementById('csv_bulkCabang').value.trim() || '0';
+    Object.keys(csvOverrides).forEach(n => csvOverrides[n].kodeCabang = val);
+    document.querySelectorAll('#csv_previewTbody tr').forEach(tr => {
+        // Kode cabang ada di input type=number (bukan input teks customDoc)
+        const inputs = tr.querySelectorAll('input.prev-input');
+        // inputs[0] = customDoc (text), inputs[1] = kodeCabang (number)
+        if (inputs[1]) inputs[1].value = val;
+    });
 }
 
 function csvSelectCompany(el) {
@@ -7324,7 +7354,6 @@ function csvDoConvert(sellerTin, sellerIdtku) {
             const _buyerRaw  = (row[FK.NPWP] || '').trim().replace(/\D/g,'');
             // CSV eFaktur menyimpan NPWP Buyer 15 digit (format lama) → tambah '0' di depan jadi 16 digit Coretax
             const buyerNpwp  = _buyerRaw.length === 15 ? '0' + _buyerRaw : _buyerRaw.slice(0, 16);
-            const buyerIdtku = buyerNpwp + '000000';
 
             // Ambil override per faktur dari preview table, fallback ke data CSV
             const ov         = csvOverrides[nomorFaktur] || {};
@@ -7334,6 +7363,12 @@ function csvDoConvert(sellerTin, sellerIdtku) {
             const addInfo    = addInfoRaw === '0' ? '' : addInfoRaw;
             const customDoc  = (ov.customDoc || '').trim();
             const refDesc    = csvXmlEsc((row[FK.REF] || '').trim());
+
+            // Kode cabang buyer → 6 digit suffix untuk BuyerTin & BuyerIDTKU
+            // 0 = kantor pusat (000000), 1 = cabang 1 (000001), dst
+            const kodeCabangNum = parseInt(ov.kodeCabang || '0', 10) || 0;
+            const cabangSuffix  = String(kodeCabangNum).padStart(6, '0');
+            const buyerIdtku    = buyerNpwp + cabangSuffix;
 
             let gsXml = '';
             if (items.length === 0) {
