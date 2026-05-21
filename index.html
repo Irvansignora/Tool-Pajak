@@ -979,6 +979,32 @@
         .rn-action-btn { padding: 4px 8px; background: var(--accent); color: white; border: none; border-radius: 4px; font-size: 10px; cursor: pointer; transition: all 0.2s; }
         .rn-action-btn:hover { filter: brightness(1.2); }
 
+        /* ── CSV Preview Table ── */
+        .csv-preview-wrap { display:none; margin-top:18px; border:1px solid var(--border2); border-radius:12px; overflow:hidden; }
+        .csv-preview-wrap.show { display:block; }
+        .csv-preview-header { background:var(--surface2); padding:12px 16px; font-size:12px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--text-dim); letter-spacing:0.05em; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border2); }
+        .csv-preview-table-wrap { overflow-x:auto; max-height:400px; overflow-y:auto; }
+        .csv-preview-table { width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+        .csv-preview-table th { background:rgba(30,45,66,0.95); padding:8px 12px; text-align:left; color:var(--text-muted); font-size:10px; letter-spacing:0.07em; text-transform:uppercase; white-space:nowrap; position:sticky; top:0; z-index:2; border-bottom:1px solid var(--border2); }
+        .csv-preview-table td { padding:7px 10px; border-bottom:1px solid rgba(30,45,66,0.6); color:var(--text); vertical-align:middle; white-space:nowrap; }
+        .csv-preview-table tr:hover td { background:rgba(59,130,246,0.04); }
+        .td-no { color:var(--text-muted); width:36px; text-align:center; }
+        .td-nomor { color:var(--accent); max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+        .td-buyer { max-width:150px; overflow:hidden; text-overflow:ellipsis; color:var(--text-dim); }
+        .prev-select { background:var(--surface2); border:1px solid var(--border2); border-radius:6px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 6px; outline:none; cursor:pointer; }
+        .prev-select:focus { border-color:var(--accent); }
+        .prev-input { background:var(--surface2); border:1px solid var(--border2); border-radius:6px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 8px; outline:none; width:120px; }
+        .prev-input:focus { border-color:var(--accent); }
+        .badge-trx { display:inline-block; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:700; }
+        .badge-04 { background:rgba(59,130,246,0.15); color:#60a5fa; }
+        .badge-07 { background:rgba(245,158,11,0.15); color:#fbbf24; }
+        .badge-08 { background:rgba(16,185,129,0.15); color:#34d399; }
+        .badge-other { background:rgba(100,100,120,0.15); color:#9ca3af; }
+        .csv-bulk-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:rgba(59,130,246,0.04); border-top:1px solid var(--border); flex-wrap:wrap; }
+        .csv-bulk-bar label { font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--text-dim); white-space:nowrap; }
+        .csv-bulk-btn { background:var(--surface2); border:1px solid var(--border2); border-radius:6px; color:var(--text-dim); font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 12px; cursor:pointer; transition:all 0.15s; }
+        .csv-bulk-btn:hover { border-color:var(--accent); color:var(--accent); }
+
         /* ── License Gate ── */
         #license-overlay {
             display: none;
@@ -1754,6 +1780,113 @@
                     <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
                         <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--purple);" id="csv_statRows">0</div>
                         <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Total Baris</div>
+                    </div>
+                </div>
+
+                <!-- Preview & Konfigurasi per Faktur -->
+                <div class="csv-preview-wrap" id="csv_previewWrap">
+                    <div class="csv-preview-header">
+                        <span>📋 Preview &amp; Konfigurasi per Faktur</span>
+                        <span id="csv_previewCount" style="color:var(--text-muted);font-size:10px;"></span>
+                    </div>
+                    <div class="csv-bulk-bar">
+                        <label>Set semua:</label>
+                        <select class="prev-select" id="csv_bulkTrx" onchange="csvBulkSetTrx(this.value)">
+                            <option value="">— TrxCode —</option>
+                            <option value="04">04 – Dalam Negeri</option>
+                            <option value="07">07 – Tidak Dipungut</option>
+                            <option value="08">08 – Dibebaskan</option>
+                        </select>
+                        <select class="prev-select" id="csv_bulkAddInfo" onchange="csvBulkSetAddInfo(this.value)" style="min-width:150px;">
+                            <option value="">— AddInfo —</option>
+                            <optgroup label="Keterangan Tambahan (TD.005xx)">
+                                <option value="TD.00501">TD.00501 – Kawasan Bebas</option>
+                                <option value="TD.00502">TD.00502 – Tempat Penimbunan Berikat</option>
+                                <option value="TD.00503">TD.00503 – Hibah dan Bantuan LN</option>
+                                <option value="TD.00504">TD.00504 – Avtur</option>
+                                <option value="TD.00505">TD.00505 – Lainnya (07)</option>
+                                <option value="TD.00506">TD.00506 – Batubara Gen I</option>
+                                <option value="TD.00507">TD.00507 – BBM Kapal LN</option>
+                                <option value="TD.00508">TD.00508 – JKP Alat Angkutan</option>
+                                <option value="TD.00509">TD.00509 – BKP Tertentu KEK</option>
+                                <option value="TD.00510">TD.00510 – Anode Slime</option>
+                                <option value="TD.00511">TD.00511 – Alat Angkutan Tertentu</option>
+                                <option value="TD.00512">TD.00512 – Kontraktor Migas PP 27/2017</option>
+                                <option value="TD.00513">TD.00513 – Rumah Tapak DTP 2025</option>
+                                <option value="TD.00514">TD.00514 – Sewa Ruangan Pedagang Eceran</option>
+                                <option value="TD.00515">TD.00515 – COVID-19 PMK 239</option>
+                                <option value="TD.00516">TD.00516 – Rumah Tapak DTP 2021</option>
+                                <option value="TD.00517">TD.00517 – KEK PP 40/2021</option>
+                                <option value="TD.00518">TD.00518 – Kawasan Bebas PP 41/2021</option>
+                                <option value="TD.00519">TD.00519 – Rumah Tapak DTP 2022</option>
+                                <option value="TD.00520">TD.00520 – COVID DTP</option>
+                                <option value="TD.00521">TD.00521 – Kontraktor Migas PP 53/2017</option>
+                                <option value="TD.00522">TD.00522 – Anode Slime &amp; Emas</option>
+                                <option value="TD.00523">TD.00523 – Kertas Koran/Majalah</option>
+                                <option value="TD.00524">TD.00524 – PPN DTP</option>
+                                <option value="TD.00525">TD.00525 – BKP &amp; JKP Tertentu</option>
+                                <option value="TD.00526">TD.00526 – IKN</option>
+                                <option value="TD.00527">TD.00527 – Kendaraan Listrik</option>
+                                <option value="TD.00528">TD.00528 – Rumah Tapak DTP Tambahan 2025</option>
+                                <option value="TD.00529">TD.00529 – Hewan Khusus 2025</option>
+                                <option value="TD.00530">TD.00530 – Bekal Khusus Operasi 2025</option>
+                                <option value="TD.00531">TD.00531 – Rumah Tapak DTP 2026</option>
+                            </optgroup>
+                            <optgroup label="Cap Fasilitas (TD.011xx)">
+                                <option value="TD.01101">TD.01101 – PPN Tidak Dipungut PP 10/2012</option>
+                                <option value="TD.01102">TD.01102 – PPN/PPnBM Tidak Dipungut</option>
+                                <option value="TD.01103">TD.01103 – PPN &amp; PPnBM Tidak Dipungut</option>
+                                <option value="TD.01104">TD.01104 – PPN Tidak Dipungut PP 71/2012</option>
+                                <option value="TD.01105">TD.01105 – (Tidak ada Cap)</option>
+                                <option value="TD.01106">TD.01106 – PPN PMK 194</option>
+                                <option value="TD.01107">TD.01107 – PPN Tidak Dipungut PP 15/2015</option>
+                                <option value="TD.01108">TD.01108 – PPN Tidak Dipungut PP 69/2015</option>
+                                <option value="TD.01109">TD.01109 – PPN Tidak Dipungut PP 96/2015</option>
+                                <option value="TD.01110">TD.01110 – PPN Tidak Dipungut PP 106/2015</option>
+                                <option value="TD.01111">TD.01111 – PPN Tidak Dipungut PP 50/2019</option>
+                                <option value="TD.01112">TD.01112 – PPN Tidak Dipungut PP 27/2017</option>
+                                <option value="TD.01113">TD.01113 – PPN DTP PMK 13/2025</option>
+                                <option value="TD.01114">TD.01114 – PPN DTP PMK 102/2021</option>
+                                <option value="TD.01115">TD.01115 – PPN DTP PMK 239/2020</option>
+                                <option value="TD.01116">TD.01116 – PPN DTP PMK 103/2021</option>
+                                <option value="TD.01117">TD.01117 – PPN Tidak Dipungut PP 40/2021</option>
+                                <option value="TD.01118">TD.01118 – PPN Tidak Dipungut PP 41/2021</option>
+                                <option value="TD.01119">TD.01119 – PPN DTP PMK 6/2022</option>
+                                <option value="TD.01120">TD.01120 – PPN DTP PMK 226/2021</option>
+                                <option value="TD.01121">TD.01121 – PPN Tidak Dipungut PP 53/2017</option>
+                                <option value="TD.01122">TD.01122 – PPN Tidak Dipungut PP 70/2021</option>
+                                <option value="TD.01123">TD.01123 – PPN DTP PMK 125/2020</option>
+                                <option value="TD.01124">TD.01124 – (Tidak ada Cap)</option>
+                                <option value="TD.01125">TD.01125 – PPN Tidak Dipungut PP 49/2022</option>
+                                <option value="TD.01126">TD.01126 – PPN Tidak Dipungut PP 12/2023</option>
+                                <option value="TD.01127">TD.01127 – PPN DTP PMK 12/2025</option>
+                                <option value="TD.01128">TD.01128 – PPN DTP PMK 60/2025</option>
+                                <option value="TD.01129">TD.01129 – PPN DTP PMK 61/2025</option>
+                                <option value="TD.01130">TD.01130 – PPN DTP PMK 44/2025</option>
+                                <option value="TD.01131">TD.01131 – PPN DTP PMK 90/2025</option>
+                            </optgroup>
+                        </select>
+                        <button class="csv-bulk-btn" onclick="csvBulkClearAddInfo()">✕ Clear AddInfo</button>
+                        <input class="prev-input" id="csv_bulkCustomDoc" placeholder="CustomDoc (bulk)" style="width:130px;">
+                        <button class="csv-bulk-btn" onclick="csvBulkSetCustomDoc()">Set CustomDoc</button>
+                        <button class="csv-bulk-btn" onclick="csvBulkClearCustomDoc()">✕ Clear</button>
+                    </div>
+                    <div class="csv-preview-table-wrap">
+                        <table class="csv-preview-table">
+                            <thead>
+                                <tr>
+                                    <th class="td-no">#</th>
+                                    <th>No. Faktur</th>
+                                    <th>Tgl</th>
+                                    <th>Pembeli</th>
+                                    <th>DPP</th>
+                                    <th>TrxCode</th>
+                                    <th>AddInfo</th>
+                                    <th>CustomDoc</th>
+                                </tr>
+                            </thead>
+                            <tbody id="csv_previewTbody"></tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -6881,6 +7014,125 @@ let csvFileName   = 'coretax_output.xml';
 let csvSelectedOpt  = 'A'; // A=Barang, B=Jasa
 let csvSelectedUnit = 'UM.0018';
 
+// ── CSV Preview & Konfigurasi per Faktur ────────────────────────────────────
+
+// Simpan override per faktur: { [nomorFaktur]: { trxCode, addInfo, customDoc } }
+let csvOverrides = {};
+
+function csvRenderPreview(fkRows) {
+    const FK = { KODE:1, NOMOR:3, TGL:6, NPWP:7, NAMA:8, DPP:10 };
+    const tbody = document.getElementById('csv_previewTbody');
+    const wrap  = document.getElementById('csv_previewWrap');
+    const countEl = document.getElementById('csv_previewCount');
+    tbody.innerHTML = '';
+    csvOverrides = {};
+
+    fkRows.forEach((row, i) => {
+        const nomor    = (row[FK.NOMOR] || '').trim();
+        const tgl      = (row[FK.TGL]   || '').trim();
+        const buyer    = (row[FK.NAMA]  || '').trim();
+        const dpp      = csvNum(row[FK.DPP]);
+        const trxInit  = (row[FK.KODE]  || '04').trim();
+
+        // Init override dari CSV
+        csvOverrides[nomor] = { trxCode: trxInit, addInfo: '', customDoc: '' };
+
+        const badgeClass = trxInit === '07' ? 'badge-07' : trxInit === '08' ? 'badge-08' : trxInit === '04' ? 'badge-04' : 'badge-other';
+        const dppFmt = dpp.toLocaleString('id-ID');
+
+        const tr = document.createElement('tr');
+        tr.dataset.nomor = nomor;
+        tr.innerHTML = `
+            <td class="td-no">${i+1}</td>
+            <td class="td-nomor" title="${nomor}">${nomor.slice(-12)}</td>
+            <td style="color:var(--text-dim)">${tgl}</td>
+            <td class="td-buyer" title="${buyer}">${buyer.length > 22 ? buyer.slice(0,22)+'…' : buyer}</td>
+            <td style="color:var(--green);text-align:right">${dppFmt}</td>
+            <td>
+                <select class="prev-select" onchange="csvOverrideSet('${nomor}','trxCode',this.value,this)">
+                    <option value="04" ${trxInit==='04'?'selected':''}>04</option>
+                    <option value="07" ${trxInit==='07'?'selected':''}>07</option>
+                    <option value="08" ${trxInit==='08'?'selected':''}>08</option>
+                </select>
+            </td>
+            <td>
+                <select class="prev-select" style="min-width:120px;" onchange="csvOverrideSet('${nomor}','addInfo',this.value,this)">
+                    <option value="">—</option>
+                    <optgroup label="Ket. Tambahan">
+                        ${['TD.00501','TD.00502','TD.00503','TD.00504','TD.00505','TD.00506','TD.00507','TD.00508','TD.00509','TD.00510','TD.00511','TD.00512','TD.00513','TD.00514','TD.00515','TD.00516','TD.00517','TD.00518','TD.00519','TD.00520','TD.00521','TD.00522','TD.00523','TD.00524','TD.00525','TD.00526','TD.00527','TD.00528','TD.00529','TD.00530','TD.00531'].map(c=>`<option value="${c}">${c}</option>`).join('')}
+                    </optgroup>
+                    <optgroup label="Cap Fasilitas">
+                        ${['TD.01101','TD.01102','TD.01103','TD.01104','TD.01105','TD.01106','TD.01107','TD.01108','TD.01109','TD.01110','TD.01111','TD.01112','TD.01113','TD.01114','TD.01115','TD.01116','TD.01117','TD.01118','TD.01119','TD.01120','TD.01121','TD.01122','TD.01123','TD.01124','TD.01125','TD.01126','TD.01127','TD.01128','TD.01129','TD.01130','TD.01131'].map(c=>`<option value="${c}">${c}</option>`).join('')}
+                    </optgroup>
+                </select>
+            </td>
+            <td>
+                <input class="prev-input" placeholder="—" style="width:110px;"
+                    oninput="csvOverrideSet('${nomor}','customDoc',this.value,this)"
+                    value="">
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    countEl.textContent = fkRows.length + ' faktur';
+    wrap.classList.add('show');
+}
+
+function csvOverrideSet(nomor, field, val, el) {
+    if (!csvOverrides[nomor]) csvOverrides[nomor] = {};
+    csvOverrides[nomor][field] = val;
+}
+
+// Bulk actions
+function csvBulkSetTrx(val) {
+    if (!val) return;
+    Object.keys(csvOverrides).forEach(n => csvOverrides[n].trxCode = val);
+    document.querySelectorAll('#csv_previewTbody select:nth-child(1)').forEach(s => s.value = val);
+    // Update all TrxCode selects in table
+    document.querySelectorAll('#csv_previewTbody tr').forEach(tr => {
+        const sel = tr.querySelectorAll('select')[0];
+        if (sel) sel.value = val;
+    });
+    document.getElementById('csv_bulkTrx').value = '';
+}
+
+function csvBulkSetAddInfo(val) {
+    if (!val) return;
+    Object.keys(csvOverrides).forEach(n => csvOverrides[n].addInfo = val);
+    document.querySelectorAll('#csv_previewTbody tr').forEach(tr => {
+        const sel = tr.querySelectorAll('select')[1];
+        if (sel) sel.value = val;
+    });
+    document.getElementById('csv_bulkAddInfo').value = '';
+}
+
+function csvBulkClearAddInfo() {
+    Object.keys(csvOverrides).forEach(n => csvOverrides[n].addInfo = '');
+    document.querySelectorAll('#csv_previewTbody tr').forEach(tr => {
+        const sel = tr.querySelectorAll('select')[1];
+        if (sel) sel.value = '';
+    });
+}
+
+function csvBulkSetCustomDoc() {
+    const val = document.getElementById('csv_bulkCustomDoc').value.trim();
+    Object.keys(csvOverrides).forEach(n => csvOverrides[n].customDoc = val);
+    document.querySelectorAll('#csv_previewTbody tr').forEach(tr => {
+        const inp = tr.querySelector('input.prev-input');
+        if (inp) inp.value = val;
+    });
+}
+
+function csvBulkClearCustomDoc() {
+    Object.keys(csvOverrides).forEach(n => csvOverrides[n].customDoc = '');
+    document.querySelectorAll('#csv_previewTbody tr').forEach(tr => {
+        const inp = tr.querySelector('input.prev-input');
+        if (inp) inp.value = '';
+    });
+    document.getElementById('csv_bulkCustomDoc').value = '';
+}
+
 function csvSelectCompany(el) {
     // Deselect all company cards in the CSV grid only
     document.querySelectorAll('#csv_companyGrid .company-card').forEach(c => c.classList.remove('active'));
@@ -7031,6 +7283,7 @@ function csvParseCSV(text, fname) {
 
     csvLog('success', '✓ Parsed: ' + fkCount + ' FK, ' + ofCount + ' OF rows');
     document.getElementById('csv_btnConvert').disabled = false;
+    csvRenderPreview(csvParsedData.fkRows);
 }
 
 function csvStartConvert() {
@@ -7072,9 +7325,14 @@ function csvDoConvert(sellerTin, sellerIdtku) {
             // CSV eFaktur menyimpan NPWP Buyer 15 digit (format lama) → tambah '0' di depan jadi 16 digit Coretax
             const buyerNpwp  = _buyerRaw.length === 15 ? '0' + _buyerRaw : _buyerRaw.slice(0, 16);
             const buyerIdtku = buyerNpwp + '000000';
-            const trxCode    = (row[FK.KODE] || '04').trim();
+
+            // Ambil override per faktur dari preview table, fallback ke data CSV
+            const ov         = csvOverrides[nomorFaktur] || {};
+            const trxCode    = ov.trxCode || (row[FK.KODE] || '04').trim();
             const opt        = (row[FK.FG_PENGGANTI] || '0').trim() === '1' ? 'Replacement' : 'Normal';
-            const addInfo    = (row[FK.ADDINFO] || '0').trim();
+            const addInfoRaw = ov.addInfo !== undefined ? ov.addInfo : (row[FK.ADDINFO] || '').trim();
+            const addInfo    = addInfoRaw === '0' ? '' : addInfoRaw;
+            const customDoc  = (ov.customDoc || '').trim();
             const refDesc    = csvXmlEsc((row[FK.REF] || '').trim());
 
             let gsXml = '';
@@ -7107,8 +7365,8 @@ function csvDoConvert(sellerTin, sellerIdtku) {
       <TaxInvoiceDate>${tgl}</TaxInvoiceDate>
       <TaxInvoiceOpt>${opt}</TaxInvoiceOpt>
       <TrxCode>${trxCode}</TrxCode>
-      <AddInfo>${addInfo === '0' ? '' : addInfo}</AddInfo>
-      <CustomDoc/>
+      <AddInfo>${csvXmlEsc(addInfo)}</AddInfo>
+      ${customDoc ? `<CustomDoc>${csvXmlEsc(customDoc)}</CustomDoc>` : '<CustomDoc/>'}
       <CustomDocMonthYear/>
       <RefDesc>${refDesc}</RefDesc>
       <FacilityStamp/>
@@ -7230,6 +7488,9 @@ function csvReset() {
     document.getElementById('csv_btnConvert').disabled = true;
     csvLogClear();
     csvLog('info', '// Reset — siap untuk file baru');
+    csvOverrides = {};
+    document.getElementById('csv_previewWrap').classList.remove('show');
+    document.getElementById('csv_previewTbody').innerHTML = '';
 }
 
 // Log helpers
