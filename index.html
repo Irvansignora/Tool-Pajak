@@ -7025,16 +7025,20 @@ let csvSelectedUnit = 'UM.0018';
 let csvOverrides = {};
 
 function csvRenderPreview(fkRows) {
-    const FK = { KODE:1, NOMOR:3, TGL:6, NPWP:7, NAMA:8, DPP:10, INV:17 };
+    const FK = { KODE:1, NOMOR:3, TGL:6, NPWP:7, NAMA:8, DPP:10 };
     const tbody = document.getElementById('csv_previewTbody');
     const wrap  = document.getElementById('csv_previewWrap');
     const countEl = document.getElementById('csv_previewCount');
     tbody.innerHTML = '';
     csvOverrides = {};
 
+    // ── Kolom referensi/nomor invoice: pakai index tetap 18 (REFERENSI) ──
+    // Sama dengan FK.REF=18 yang dipakai csvDoConvert, agar preview konsisten dengan hasil XML.
+    const invCol = 18;
+
     fkRows.forEach((row, i) => {
         const nomor    = (row[FK.NOMOR] || '').trim(); // kunci internal tetap pakai nomor faktur
-        const inv      = (row[FK.INV]   || '').trim(); // nomor invoice (IP/IN) untuk tampilan
+        const inv      = (row[invCol]   || '').trim(); // nomor referensi dari kolom REFERENSI (col 18)
         const tgl      = (row[FK.TGL]   || '').trim();
         const buyer    = (row[FK.NAMA]  || '').trim();
         const dpp      = csvNum(row[FK.DPP]);
