@@ -2728,6 +2728,7 @@
                         <thead>
                             <tr>
                                 <th>No. Faktur Pajak</th>
+                                <th>Tanggal Faktur</th>
                                 <th>Nama Penjual</th>
                                 <th>NPWP Penjual</th>
                                 <th>Nama Barang</th>
@@ -4312,6 +4313,19 @@ async function fpExtractEfaktur(text, filename, pdfDocument) {
         if (m) { nomorFaktur = m[1].replace(/\s+/g,''); break; }
     }
 
+    // ── Tanggal Faktur (e-Faktur) ──
+    let tanggalFaktur = '';
+    const tglPatsEfaktur = [
+        /(?:Tanggal\s+Faktur\s+Pajak|Tanggal\s+Pembuatan)\s*:?\s*(\d{1,2}\s+\w+\s+\d{4})/i,
+        /(?:Jakarta|Surabaya|Bandung|Medan|Semarang|Makassar|Bekasi|Bogor|Depok|Tangerang|Palembang|Batam|Pekanbaru|Denpasar),?\s+(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i,
+        /(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i,
+        /(\d{4}-\d{2}-\d{2})/
+    ];
+    for (const pat of tglPatsEfaktur) {
+        const m = text.match(pat);
+        if (m) { tanggalFaktur = m[1].trim(); break; }
+    }
+
     // ── Penjual & Pembeli ──
     // INSIGHT dari raw text PDF e-Faktur:
     // Header tabel (Pengusaha Kena Pajak / Pembeli Barang) dicetak DULUAN tanpa data.
@@ -4544,7 +4558,7 @@ async function fpExtractEfaktur(text, filename, pdfDocument) {
 
         if (total > 0) {
             itemsFound.push({
-                nomorFaktur, namaPenjual, npwpPenjual, namaBarang,
+                nomorFaktur, tanggalFaktur, namaPenjual, npwpPenjual, namaBarang,
                 harga, qty, discount, total, ppn,
                 namaPembeli, npwpPembeli, referensi,
                 sumber: filename
@@ -4564,7 +4578,7 @@ async function fpExtractEfaktur(text, filename, pdfDocument) {
 
         if (total > 0) {
             itemsFound.push({
-                nomorFaktur, namaPenjual, npwpPenjual,
+                nomorFaktur, tanggalFaktur, namaPenjual, npwpPenjual,
                 namaBarang: 'Barang / Jasa (Summary)',
                 harga: total, qty: 1, discount: 0,
                 total, ppn,
@@ -4658,6 +4672,19 @@ async function fpExtractFromText(text, filename, pdfDocument) {
         if (m) { referensi = m[1].trim().replace(/[\)\s]+$/,''); if (referensi.length > 0) break; }
     }
 
+    // ── Tanggal Faktur (Coretax) ──
+    let tanggalFaktur = '';
+    const tglPatsCoretax = [
+        /(?:Tanggal\s+Faktur\s+Pajak|Tanggal\s+Pembuatan)\s*:?\s*(\d{1,2}\s+\w+\s+\d{4})/i,
+        /(?:Jakarta|Surabaya|Bandung|Medan|Semarang|Makassar|Bekasi|Bogor|Depok|Tangerang|Palembang|Batam|Pekanbaru|Denpasar),?\s+(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i,
+        /(\d{1,2}\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4})/i,
+        /(\d{4}-\d{2}-\d{2})/
+    ];
+    for (const pat of tglPatsCoretax) {
+        const m = text.match(pat);
+        if (m) { tanggalFaktur = m[1].trim(); break; }
+    }
+
     // ── Items: parse per-line dengan nomor urut item ──
     const itemsFound = [];
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -4665,46 +4692,58 @@ async function fpExtractFromText(text, filename, pdfDocument) {
     // Kumpulkan semua blok item: dimulai dari baris dengan pola "angka (kode6digit) nama_barang"
     // atau "angka nama_barang", lalu lanjut sampai baris berikutnya yang diawali nomor urut baru
     // atau sampai "Harga Jual"
+    // Deteksi item: support "N KODE6" pada baris terpisah (nama di baris berikutnya)
+    // dan format lama "N KODE6 Nama..." atau "N Nama..." dalam satu baris
+    const _isItemStart = (line) => {
+        const m = line.match(/^(\d{1,2})\s+(\d{6})\s*(.*)/);
+        if (m) return { itemNo: parseInt(m[1]), kode: m[2], extra: m[3].trim() };
+        const m2 = line.match(/^(\d{1,2})\s+((?!\d{6})[A-Za-z].+)/);
+        if (m2) return { itemNo: parseInt(m2[1]), kode: '', extra: m2[2].trim() };
+        return null;
+    };
+
     const itemBlocks = [];
     let i = 0;
     while (i < lines.length) {
         const line = lines[i];
-        // Deteksi baris awal item: diawali angka 1–99 lalu spasi lalu kode 6 digit atau langsung nama
-        const itemStartM = line.match(/^(\d{1,2})\s+(\d{6})\s+(.+)/) || line.match(/^(\d{1,2})\s+((?!\d{6})[A-Za-z].+)/);
-        if (itemStartM) {
-            const itemNo = parseInt(itemStartM[1]);
-            if (itemNo >= 1 && itemNo <= 50) {
-                // Kumpulkan baris-baris blok item ini
-                let block = line;
-                let j = i + 1;
-                while (j < lines.length) {
-                    const nextLine = lines[j];
-                    // Stop jika baris berikutnya adalah item baru atau total/footer
-                    if (nextLine.match(/^(\d{1,2})\s+(\d{6})\s+/) || nextLine.match(/^(\d{1,2})\s+(?!\d)[A-Za-z]/)) break;
-                    if (nextLine.match(/^Harga Jual\s*\/\s*Penggantian/i)) break;
-                    if (nextLine.match(/^Dikurangi|^Dasar Pengenaan|^Jumlah PPN|^Sesuai dengan/i)) break;
-                    block += ' ' + nextLine;
-                    j++;
-                }
-                itemBlocks.push(block);
-                i = j;
-                continue;
+        const startInfo = _isItemStart(line);
+        if (startInfo && startInfo.itemNo >= 1 && startInfo.itemNo <= 50) {
+            // Kumpulkan baris-baris blok item ini
+            const blockLines = [line];
+            let j = i + 1;
+            while (j < lines.length) {
+                const nextLine = lines[j];
+                // Stop jika item baru (nomor lebih besar dari current)
+                const nextStart = _isItemStart(nextLine);
+                if (nextStart && nextStart.itemNo > startInfo.itemNo && nextStart.itemNo <= 50) break;
+                if (nextLine.match(/^Harga Jual\s*\/\s*Penggantian/i)) break;
+                if (nextLine.match(/^Dikurangi|^Dasar Pengenaan|^Jumlah PPN|^Sesuai dengan/i)) break;
+                blockLines.push(nextLine);
+                j++;
             }
+            itemBlocks.push({ startInfo, blockLines, block: blockLines.join(' ') });
+            i = j;
+            continue;
         }
         i++;
     }
 
     // Parse setiap blok item
-    for (const block of itemBlocks) {
-        // Cari nama barang: setelah nomor urut (dan opsional kode 6 digit), sebelum "Rp"
-        let namaBarang = '';
-        const namaM = block.match(/^\d{1,2}\s+\d{6}\s+(.+?)\s+Rp\s*[\d.,]+/i)
-                   || block.match(/^\d{1,2}\s+(.+?)\s+Rp\s*[\d.,]+/i);
-        if (namaM) {
-            namaBarang = namaM[1].trim()
-                .replace(/\d{6,}/g, '').replace(/\s+/g, ' ')
-                .replace(/Potongan.*/i, '').replace(/PPnBM.*/i, '').trim();
+    for (const { startInfo, blockLines, block } of itemBlocks) {
+        // Nama barang: extra di baris pertama, atau baris berikutnya sebelum "Rp X x Y"
+        let namaBarang = startInfo.extra || '';
+        if (!namaBarang) {
+            const namaLines = [];
+            for (let k = 1; k < blockLines.length; k++) {
+                const bl = blockLines[k];
+                if (/^Rp\s*[\d.,]+/i.test(bl) || /^Potongan/i.test(bl) || /^PPnBM/i.test(bl)) break;
+                namaLines.push(bl);
+            }
+            namaBarang = namaLines.join(' ').trim();
         }
+        namaBarang = namaBarang
+            .replace(/\d{6,}/g, '').replace(/\s+/g, ' ')
+            .replace(/Rp\s*[\d.,]+.*$/i, '').replace(/Potongan.*/i, '').replace(/PPnBM.*/i, '').trim();
 
         // Cari semua pasangan Rp harga x qty dalam blok
         const priceRe = /Rp\s*([\d.,]+)\s*[xX×]\s*([\d.,]+)(?:\s*(?:Bulan|Lainnya|Hari|Unit|Pcs|Piece))?/gi;
@@ -4723,9 +4762,10 @@ async function fpExtractFromText(text, filename, pdfDocument) {
         const discount = discM ? parseFloat(discM[1].replace(/\./g,'').replace(',','.')) : 0;
 
         if (namaBarang && namaBarang.length > 2 && !isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
-            const total = (harga * qty) - discount;
-            const ppn   = total * 0.11;
-            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
+            // Total di PDF = harga × qty (kolom Harga Jual, sebelum discount)
+            const total = harga * qty;
+            const ppn   = (total - discount) * 0.11;
+            itemsFound.push({nomorFaktur,tanggalFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
         }
     }
 
@@ -4761,7 +4801,7 @@ async function fpExtractFromText(text, filename, pdfDocument) {
                     if (!isNaN(harga) && !isNaN(qty) && harga > 0 && qty > 0) {
                         const total = (harga * qty) - discount;
                         const ppn   = total * 0.11;
-                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
+                        itemsFound.push({nomorFaktur,tanggalFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
                     }
                 }
             }
@@ -4804,7 +4844,7 @@ async function fpExtractFromText(text, filename, pdfDocument) {
                     const disc  = parseFloat(discM[1].replace(/\./g,'').replace(',','.'));
                     if (!isNaN(harga)&&!isNaN(qty)&&!isNaN(disc)&&harga>0&&qty>0) {
                         const total = harga*qty-disc;
-                        itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount:disc,total,ppn:total*0.11,namaPembeli,npwpPembeli,referensi,sumber:filename});
+                        itemsFound.push({nomorFaktur,tanggalFaktur,namaPenjual,npwpPenjual,namaBarang,harga,qty,discount:disc,total,ppn:total*0.11,namaPembeli,npwpPembeli,referensi,sumber:filename});
                     }
                 }
             }
@@ -4833,7 +4873,7 @@ async function fpExtractFromText(text, filename, pdfDocument) {
             const total = harga * qty;
             const dpp   = dppM ? parseFloat(dppM[1].replace(/\./g,'').replace(',','.')) : total*11/12;
             const ppn   = dpp * 0.12;
-            itemsFound.push({nomorFaktur,namaPenjual,npwpPenjual,namaBarang:namaBarangFallback||'Jasa / Barang (Single Item)',harga,qty,discount:0,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
+            itemsFound.push({nomorFaktur,tanggalFaktur,namaPenjual,npwpPenjual,namaBarang:namaBarangFallback||'Jasa / Barang (Single Item)',harga,qty,discount:0,total,ppn,namaPembeli,npwpPembeli,referensi,sumber:filename});
         }
     }
 
@@ -4853,7 +4893,7 @@ function fpDisplayResults() {
         const st = r.status || 'NORMAL';
         const stColor = st === 'BATAL' ? 'color:#ef4444;font-weight:700;' : st === 'PEMBETULAN' ? 'color:#f59e0b;font-weight:700;' : 'color:#22c55e;font-weight:600;';
         return `<tr>
-        <td>${r.nomorFaktur}</td><td>${r.namaPenjual}</td><td>${r.npwpPenjual}</td>
+        <td>${r.nomorFaktur}</td><td>${r.tanggalFaktur||''}</td><td>${r.namaPenjual}</td><td>${r.npwpPenjual}</td>
         <td>${r.namaBarang}</td><td>Rp ${r.harga.toLocaleString('id-ID')}</td>
         <td>${r.qty}</td><td>Rp ${r.discount.toLocaleString('id-ID')}</td>
         <td>Rp ${r.total.toLocaleString('id-ID')}</td><td>Rp ${r.ppn.toLocaleString('id-ID')}</td>
@@ -4865,7 +4905,7 @@ function fpDisplayResults() {
 
     if (fpExtractedData.length > displayLimit) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="14" style="text-align:center;padding:15px;color:var(--text-dim);background:rgba(255,255,255,0.03);font-style:italic;">
+        tr.innerHTML = `<td colspan="15" style="text-align:center;padding:15px;color:var(--text-dim);background:rgba(255,255,255,0.03);font-style:italic;">
             Menampilkan ${displayLimit} data pertama saja untuk menjaga performa. 
             Semua ${fpExtractedData.length} data akan tetap ada di hasil download Excel.
         </td>`;
@@ -4874,15 +4914,15 @@ function fpDisplayResults() {
 }
 
 function fpDownload() {
-    const ws_data = [['No. Faktur Pajak','Nama Penjual','NPWP Penjual','Nama Barang','Harga','Qty','Discount','Total','PPN','Nama Pembeli','NPWP Pembeli','Referensi','Status','Sumber']];
-    fpExtractedData.forEach(r => ws_data.push([r.nomorFaktur,r.namaPenjual,r.npwpPenjual,r.namaBarang,r.harga,r.qty,r.discount,r.total,r.ppn,r.namaPembeli,r.npwpPembeli,r.referensi,r.status||'NORMAL',r.sumber||'']));
+    const ws_data = [['No. Faktur Pajak','Tanggal Faktur','Nama Penjual','NPWP Penjual','Nama Barang','Harga','Qty','Discount','Total','PPN','Nama Pembeli','NPWP Pembeli','Referensi','Status','Sumber']];
+    fpExtractedData.forEach(r => ws_data.push([r.nomorFaktur,r.tanggalFaktur||'',r.namaPenjual,r.npwpPenjual,r.namaBarang,r.harga,r.qty,r.discount,r.total,r.ppn,r.namaPembeli,r.npwpPembeli,r.referensi,r.status||'NORMAL',r.sumber||'']));
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:40},{wch:15},{wch:10},{wch:15},{wch:15},{wch:15},{wch:30},{wch:20},{wch:20},{wch:14},{wch:25}];
+    ws['!cols'] = [{wch:20},{wch:18},{wch:30},{wch:20},{wch:40},{wch:15},{wch:10},{wch:15},{wch:15},{wch:15},{wch:30},{wch:20},{wch:20},{wch:14},{wch:25}];
     // Color-code Status column (col index 12 = M)
     const rowCount = ws_data.length;
     for (let ri = 1; ri < rowCount; ri++) {
-        const cellRef = XLSX.utils.encode_cell({r: ri, c: 12});
+        const cellRef = XLSX.utils.encode_cell({r: ri, c: 13});
         if (ws[cellRef]) {
             const st = ws[cellRef].v;
             let fgColor = 'FF22C55E'; // green = NORMAL
@@ -7378,7 +7418,7 @@ function csvDoConvert(sellerTin, sellerIdtku) {
             if (items.length === 0) {
                 const dpp = csvNum(row[FK.DPP]), ppn = csvNum(row[FK.PPN]);
                 gsXml = csvBuildGS({ nama:'Barang/Jasa', kode:'000000', price:dpp, qty:1, diskon:0,
-                    taxBase:dpp, otherTaxBase:Math.round(dpp*11/12), vatRate:12, vat:ppn, stlgRate:0, stlg:0 });
+                    taxBase:dpp, otherTaxBase:Number((dpp*11/12).toFixed(2)), vatRate:12, vat:ppn, stlgRate:0, stlg:0 });
             } else {
                 for (const item of items) {
                     const dpp = csvNum(item[OF.DPP]), ppn = csvNum(item[OF.PPN]);
@@ -7389,7 +7429,7 @@ function csvDoConvert(sellerTin, sellerIdtku) {
                         qty:     csvNum(item[OF.QTY])||1,
                         diskon:  csvNum(item[OF.DISKON]),
                         taxBase: dpp,
-                        otherTaxBase: Math.round(dpp*11/12),
+                        otherTaxBase: Number((dpp*11/12).toFixed(2)),
                         vatRate: 12, vat: ppn,
                         stlgRate: csvNum(item[OF.TARIF_PPNBM]),
                         stlg:     csvNum(item[OF.PPNBM])
