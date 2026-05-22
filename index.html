@@ -1504,10 +1504,14 @@
                         <span style="display:inline-block;width:3px;height:14px;background:var(--pink);border-radius:2px;"></span>
                         Konfigurasi BPU
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">NPWP Pemotong (TIN)</label>
                             <input type="text" class="form-input" id="bpu_cfgTIN" placeholder="16 digit NPWP" maxlength="16">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kode Cabang Pemotong</label>
+                            <input type="number" class="form-input" id="bpu_cfgCabang" placeholder="0 (pusat)" min="0" max="999" value="0" style="font-family:'IBM Plex Mono',monospace;">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Bendahara Pemerintah</label>
@@ -1537,7 +1541,14 @@
                         <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;">📋 Preview Data</div>
                         <span style="background:rgba(236,72,153,0.12);color:var(--pink);border:1px solid rgba(236,72,153,0.25);padding:2px 10px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;" id="bpu_rowBadge">0 rows</span>
                     </div>
-                    <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+                    <!-- Bulk Cabang Bar -->
+                    <div style="padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(139,92,246,0.05);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <span style="font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;white-space:nowrap;">🏢 Kode Cabang Penerima:</span>
+                        <input class="prev-input" id="bpu_bulkCabang" type="number" min="0" max="999" placeholder="0" style="width:60px;text-align:center;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:4px 8px;" title="Set kode cabang penerima penghasilan untuk semua baris">
+                        <button onclick="bpuBulkSetCabang()" style="background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4);color:#a78bfa;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;">Set Semua</button>
+                        <span style="font-size:10px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;">— mengubah 6 digit akhir IDPlaceOfBusinessActivityOfIncomeRecipient di XML</span>
+                    </div>
+                    <div style="overflow-x:auto;max-height:320px;overflow-y:auto;">
                         <table style="width:100%;border-collapse:collapse;font-size:12px;" id="bpu_previewTable"></table>
                     </div>
                 </div>
@@ -6458,6 +6469,8 @@ const BPU_RATE_MAP = {};
 BPU_CODES.forEach(c => BPU_RATE_MAP[c.code] = c.rate);
 
 let bpuParsedData = [], bpuHeaders = [], bpuXmlOutput = '';
+let bpuCabangOverrides = {}; // { rowIndex: kodeCabang }
+
 
 function bpuDownloadTemplate() {
     const wb = XLSX.utils.book_new();
@@ -6528,6 +6541,7 @@ function bpuHandleFile(e) {
             if (data.length < 2) { bpuShowErr('File kosong atau hanya header.'); return; }
             bpuHeaders = data[0].map(h => String(h).trim());
             bpuParsedData = data.slice(1).filter(r => r.some(c => c !== ''));
+            bpuCabangOverrides = {}; // reset per-row cabang overrides
             incrementUploads(1);
             bpuRenderPreview();
             document.getElementById('bpu_previewSection').style.display = 'block';
@@ -6547,7 +6561,8 @@ function bpuShowErr(msg) {
 
 function bpuRenderPreview() {
     const tbl = document.getElementById('bpu_previewTable');
-    let html = `<thead><tr style="background:rgba(236,72,153,0.08);">${bpuHeaders.map(h => `<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pink);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border);">${h}</th>`).join('')}<th style="padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);border-bottom:1px solid var(--border);">TARIF AUTO</th></tr></thead><tbody>`;
+    const thStyle = `padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border);`;
+    let html = `<thead><tr style="background:rgba(236,72,153,0.08);">${bpuHeaders.map(h => `<th style="${thStyle}color:var(--pink);">${h}</th>`).join('')}<th style="${thStyle}color:var(--green);">TARIF AUTO</th><th style="${thStyle}color:#a78bfa;">KODE CABANG</th></tr></thead><tbody>`;
     bpuParsedData.slice(0,50).forEach((row, ri) => {
         const codeIdx = bpuHeaders.findIndex(h => h.toLowerCase().includes('taxobjectcode') || h.toLowerCase().includes('kode'));
         const facIdx = bpuHeaders.findIndex(h => h.toLowerCase().includes('facility') || h.toLowerCase().includes('suratketerangan'));
@@ -6559,21 +6574,41 @@ function bpuRenderPreview() {
         const rate = hasFac ? 0 : baseRate;
         const rateColor = hasFac ? 'var(--yellow)' : 'var(--green)';
         const rateLabel = hasFac ? '0% (Fasilitas)' : rate + '%';
+        const curCabang = bpuCabangOverrides[ri] !== undefined ? bpuCabangOverrides[ri] : 0;
         html += `<tr style="${ri%2===1?'background:rgba(255,255,255,0.02)':''}">` + bpuHeaders.map((h,i) => {
             return `<td style="padding:8px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04);">${row[i] ?? ''}</td>`;
-        }).join('') + `<td style="padding:8px 12px;color:${rateColor};font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.04);">${rateLabel}</td></tr>`;
+        }).join('') + `<td style="padding:8px 12px;color:${rateColor};font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.04);">${rateLabel}</td>` +
+        `<td style="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <input type="number" min="0" max="999" value="${curCabang}"
+                style="width:52px;text-align:center;background:var(--bg);border:1px solid rgba(139,92,246,0.3);border-radius:6px;color:#c4b5fd;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 6px;"
+                title="Kode cabang penerima penghasilan baris ini (0=pusat)"
+                oninput="bpuCabangOverrides[${ri}]=parseInt(this.value)||0">
+        </td></tr>`;
     });
     html += '</tbody>';
     tbl.innerHTML = html;
     document.getElementById('bpu_rowBadge').textContent = bpuParsedData.length + ' rows';
 }
 
+function bpuBulkSetCabang() {
+    const val = parseInt(document.getElementById('bpu_bulkCabang').value) || 0;
+    bpuParsedData.forEach((_, i) => { bpuCabangOverrides[i] = val; });
+    // Update all input fields in the preview table (last column input)
+    document.querySelectorAll('#bpu_previewTable tbody tr').forEach((tr, i) => {
+        const inp = tr.querySelector('td:last-child input');
+        if (inp) inp.value = val;
+    });
+}
+
+
 function bpuConvertXML() {
     try {
         const tin = document.getElementById('bpu_cfgTIN').value.replace(/\D/g,'');
         if (tin.length !== 16) { bpuShowErr('NPWP Pemotong harus 16 digit!'); return; }
         const gov = document.getElementById('bpu_cfgGov')?.value || 'N/A';
-        const idtku = tin + '000000';
+        const cfgCabangNum = parseInt(document.getElementById('bpu_cfgCabang')?.value || '0') || 0;
+        const cfgCabangSuffix = String(cfgCabangNum).padStart(6, '0');
+        const idtku = tin + cfgCabangSuffix;
 
         const ci = idx => bpuHeaders.findIndex(h => h.toLowerCase().replace(/[\s_]+/g,'').includes(idx));
         const colCpTin = ci('counterparttin');
@@ -6591,7 +6626,7 @@ function bpuConvertXML() {
         if (colWDate < 0) { bpuShowErr('Kolom WithholdingDate tidak ditemukan! (Dibutuhkan untuk Masa/Tahun Pajak)'); return; }
 
         let bpuList = '';
-        bpuParsedData.forEach(row => {
+        bpuParsedData.forEach((row, rowIdx) => {
             const cpTin = String(row[colCpTin] || '').replace(/\D/g,'').padEnd(16,'0');
             const code = String(row[colCode] || '').trim();
             const taxBase = Number(row[colBase]) || 0;
@@ -6620,7 +6655,9 @@ function bpuConvertXML() {
                 rowMonth = parseInt(parts[1]);
             }
 
-            const cpIdtku = cpTin + '000000';
+            // Kode cabang penerima penghasilan per baris (dari preview table), default 0 = pusat
+            const rowCabangNum = bpuCabangOverrides[rowIdx] !== undefined ? parseInt(bpuCabangOverrides[rowIdx]) || 0 : 0;
+            const cpIdtku = cpTin + String(rowCabangNum).padStart(6, '0');
 
             bpuList += `
     <Bpu>
@@ -6728,7 +6765,7 @@ function bpuCopyXML() {
 }
 
 function bpuResetAll() {
-    bpuParsedData = []; bpuHeaders = []; bpuXmlOutput = '';
+    bpuParsedData = []; bpuHeaders = []; bpuXmlOutput = ''; bpuCabangOverrides = {};
     document.getElementById('bpu_fileInput').value = '';
     document.getElementById('bpu_previewTable').innerHTML = '';
     document.getElementById('bpu_xmlContent').innerHTML = '';
