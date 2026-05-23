@@ -1098,6 +1098,133 @@
             font-size:10px; padding:3px 8px; cursor:pointer;
         }
         .lic-revoke:hover { color:#ef4444; border-color:#ef4444; }
+
+        /* ── Trial Mode Styles ── */
+        #trial-banner {
+            background: rgba(245,158,11,0.07);
+            border-bottom: 1px solid rgba(245,158,11,0.25);
+            padding: 10px 32px;
+            font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #6b83a3;
+            align-items: center; gap: 12px;
+            display: none; justify-content: space-between;
+        }
+        #trial-banner.show { display: flex; }
+        .trial-dot {
+            width: 8px; height: 8px; background: #f59e0b;
+            border-radius: 50%; flex-shrink: 0;
+            box-shadow: 0 0 6px rgba(245,158,11,0.6);
+            animation: trialPulse 1.8s ease-in-out infinite;
+        }
+        @keyframes trialPulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(245,158,11,0.6); }
+            50% { box-shadow: 0 0 14px rgba(245,158,11,0.9); }
+        }
+        .trial-info { flex: 1; }
+        .trial-info strong { color: #f59e0b; }
+        .trial-info .trial-countdown { color: #f59e0b; font-weight: 700; }
+        .trial-info .trial-expired { color: #ef4444; font-weight: 700; }
+        .trial-upgrade-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none; border-radius: 6px;
+            color: #000; font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px; font-weight: 700; padding: 5px 12px;
+            cursor: pointer; white-space: nowrap; letter-spacing: 0.04em;
+            transition: filter 0.2s;
+        }
+        .trial-upgrade-btn:hover { filter: brightness(1.15); }
+
+        /* Trial tab on overlay */
+        .overlay-tabs {
+            display: flex; gap: 0; margin-bottom: 24px;
+            background: #0e1520; border: 1px solid #1e2d42;
+            border-radius: 10px; padding: 4px; overflow: hidden;
+        }
+        .overlay-tab-btn {
+            flex: 1; padding: 10px 8px; border: none; border-radius: 7px;
+            background: transparent; color: #6b83a3;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .overlay-tab-btn:hover { color: #e2eaf8; background: rgba(255,255,255,0.05); }
+        .overlay-tab-btn.active {
+            background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(139,92,246,0.15));
+            color: #60a5fa; border: 1px solid rgba(59,130,246,0.35);
+        }
+        .overlay-panel { display: none; }
+        .overlay-panel.active { display: block; }
+
+        /* Trial start panel */
+        .trial-start-box {
+            text-align: center; padding: 8px 0 4px;
+        }
+        .trial-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+        .trial-headline {
+            font-family: 'Syne', sans-serif; font-size: 22px;
+            font-weight: 800; color: #e2eaf8; margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .trial-subline {
+            font-size: 13px; color: #6b83a3; line-height: 1.7;
+            margin-bottom: 20px; font-family: 'IBM Plex Mono', monospace;
+        }
+        .trial-features {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-bottom: 20px; text-align: left;
+        }
+        .trial-feature-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; background: rgba(245,158,11,0.06);
+            border: 1px solid rgba(245,158,11,0.15); border-radius: 8px;
+            font-size: 13px; color: #e2eaf8;
+        }
+        .trial-feature-item .tf-icon { font-size: 16px; flex-shrink: 0; }
+        .trial-btn {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none; border-radius: 10px; color: #000;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;
+            font-size: 15px; cursor: pointer; transition: all 0.2s;
+            letter-spacing: 0.01em;
+        }
+        .trial-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .trial-btn:active { transform: translateY(0); }
+        .trial-name-group { margin-bottom: 16px; text-align: left; }
+        .trial-name-group label {
+            display: block; font-size: 11px; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: #6b83a3; font-family: 'IBM Plex Mono', monospace;
+            margin-bottom: 6px;
+        }
+        .trial-note {
+            margin-top: 14px; font-size: 11px;
+            color: #3d5270; font-family: 'IBM Plex Mono', monospace;
+            text-align: center; line-height: 1.7;
+        }
+        .trial-expired-box {
+            text-align: center; padding: 16px 0;
+        }
+        .trial-expired-icon { font-size: 44px; margin-bottom: 12px; display: block; }
+        .trial-expired-title {
+            font-family: 'Syne', sans-serif; font-size: 20px;
+            font-weight: 800; color: #ef4444; margin-bottom: 8px;
+        }
+        .trial-expired-sub {
+            font-size: 13px; color: #6b83a3; line-height: 1.7;
+            margin-bottom: 18px; font-family: 'IBM Plex Mono', monospace;
+        }
+        /* Overlay expired overlay (locks the app) */
+        #trial-expired-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(8,12,20,0.95); z-index: 998;
+            align-items: center; justify-content: center;
+        }
+        #trial-expired-overlay.show { display: flex; }
+        .trial-expired-card {
+            background: #0e1520; border: 1px solid #1e2d42;
+            border-radius: 20px; padding: 40px 36px; max-width: 420px;
+            width: calc(100% - 48px); text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -1109,50 +1236,123 @@
       <div class="license-logo-icon">P</div>
       <div class="license-logo-text">Pajak<span>Tools</span></div>
     </div>
-    <div class="license-title">Aktivasi Lisensi</div>
-    <div class="license-subtitle">Masukkan license key yang kamu terima setelah pembelian</div>
 
-    <div class="license-form-group">
-      <label class="license-label">Nama</label>
-      <input class="license-input" type="text" id="lic_name" placeholder="Nama kamu / PIC perusahaan" autocomplete="off">
-    </div>
-    <div class="license-form-group">
-      <label class="license-label">Email</label>
-      <input class="license-input" type="email" id="lic_email" placeholder="Email yang digunakan saat beli" autocomplete="off">
-    </div>
-    <!-- Field nama perusahaan — muncul otomatis saat key PRU dideteksi -->
-    <div class="license-form-group" id="lic_wrap_company" style="display:none;">
-      <label class="license-label">Nama Perusahaan</label>
-      <input class="license-input" type="text" id="lic_company" placeholder="Nama perusahaan sesuai saat pembelian" autocomplete="off">
-      <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:#3d5270;margin-top:5px;">Harus sama persis dengan yang didaftarkan</div>
-    </div>
-    <div class="license-form-group">
-      <label class="license-label">License Key</label>
-      <input class="license-input key-field" type="text" id="lic_key" placeholder="PRS-XXXX-XXXX-XXXX-XXXX" autocomplete="off" maxlength="23" oninput="formatLicKey(this)">
+    <!-- Tabs: Aktivasi | Coba Gratis -->
+    <div class="overlay-tabs">
+      <button class="overlay-tab-btn active" id="otab-license" onclick="switchOverlayTab('license')">🔑 Punya License</button>
+      <button class="overlay-tab-btn" id="otab-trial" onclick="switchOverlayTab('trial')">🚀 Coba Gratis 3 Hari</button>
     </div>
 
-    <div id="lic_error" class="license-error"></div>
+    <!-- Panel: Aktivasi Lisensi -->
+    <div class="overlay-panel active" id="opanel-license">
+      <div class="license-title" style="margin-top:0">Aktivasi Lisensi</div>
+      <div class="license-subtitle">Masukkan license key yang kamu terima setelah pembelian</div>
 
-    <button class="license-btn" onclick="activateLicense()">✓ Aktivasi Sekarang</button>
+      <div class="license-form-group">
+        <label class="license-label">Nama</label>
+        <input class="license-input" type="text" id="lic_name" placeholder="Nama kamu / PIC perusahaan" autocomplete="off">
+      </div>
+      <div class="license-form-group">
+        <label class="license-label">Email</label>
+        <input class="license-input" type="email" id="lic_email" placeholder="Email yang digunakan saat beli" autocomplete="off">
+      </div>
+      <div class="license-form-group" id="lic_wrap_company" style="display:none;">
+        <label class="license-label">Nama Perusahaan</label>
+        <input class="license-input" type="text" id="lic_company" placeholder="Nama perusahaan sesuai saat pembelian" autocomplete="off">
+        <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:#3d5270;margin-top:5px;">Harus sama persis dengan yang didaftarkan</div>
+      </div>
+      <div class="license-form-group">
+        <label class="license-label">License Key</label>
+        <input class="license-input key-field" type="text" id="lic_key" placeholder="PRS-XXXX-XXXX-XXXX-XXXX" autocomplete="off" maxlength="23" oninput="formatLicKey(this)">
+      </div>
 
-    <hr class="license-divider">
-    <div class="license-purchase">
-      Belum punya license key?<br>
-      Hubungi kami via WhatsApp untuk pembelian<br><br>
-      <strong>Personal</strong> — Rp 250.000 &nbsp;|&nbsp; <strong>Perusahaan</strong> — Rp 1.000.000<br>
-      <span style="color:#263548;font-size:10px;margin-top:6px;display:block;">Pembayaran via transfer bank · License dikirim via WA/Email</span>
-      <a href="https://wa.me/6285776077292?text=Halo%2C%20saya%20ingin%20membeli%20license%20PajakTools"
-         target="_blank"
-         style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 20px;background:#25d366;border-radius:8px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;text-decoration:none;transition:filter 0.2s;"
-         onmouseover="this.style.filter='brightness(1.1)'"
-         onmouseout="this.style.filter='brightness(1)'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.83L.057 23.57a.5.5 0 0 0 .609.61l5.819-1.47A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.877 9.877 0 0 1-5.031-1.378l-.36-.214-3.733.943.974-3.641-.235-.374A9.878 9.878 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118S21.882 6.533 21.882 12 17.467 21.882 12 21.882z"/>
-        </svg>
-        Chat WhatsApp · 0857-7607-7292
-      </a>
+      <div id="lic_error" class="license-error"></div>
+      <button class="license-btn" onclick="activateLicense()">✓ Aktivasi Sekarang</button>
+
+      <hr class="license-divider">
+      <div class="license-purchase">
+        Belum punya license key?<br>
+        Hubungi kami via WhatsApp untuk pembelian<br><br>
+        <strong>Personal</strong> — Rp 250.000 &nbsp;|&nbsp; <strong>Perusahaan</strong> — Rp 1.000.000<br>
+        <span style="color:#263548;font-size:10px;margin-top:6px;display:block;">Pembayaran via transfer bank · License dikirim via WA/Email</span>
+        <a href="https://wa.me/6285776077292?text=Halo%2C%20saya%20ingin%20membeli%20license%20PajakTools"
+           target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 20px;background:#25d366;border-radius:8px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;text-decoration:none;transition:filter 0.2s;"
+           onmouseover="this.style.filter='brightness(1.1)'"
+           onmouseout="this.style.filter='brightness(1)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.83L.057 23.57a.5.5 0 0 0 .609.61l5.819-1.47A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.877 9.877 0 0 1-5.031-1.378l-.36-.214-3.733.943.974-3.641-.235-.374A9.878 9.878 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118S21.882 6.533 21.882 12 17.467 21.882 12 21.882z"/>
+          </svg>
+          Chat WhatsApp · 0857-7607-7292
+        </a>
+      </div>
     </div>
+
+    <!-- Panel: Trial Gratis -->
+    <div class="overlay-panel" id="opanel-trial">
+      <!-- sub-state: form start -->
+      <div id="trial-form-state">
+        <div class="trial-start-box">
+          <span class="trial-icon">🚀</span>
+          <div class="trial-headline">Coba Gratis 3 Hari</div>
+          <div class="trial-subline">Akses semua fitur PajakTools tanpa bayar.<br>Tidak perlu kartu kredit, tidak perlu email verifikasi.</div>
+        </div>
+        <div class="trial-features">
+          <div class="trial-feature-item"><span class="tf-icon">🔄</span> Converter Coretax (Excel → XML)</div>
+          <div class="trial-feature-item"><span class="tf-icon">🧮</span> Kalkulator Pajak PPh & PPN</div>
+          <div class="trial-feature-item"><span class="tf-icon">📊</span> Ekstraksi PDF PPh21 & Faktur</div>
+          <div class="trial-feature-item"><span class="tf-icon">📝</span> Rename PDF Otomatis</div>
+        </div>
+        <div class="trial-name-group">
+          <label>Nama kamu</label>
+          <input class="license-input" type="text" id="trial_name" placeholder="Masukkan nama kamu" autocomplete="off">
+        </div>
+        <div id="trial_error" class="license-error"></div>
+        <button class="trial-btn" onclick="startTrial()">⚡ Mulai Trial Sekarang</button>
+        <div class="trial-note">Trial berlaku 3 × 24 jam sejak aktivasi · Satu kali per browser<br>Setelah trial, beli lisensi untuk akses permanen</div>
+      </div>
+
+      <!-- sub-state: already expired (shown if trial sudah habis) -->
+      <div id="trial-expired-state" style="display:none;">
+        <div class="trial-expired-box">
+          <span class="trial-expired-icon">⏰</span>
+          <div class="trial-expired-title">Trial Sudah Berakhir</div>
+          <div class="trial-expired-sub">Masa trial 3 hari kamu sudah habis.<br>Beli lisensi untuk melanjutkan akses ke semua fitur.</div>
+          <a href="https://wa.me/6285776077292?text=Halo%2C%20trial%20saya%20sudah%20habis%2C%20ingin%20beli%20license%20PajakTools"
+             target="_blank"
+             style="display:inline-flex;align-items:center;gap:8px;margin-top:4px;padding:12px 24px;background:#25d366;border-radius:8px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;text-decoration:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.83L.057 23.57a.5.5 0 0 0 .609.61l5.819-1.47A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.877 9.877 0 0 1-5.031-1.378l-.36-.214-3.733.943.974-3.641-.235-.374A9.878 9.878 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118S21.882 6.533 21.882 12 17.467 21.882 12 21.882z"/></svg>
+            Beli Lisensi via WhatsApp
+          </a>
+          <div style="margin-top:14px;">
+            <button class="overlay-tab-btn" style="width:100%;padding:10px;" onclick="switchOverlayTab('license')">Sudah punya lisensi? Aktivasi di sini</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Trial Expired Full-Screen Overlay (shown when app opened after trial expired) ── -->
+<div id="trial-expired-overlay">
+  <div class="trial-expired-card">
+    <div style="font-size:52px;margin-bottom:16px;">⏰</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#ef4444;margin-bottom:10px;">Trial Sudah Berakhir</div>
+    <div style="font-size:13px;color:#6b83a3;line-height:1.7;font-family:'IBM Plex Mono',monospace;margin-bottom:24px;">
+      Masa trial 3 hari kamu telah habis.<br>Beli lisensi untuk akses permanen ke semua fitur PajakTools.
+    </div>
+    <a href="https://wa.me/6285776077292?text=Halo%2C%20trial%20saya%20sudah%20habis%2C%20ingin%20beli%20license%20PajakTools"
+       target="_blank"
+       style="display:inline-flex;align-items:center;gap:8px;padding:13px 24px;background:#25d366;border-radius:10px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:12px;width:100%;justify-content:center;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.83L.057 23.57a.5.5 0 0 0 .609.61l5.819-1.47A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.877 9.877 0 0 1-5.031-1.378l-.36-.214-3.733.943.974-3.641-.235-.374A9.878 9.878 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118S21.882 6.533 21.882 12 17.467 21.882 12 21.882z"/></svg>
+      Beli Lisensi — WA 0857-7607-7292
+    </a>
+    <button onclick="document.getElementById('trial-expired-overlay').classList.remove('show');document.getElementById('license-overlay').classList.add('show');"
+      style="width:100%;padding:11px;background:transparent;border:1px solid #1e2d42;border-radius:8px;color:#6b83a3;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;">
+      Sudah punya lisensi? Aktivasi
+    </button>
   </div>
 </div>
 
@@ -1165,6 +1365,18 @@
     &nbsp;·&nbsp; <span id="lic_banner_key" style="letter-spacing:0.08em;">—</span>
   </div>
   <button class="lic-revoke" onclick="revokeLicense()">Nonaktifkan</button>
+</div>
+
+<!-- ── Trial Active Banner ── -->
+<div id="trial-banner">
+  <div style="display:flex;align-items:center;gap:12px;flex:1;">
+    <div class="trial-dot"></div>
+    <div class="trial-info">
+      ⚡ Mode Trial · <strong id="trial_banner_name">—</strong>
+      &nbsp;·&nbsp; <span id="trial_banner_remaining"></span>
+    </div>
+  </div>
+  <button class="trial-upgrade-btn" onclick="showUpgradeFromTrial()">🔑 Beli Lisensi</button>
 </div>
 
 <!-- Navbar -->
@@ -7746,14 +7958,13 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function() {
   const _S = 'PajakTools2024#R4h4si4!K3y';
+  const TRIAL_DURATION_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
   async function sha256(msg) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
   }
 
-  // Personal  → email + plan + secret
-  // Perusahaan → email + companyName + plan + secret
   async function deriveKey(email, plan, companyName) {
     const base = plan === 'perusahaan'
       ? email.trim().toLowerCase() + ':' + (companyName||'').trim().toLowerCase() + ':' + plan + ':' + _S
@@ -7773,39 +7984,167 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('pt_license', JSON.stringify(data));
   }
 
-  function showBanner(lic) {
-    // Personal → tampilkan nama user | Perusahaan → tampilkan nama perusahaan
-    const displayName = lic.plan === 'perusahaan' && lic.company
-      ? lic.company
-      : lic.name;
+  // ── Trial helpers ──
+  function getTrial() {
+    try { return JSON.parse(localStorage.getItem('pt_trial') || 'null'); }
+    catch { return null; }
+  }
+
+  function saveTrial(data) {
+    localStorage.setItem('pt_trial', JSON.stringify(data));
+  }
+
+  function trialRemainingMs(trial) {
+    return (trial.startedAt + TRIAL_DURATION_MS) - Date.now();
+  }
+
+  function formatRemainingTime(ms) {
+    if (ms <= 0) return null;
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      const rh = h % 24;
+      return `${d} hari ${rh} jam tersisa`;
+    }
+    return `${h} jam ${m} menit tersisa`;
+  }
+
+  // ── Banner: License ──
+  function showLicenseBanner(lic) {
+    const displayName = lic.plan === 'perusahaan' && lic.company ? lic.company : lic.name;
     const planLabel = lic.plan === 'perusahaan' ? 'Perusahaan — Unlimited User' : 'Personal';
     document.getElementById('lic_banner_name').textContent = displayName;
     document.getElementById('lic_banner_plan').textContent = planLabel;
     document.getElementById('lic_banner_key').textContent  = lic.key;
     document.getElementById('license-banner').classList.add('show');
+    document.getElementById('trial-banner').classList.remove('show');
+  }
+
+  // ── Banner: Trial ──
+  function showTrialBanner(trial) {
+    const rem = trialRemainingMs(trial);
+    const remText = formatRemainingTime(rem);
+    document.getElementById('trial_banner_name').textContent = trial.name;
+    const remEl = document.getElementById('trial_banner_remaining');
+    remEl.innerHTML = remText
+      ? `<span class="trial-countdown">${remText}</span>`
+      : `<span class="trial-expired">Trial berakhir</span>`;
+    document.getElementById('trial-banner').classList.add('show');
+    document.getElementById('license-banner').classList.remove('show');
+  }
+
+  // Update countdown every minute while in trial
+  function startTrialCountdown(trial) {
+    showTrialBanner(trial);
+    setInterval(() => {
+      const rem = trialRemainingMs(trial);
+      if (rem <= 0) {
+        // Expired while app is open — force re-check
+        document.getElementById('trial-banner').classList.remove('show');
+        document.getElementById('trial-expired-overlay').classList.add('show');
+        return;
+      }
+      showTrialBanner(trial);
+    }, 60000);
   }
 
   function showOverlay() {
     document.getElementById('license-overlay').classList.add('show');
     document.getElementById('license-banner').classList.remove('show');
+    document.getElementById('trial-banner').classList.remove('show');
   }
 
-  // On load — check stored license
-  window.addEventListener('DOMContentLoaded', async () => {
-    const lic = getLicense();
-    if (!lic) { showOverlay(); return; }
+  // ── Overlay tab switch ──
+  window.switchOverlayTab = function(tab) {
+    document.querySelectorAll('.overlay-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.overlay-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('otab-' + tab).classList.add('active');
+    document.getElementById('opanel-' + tab).classList.add('active');
 
-    // Re-validate stored license
-    const expected = await deriveKey(lic.email, lic.plan, lic.company || '');
-    if (expected === lic.key.toUpperCase()) {
-      showBanner(lic);
-    } else {
-      localStorage.removeItem('pt_license');
-      showOverlay();
+    // If switching to trial tab, check if trial already used/expired
+    if (tab === 'trial') {
+      const trial = getTrial();
+      if (trial && trialRemainingMs(trial) <= 0) {
+        // Show expired sub-state
+        document.getElementById('trial-form-state').style.display = 'none';
+        document.getElementById('trial-expired-state').style.display = 'block';
+      } else if (!trial) {
+        document.getElementById('trial-form-state').style.display = 'block';
+        document.getElementById('trial-expired-state').style.display = 'none';
+      }
     }
+  };
+
+  // ── Start Trial ──
+  window.startTrial = function() {
+    const name = document.getElementById('trial_name').value.trim();
+    const errEl = document.getElementById('trial_error');
+    errEl.style.display = 'none';
+
+    if (!name) {
+      errEl.textContent = '❌ Nama wajib diisi sebelum memulai trial';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const existingTrial = getTrial();
+    if (existingTrial) {
+      const rem = trialRemainingMs(existingTrial);
+      if (rem <= 0) {
+        errEl.textContent = '❌ Trial kamu sudah habis. Beli lisensi untuk melanjutkan.';
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+
+    const trial = { name, startedAt: Date.now() };
+    saveTrial(trial);
+    document.getElementById('license-overlay').classList.remove('show');
+    startTrialCountdown(trial);
+  };
+
+  // ── Show upgrade prompt from banner ──
+  window.showUpgradeFromTrial = function() {
+    document.getElementById('trial-banner').classList.remove('show');
+    showOverlay();
+    // Switch to license tab
+    window.switchOverlayTab('license');
+  };
+
+  // ── On load ──
+  window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Check valid license first
+    const lic = getLicense();
+    if (lic) {
+      const expected = await deriveKey(lic.email, lic.plan, lic.company || '');
+      if (expected === lic.key.toUpperCase()) {
+        showLicenseBanner(lic);
+        return;
+      } else {
+        localStorage.removeItem('pt_license');
+      }
+    }
+
+    // 2. Check trial
+    const trial = getTrial();
+    if (trial) {
+      const rem = trialRemainingMs(trial);
+      if (rem > 0) {
+        startTrialCountdown(trial);
+        return;
+      } else {
+        // Trial expired — show full-screen expired overlay
+        document.getElementById('trial-expired-overlay').classList.add('show');
+        return;
+      }
+    }
+
+    // 3. No license, no trial → show gate
+    showOverlay();
   });
 
-  // Auto-show/hide company field based on key prefix
+  // ── Key formatter / company field ──
   window.formatLicKey = function(el) {
     let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     let out = '';
@@ -7822,7 +8161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     el.value = out.substring(0,23);
 
-    // Show company field if PRU prefix detected
     const prefix = el.value.substring(0,3);
     const companyWrap = document.getElementById('lic_wrap_company');
     if (companyWrap) {
@@ -7830,6 +8168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ── Activate License ──
   window.activateLicense = async function() {
     const name    = document.getElementById('lic_name').value.trim();
     const email   = document.getElementById('lic_email').value.trim();
@@ -7863,8 +8202,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const lic = { name, email, plan, key, company: company || '' };
     saveLicense(lic);
+    // Also clear trial expired overlay if shown
+    document.getElementById('trial-expired-overlay').classList.remove('show');
     document.getElementById('license-overlay').classList.remove('show');
-    showBanner(lic);
+    document.getElementById('trial-banner').classList.remove('show');
+    showLicenseBanner(lic);
   };
 
   window.revokeLicense = function() {
